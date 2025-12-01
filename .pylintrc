@@ -1,0 +1,30 @@
+# https://pylint.readthedocs.io/en/v2.12.2/user_guide/options.html
+
+[BASIC]
+module-naming-style=any
+const-naming-style=any
+class-naming-style=any
+function-naming-style=any
+method-naming-style=any
+attr-naming-style=any
+argument-naming-style=any
+variable-naming-style=any
+class-attribute-naming-style=any
+class-const-naming-style=any
+inlinevar-naming-style=any
+
+# Custom regexes to allow both snake_case and camelCase
+module-rgx=(?:(?P<snake>[a-z_][a-z0-9_]+)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+const-rgx=(?:(?P<snake>[A-Z_][A-Z0-9_]*)|(?P<camel>[A-Z][a-zA-Z0-9]*))$
+class-rgx=(?:(?P<camel>[A-Z][a-zA-Z0-9]*)|(?P<snake>[a-z_][a-z0-9_]+))$
+function-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+method-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+attr-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+argument-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+variable-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+class-attribute-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+class-const-rgx=(?:(?P<snake>[A-Z_][A-Z0-9_]*)|(?P<camel>[A-Z][a-zA-Z0-9]*))$
+inlinevar-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*))$
+
+[design]
+max-locals = 24
