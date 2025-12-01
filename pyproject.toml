@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "pyMathTools"
+version = "0.0.1"
+description = "Python Boilerplate contains all the boilerplate you need to create a Python package."
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">= 3.10"
+authors = [
+  {name = "Nicholas Bergantz", email = "nicholas.bergantz@gmail.com"}
+]
+keywords = [
+  
+]
+classifiers = [
+
+]
+license = {text = "MIT"}
+dependencies = [
+    "pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+develop = [
+    "pytest",
+    "black",
+    "build",
+    "bump2version",
+    "pylint",
+    "mypy",
+    "twine",
+]
+personal_repos = []
+
+[project.urls]
+
+bugs = "https://github.com/kopecn/pyMathTools/issues"
+changelog = "https://github.com/kopecn/pyMathTools/blob/master/changelog.md"
+homepage = "https://github.com/kopecn/pyMathTools"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/*"]
+python_functions = ["test*"]
+python_files = ["test*.py"]
