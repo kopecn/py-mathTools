@@ -1,12 +1,13 @@
 import numpy as np
-from numpy import atan2, acos
-import quaternion
-from numpy import pi
+from numpy import atan2, acos, pi
+
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+
+from pyMathTools.spatial.Quaternion import Quaternion
 
 
 def quat_to_unitSphericalSmallCircle(
-    q: np.quaternion, radius_angle: float = pi / 4
+    q: Quaternion, radius_angle: float = pi / 4
 ) -> UnitSphericalSmallCircle:
     # Extract vector part
 
