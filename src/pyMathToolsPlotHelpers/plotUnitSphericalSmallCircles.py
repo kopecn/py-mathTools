@@ -714,29 +714,26 @@ def demo() -> None:
         ),
     ]
 
-    # # Create the multiplot showing all three views
-    # _ = plot_unit_spherical_multiplot(
-    #     circles=circles,
-    #     num_points=240,
-    #     title="Unit Spherical Small Circles - Plate Carrée, Gauss-Krüger, and 3D Views",
-    #     show_plot=True,
-    # )
-
-    # _ = plot_unit_spherical(
-    #     circles=circles,
-    #     show_plot=True,
-    # )
-
     arcs: List[UnitSphericalArc] = [
         UnitSphericalArc(orient=0, azimuth=0, polar=0, arc_length=deg22_5),
         UnitSphericalArc(orient=deg45, azimuth=0, polar=0, arc_length=deg22_5),
         UnitSphericalArc(orient=deg90, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArc(orient=0, azimuth=0, polar=deg45, arc_length=deg22_5),
         UnitSphericalArc(orient=0, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=0, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg45, azimuth=0, polar=deg45, arc_length=deg22_5),
         UnitSphericalArc(orient=deg45, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg45, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg90, azimuth=0, polar=deg45, arc_length=deg22_5),
         UnitSphericalArc(orient=deg90, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg90, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=0, azimuth=0, polar=deg45, arc_length=-deg22_5),
+        UnitSphericalArc(orient=0, azimuth=deg45, polar=deg45, arc_length=-deg22_5),
+        UnitSphericalArc(orient=0, azimuth=deg90, polar=deg45, arc_length=-deg22_5),
     ]
 
     _ = plot_unit_spherical_multiplot(
+        circles=circles,
         arcs=arcs,
         show_plot=True,
     )

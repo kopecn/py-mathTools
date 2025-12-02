@@ -160,24 +160,30 @@ def generate_spherical_arc_points(
     # Create tangent direction based on the orient parameter
     # The orient defines the rotation angle about the radial vector (right-hand rule)
     # We need to create an orthonormal basis in the tangent plane and rotate by orient
+    # Convention: orient=0 points towards the north pole in the tangent plane
 
     north = array([0, 0, 1])
 
-    # Create a reference direction in the tangent plane
-    # Use the north direction or an arbitrary perpendicular if at poles
+    # Create an orthonormal basis in the tangent plane
+    # Following right-hand rule: thumb along radial, fingers curl in positive orient direction
     if abs(z_start) < 0.999:  # Not at poles
-        # Reference direction: perpendicular to both north and radial
-        ref_tangent = cross(north, start_point)
-        ref_tangent = ref_tangent / norm(ref_tangent)
+        # East direction: perpendicular to both north and radial
+        east = cross(north, start_point)
+        east = east / norm(east)
+
+        # North direction in tangent plane: completes right-handed system
+        # cross(north_tangent, east) = start_point (outward radial)
+        north_tangent = cross(east, start_point)
+        north_tangent = north_tangent / norm(north_tangent)
+
+        ref_tangent = north_tangent
+        second_tangent = east
     else:  # At poles, use arbitrary reference
         ref_tangent = array([1, 0, 0])
+        second_tangent = array([0, 1, 0])
 
-    # Second tangent direction (perpendicular to both radial and reference)
-    second_tangent = cross(start_point, ref_tangent)
-    second_tangent = second_tangent / norm(second_tangent)
-
-    # Rotate the reference tangent by the orient angle about the radial vector
-    # Using the rotation formula in the tangent plane
+    # Rotate by the orient angle about the radial vector (right-hand rule)
+    # orient=0 points north, positive orient rotates towards east
     initial_direction = cos(arc.orient) * ref_tangent + sin(arc.orient) * second_tangent
     initial_direction = initial_direction / norm(initial_direction)
 

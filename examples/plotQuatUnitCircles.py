@@ -10,8 +10,8 @@ Steps:
 1. Import required modules and functions.
 2. Convert several canonical quaternions (identity and axis-aligned) to
    UnitSphericalSmallCircle objects.
-3. Plot these circles using the multiplot function, which shows Mercator,
-   Gauss-Krüger, and 3D views.
+3. Plot these circles using the multiplot function, which shows flat projection,
+   polar, and 3D views.
 
 Usage:
 ------
@@ -33,7 +33,7 @@ from pyMathTools.constructors.constructUnitSphericalSmallCircle import (
 )
 
 from pyMathToolsPlotHelpers.plotUnitSphericalSmallCircles import (
-    plot_spherical_small_circles_multiplot,
+    plot_unit_spherical_multiplot,
 )
 
 
@@ -48,7 +48,7 @@ def main():
 
     All circles use a radius angle of pi/8 except y and z, which use the default.
     """
-    _ = plot_spherical_small_circles_multiplot(
+    _ = plot_unit_spherical_multiplot(
         circles=[
             quat_to_unitSphericalSmallCircle(q=quaternion.one, radius_angle=pi / 8),
             quat_to_unitSphericalSmallCircle(q=quaternion.x, radius_angle=pi / 8),
