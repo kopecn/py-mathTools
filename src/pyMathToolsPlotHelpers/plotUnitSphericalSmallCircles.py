@@ -581,11 +581,6 @@ def demo() -> None:
             polar=0,
             radius_angle=np.deg2rad(45),
         ),
-        UnitSphericalSmallCircle(  # should overlap circle 1
-            azimuth=np.pi / 2,
-            polar=0,
-            radius_angle=np.deg2rad(45),
-        ),
         UnitSphericalSmallCircle(
             azimuth=0,
             polar=np.pi / 2,
@@ -598,7 +593,7 @@ def demo() -> None:
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
-            polar=np.pi,  # Fixed: was -π/2 (invalid), now π (south pole)
+            polar=-np.pi / 2,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
@@ -615,6 +610,11 @@ def demo() -> None:
             azimuth=np.deg2rad(30),
             polar=np.deg2rad(30),
             radius_angle=np.deg2rad(30),
+        ),
+        UnitSphericalSmallCircle(  # should overlap circle 1
+            azimuth=np.pi / 2,
+            polar=0,
+            radius_angle=np.deg2rad(45),
         ),
         # UnitSphericalSmallCircle(
         #     azimuth=np.deg2rad(10),
