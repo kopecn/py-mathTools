@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 
 from pyMathTools.transforms.sphericalTransforms import (
-    mercator_transform,
+    plate_carree_transform,
     gauss_kruger_transform,
 )
 from pyMathTools.generators.sphericalGenerators import (
@@ -19,12 +19,12 @@ def plot_spherical_small_circles(
     circles: Union[List[UnitSphericalSmallCircle], List[List[float]]],
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 6),
-    title: str = "Small Circles on Sphere (Mercator Projection)",
+    title: str = "Small Circles on Sphere (Plate Carrée Projection)",
     show_legend: bool = True,
     show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
-    Plot small circles on a sphere using Mercator projection.
+    Plot small circles on a sphere using plate carrée (equirectangular) projection.
 
     Parameters:
     -----------
@@ -64,19 +64,21 @@ def plot_spherical_small_circles(
             azimuth_center, polar_center, radius_angle, num_points
         )
 
-        # Apply Mercator projection
-        x_points, y_points = mercator_transform(azimuth_points, polar_points)
+        # Apply Plate Carrée projection
+        x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
         # Convert radius to degrees for legend
         radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
+        azimuth_deg = np.degrees(azimuth_center)
+        polar_deg = np.degrees(polar_center)
+        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
         # Plot the circle
         ax.scatter(x_points, y_points, s=10, alpha=0.6, label=label)
 
     # Set up axes
-    ax.set_xlabel("Azmuth (radians)", fontsize=12)
-    ax.set_ylabel("Polar (radians)", fontsize=12)
+    ax.set_xlabel("Azimuth (radians)", fontsize=12)
+    ax.set_ylabel("Latitude (radians)", fontsize=12)
     ax.set_xlim(0, 2 * np.pi)
 
     # Add grid
@@ -163,8 +165,8 @@ def plot_spherical_small_circles_advanced(
             azimuth_center, polar_center, radius_angle, num_points
         )
 
-        # Apply Mercator projection
-        x_points, y_points = mercator_transform(azimuth_points, polar_points)
+        # Apply Plate Carrée projection
+        x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
         # Determine color and label
         color = colors[idx] if colors is not None and idx < len(colors) else None
@@ -175,7 +177,7 @@ def plot_spherical_small_circles_advanced(
 
         # Plot center point if requested
         if show_centers:
-            x_center, y_center = mercator_transform(azimuth_center, polar_center)
+            x_center, y_center = plate_carree_transform(azimuth_center, polar_center)
             ax.scatter(
                 x_center,
                 y_center,
@@ -186,8 +188,8 @@ def plot_spherical_small_circles_advanced(
             )
 
     # Set up axes
-    ax.set_xlabel("Azmuth (radians)", fontsize=12)
-    ax.set_ylabel("Polar (radians)", fontsize=12)
+    ax.set_xlabel("Azimuth (radians)", fontsize=12)
+    ax.set_ylabel("Latitude (radians)", fontsize=12)
     ax.set_xlim(0, 2 * np.pi)
 
     # Add grid
@@ -278,15 +280,16 @@ def plot_spherical_small_circles_gauss_kruger(
 
         # Convert radius to degrees for legend
         radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
+        azimuth_deg = np.degrees(azimuth_center)
+        polar_deg = np.degrees(polar_center)
+        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
-        # Plot with swapped coordinates to view down at equator
-        # x-axis (azimuth-related) = northing
-        # y-axis (polar-related) = easting
+        # Plot in Gauss-Krüger projection coordinates
+        # x-axis = easting, y-axis = northing
         ax.scatter(easting, northing, s=10, alpha=0.6, label=label)
 
-    ax.set_xlabel("Azimuth-related (radians)", fontsize=12)
-    ax.set_ylabel("Polar-related (radians)", fontsize=12)
+    ax.set_xlabel("Easting", fontsize=12)
+    ax.set_ylabel("Northing", fontsize=12)
     ax.grid(True, alpha=0.3)
     ax.set_title(title, fontsize=14)
     ax.set_aspect("equal", adjustable="box")
@@ -354,7 +357,9 @@ def plot_spherical_small_circles_polar(
 
         # Convert radius to degrees for legend
         radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
+        azimuth_deg = np.degrees(azimuth_center)
+        polar_deg = np.degrees(polar_center)
+        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
         # Plot in polar coordinates
         ax.scatter(azimuth_points, radius_points, s=10, alpha=0.6, label=label)
@@ -491,7 +496,7 @@ def plot_spherical_small_circles_multiplot(
     show_plot: bool = False,
 ) -> Figure:
     """
-    Create a multiplot showing Mercator, Gauss-Krüger, and 3D views of spherical small circles.
+    Create a multiplot showing Plate Carrée, Gauss-Krüger, and 3D views of spherical small circles.
 
     Parameters:
     -----------
@@ -515,22 +520,22 @@ def plot_spherical_small_circles_multiplot(
     fig.suptitle(title, fontsize=16)
 
     # Create subplots
-    ax1 = fig.add_subplot(131)  # Mercator projection
+    ax1 = fig.add_subplot(131)  # Plate Carrée projection
     ax2 = fig.add_subplot(132)  # Gauss-Krüger projection
     ax3 = fig.add_subplot(133, projection="3d")  # 3D view
 
-    # 1. Mercator projection using advanced plot function
+    # 1. Plate Carrée projection using advanced plot function
     plot_spherical_small_circles_advanced(
         circles=circles,
         num_points=num_points,
-        title="Mercator Projection",
+        title="Plate Carrée Projection",
         show_centers=False,
         ax=ax1,
     )
     # Customize for multiplot
-    ax1.set_xlabel("Azmuth (radians)", fontsize=10)
-    ax1.set_ylabel("Polar (radians)", fontsize=10)
-    ax1.set_title("Mercator Projection", fontsize=12)
+    ax1.set_xlabel("Azimuth (radians)", fontsize=10)
+    ax1.set_ylabel("Latitude (radians)", fontsize=10)
+    ax1.set_title("Plate Carrée Projection", fontsize=12)
 
     # 2. Gauss-Krüger projection
     plot_spherical_small_circles_gauss_kruger(
@@ -611,11 +616,11 @@ def demo() -> None:
             polar=np.deg2rad(30),
             radius_angle=np.deg2rad(30),
         ),
-        UnitSphericalSmallCircle(  # should overlap circle 1
-            azimuth=np.pi / 2,
-            polar=0,
-            radius_angle=np.deg2rad(45),
-        ),
+        # UnitSphericalSmallCircle(  # should overlap circle 1
+        #     azimuth=np.pi / 2,
+        #     polar=0,
+        #     radius_angle=np.deg2rad(45),
+        # ),
         # UnitSphericalSmallCircle(
         #     azimuth=np.deg2rad(10),
         #     polar=np.deg2rad(-80),
@@ -642,7 +647,7 @@ def demo() -> None:
     _ = plot_spherical_small_circles_multiplot(
         circles,
         num_points=240,
-        title="Unit Spherical Small Circles - Mercator, Gauss-Krüger, and 3D Views",
+        title="Unit Spherical Small Circles - Plate Carrée, Gauss-Krüger, and 3D Views",
         show_plot=True,
     )
 
