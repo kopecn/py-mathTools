@@ -10,7 +10,7 @@ from numpy import (
     linspace,
     zeros,
     sqrt,
-    arcsin,
+    arccos,
     dot,
 )
 from numpy.linalg import norm
@@ -49,10 +49,12 @@ def generate_spherical_small_circle_points(
     polar_points : NDArray
         Polar angles of points on the circle
     """
-    # Convert center to Cartesian coordinates
-    x_center = cos(polar_center) * cos(azimuth_center)
-    y_center = cos(polar_center) * sin(azimuth_center)
-    z_center = sin(polar_center)
+    # Convert center to Cartesian coordinates (physics convention)
+    # theta (polar) = 0 at north pole, pi at south pole
+    # phi (azimuth) = rotation about Z axis
+    x_center = sin(polar_center) * cos(azimuth_center)
+    y_center = sin(polar_center) * sin(azimuth_center)
+    z_center = cos(polar_center)
     center = array([x_center, y_center, z_center])
 
     # Create orthonormal basis at the center point
@@ -102,12 +104,14 @@ def generate_spherical_small_circle_points(
             # If no rotation needed (shouldn't happen)
             point = center
 
-        # Convert back to spherical coordinates
+        # Convert back to spherical coordinates (physics convention)
         x, y, z = point
         r = sqrt(x**2 + y**2 + z**2)
         x, y, z = x / r, y / r, z / r  # Normalize to unit sphere
 
-        polar_points[i] = arcsin(clip(z, -1, 1))
+        # theta (polar) = arccos(z), ranges from 0 (north pole) to pi (south pole)
+        polar_points[i] = arccos(clip(z, -1, 1))
+        # phi (azimuth) = atan2(y, x)
         azimuth_points[i] = arctan2(y, x)
         if azimuth_points[i] < 0:
             azimuth_points[i] += 2 * pi
