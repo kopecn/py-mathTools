@@ -1,19 +1,27 @@
-from typing import List, Union, Tuple, Optional
+from typing import List, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
 from pyMathTools.transforms.sphericalTransforms import plate_carree_transform
 from pyMathTools.generators.sphericalGenerators import (
     generate_spherical_small_circle_points,
+    generate_spherical_arc_points,
 )
 
+deg45 = np.deg2rad(45)
+deg90 = np.deg2rad(90)
+deg180 = np.deg2rad(180)
+deg22_5 = np.pi / 8
 
-def plot_spherical_small_circles(
-    circles: List[UnitSphericalSmallCircle],
+
+def plot_unit_spherical(
+    circles: List[UnitSphericalSmallCircle] | None = None,
+    arcs: List[UnitSphericalArc] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 6),
     title: str = "Small Circles on Sphere (Plate Carrée Projection)",
@@ -21,21 +29,27 @@ def plot_spherical_small_circles(
     show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
-    Plot small circles on a sphere using plate carrée (equirectangular) projection.
+    Plot small circles and arcs on a sphere using plate carrée (equirectangular) projection.
 
     Parameters:
     -----------
-    circles : List[UnitSphericalSmallCircle] or array-like
-        List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists.
+    circles : List[UnitSphericalSmallCircle], optional
+        List of UnitSphericalSmallCircle objects.
         Each circle represents a small circle on the unit sphere
+    arcs : List[UnitSphericalArc], optional
+        List of UnitSphericalArc objects.
+        Each arc starts at (azimuth, polar) and extends along a great circle
+        for the specified arc_length (positive or negative)
     num_points : int, optional
-        Number of points to generate around each circle (default: 120)
+        Number of points to generate for each circle/arc (default: 120)
     figsize : tuple, optional
         Figure size (default: (10, 6))
     title : str, optional
         Plot title
     show_legend : bool, optional
         Whether to show the legend (default: True)
+    show_plot : bool, optional
+        Whether to display the plot (default: False)
 
     Returns:
     --------
@@ -44,30 +58,60 @@ def plot_spherical_small_circles(
     fig, ax = plt.subplots(figsize=figsize)
 
     # Generate points for each circle
-    for idx, circle in enumerate(circles):
+    if circles is not None:
+        for idx, circle in enumerate(circles):
 
-        # Generate true spherical small circle points
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            circle, num_points
-        )
+            # Generate true spherical small circle points
+            azimuth_points, polar_points = generate_spherical_small_circle_points(
+                circle, num_points
+            )
 
-        # Apply Plate Carrée projection
-        x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
+            # Apply Plate Carrée projection
+            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
-        # Convert radius to degrees for legend
-        radius_deg = np.degrees(circle.radius_angle)
-        azimuth_deg = np.degrees(circle.azimuth)
-        polar_deg = np.degrees(circle.polar)
-        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
+            # Convert radius to degrees for legend
+            radius_deg = np.degrees(circle.radius_angle)
+            azimuth_deg = np.degrees(circle.azimuth)
+            polar_deg = np.degrees(circle.polar)
+            label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
-        # Plot the circle
-        ax.scatter(
-            np.degrees(x_points),
-            np.degrees(y_points),
-            s=10,
-            alpha=0.6,
-            label=label,
-        )
+            # Plot the circle
+            ax.scatter(
+                np.degrees(x_points),
+                np.degrees(y_points),
+                s=10,
+                alpha=0.6,
+                label=label,
+            )
+
+    # Generate points for each arc
+    if arcs is not None:
+        for idx, arc in enumerate(arcs):
+
+            # Generate spherical arc points
+            azimuth_points, polar_points = generate_spherical_arc_points(
+                arc, num_points
+            )
+
+            # Apply Plate Carrée projection
+            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
+
+            # Convert to degrees for legend
+            arc_length_deg = np.degrees(arc.arc_length)
+            azimuth_deg = np.degrees(arc.azimuth)
+            polar_deg = np.degrees(arc.polar)
+            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
+
+            # Plot the arc as a line
+            ax.plot(
+                np.degrees(x_points),
+                np.degrees(y_points),
+                linewidth=2,
+                alpha=0.8,
+                label=label,
+                marker="o",
+                markersize=3,
+            )
 
     # Set up axes
     ax.set_xlabel("Azimuth (deg)", fontsize=12)
@@ -95,8 +139,9 @@ def plot_spherical_small_circles(
     return fig, ax
 
 
-def plot_spherical_small_circles_advanced(
-    circles: List[UnitSphericalSmallCircle],
+def plot_unit_spherical_advanced(
+    circles: List[UnitSphericalSmallCircle] | None = None,
+    arcs: List[UnitSphericalArc] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 6),
     title: str = "Small Circles on Sphere (Flattened)",
@@ -113,6 +158,10 @@ def plot_spherical_small_circles_advanced(
     -----------
     circles : List[UnitSphericalSmallCircle] or array-like
         List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
+    arcs : List[UnitSphericalArc], optional
+        List of UnitSphericalArc objects.
+        Each arc starts at (azimuth, polar) and extends along a great circle
+        for the specified arc_length (positive or negative)
     num_points : int, optional
         Number of points to generate around each circle
     figsize : tuple, optional
@@ -142,40 +191,71 @@ def plot_spherical_small_circles_advanced(
     else:
         fig = ax.get_figure()
 
-    for idx, circle in enumerate(circles):
+    if circles is not None:
+        for idx, circle in enumerate(circles):
 
-        # Generate true spherical small circle points
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            circle, num_points
-        )
+            # Generate true spherical small circle points
+            azimuth_points, polar_points = generate_spherical_small_circle_points(
+                circle, num_points
+            )
 
-        # Apply Plate Carrée projection
-        x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
+            # Apply Plate Carrée projection
+            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
-        # Determine color and label
-        color = colors[idx] if colors is not None and idx < len(colors) else None
-        label = labels[idx] if labels is not None and idx < len(labels) else None
+            # Determine color and label
+            color = colors[idx] if colors is not None and idx < len(colors) else None
+            label = labels[idx] if labels is not None and idx < len(labels) else None
 
-        # Plot the circle
-        ax.scatter(
-            np.degrees(x_points),
-            np.degrees(y_points),
-            s=10,
-            alpha=0.6,
-            c=color,
-            label=label,
-        )
-
-        # Plot center point if requested
-        if show_centers:
-            x_center, y_center = plate_carree_transform(circle.azimuth, circle.polar)
+            # Plot the circle
             ax.scatter(
-                np.degrees(x_center),
-                np.degrees(y_center),
-                s=100,
-                marker="x",
-                c=color if color else "red",
-                linewidths=2,
+                np.degrees(x_points),
+                np.degrees(y_points),
+                s=10,
+                alpha=0.6,
+                c=color,
+                label=label,
+            )
+
+            # Plot center point if requested
+            if show_centers:
+                x_center, y_center = plate_carree_transform(
+                    circle.azimuth, circle.polar
+                )
+                ax.scatter(
+                    np.degrees(x_center),
+                    np.degrees(y_center),
+                    s=100,
+                    marker="x",
+                    c=color if color else "red",
+                    linewidths=2,
+                )
+
+    # Generate points for each arc
+    if arcs is not None:
+        for idx, arc in enumerate(arcs):
+
+            # Generate spherical arc points
+            azimuth_points, polar_points = generate_spherical_arc_points(
+                arc, num_points
+            )
+
+            # Apply Plate Carrée projection
+            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
+
+            # Determine color and label
+            color = colors[idx] if colors is not None and idx < len(colors) else None
+            label = labels[idx] if labels is not None and idx < len(labels) else None
+
+            # Plot the arc as a line
+            ax.plot(
+                np.degrees(x_points),
+                np.degrees(y_points),
+                linewidth=2,
+                alpha=0.8,
+                c=color,
+                label=label,
+                marker="o",
+                markersize=3,
             )
 
     # Set up axes
@@ -204,8 +284,9 @@ def plot_spherical_small_circles_advanced(
     return fig, ax
 
 
-def plot_spherical_small_circles_polar(
-    circles: List[UnitSphericalSmallCircle],
+def plot_unit_spherical_polar(
+    circles: List[UnitSphericalSmallCircle] | None = None,
+    arcs: List[UnitSphericalArc] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (8, 8),
     title: str = "Small Circles on Sphere (Polar View)",
@@ -214,13 +295,17 @@ def plot_spherical_small_circles_polar(
     show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
-    Plot small circles on a sphere using polar projection.
+    Plot small circles and arcs on a sphere using polar projection.
     Azimuth is shown as the angle, polar angle is mapped to radius.
 
     Parameters:
     -----------
     circles : List[UnitSphericalSmallCircle] or array-like
         List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
+    arcs : List[UnitSphericalArc], optional
+        List of UnitSphericalArc objects.
+        Each arc starts at (azimuth, polar) and extends along a great circle
+        for the specified arc_length (positive or negative)
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
@@ -240,53 +325,100 @@ def plot_spherical_small_circles_polar(
     else:
         fig = ax.get_figure()
 
-    for idx, circle in enumerate(circles):
+    if circles is not None:
+        for idx, circle in enumerate(circles):
 
-        # Generate true spherical small circle points
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            circle, num_points
-        )
+            # Generate true spherical small circle points
+            azimuth_points, polar_points = generate_spherical_small_circle_points(
+                circle, num_points
+            )
 
-        # Map polar angle to radius (0 to 1) for polar plot
-        # polar ranges from -pi/2 to pi/2, map to 0 to 1
-        radius_points = (polar_points + np.pi / 2) / np.pi
+            # Map polar angle to radius (0 to 1) for polar plot
+            # polar ranges from -pi/2 to pi/2, map to 0 to 1
+            radius_points = (polar_points + np.pi / 2) / np.pi
 
-        # Handle azimuth wraparound by detecting large jumps in the ORIGINAL order
-        # Insert NaN values at discontinuities to break the line
-        azimuth_plot = [azimuth_points[0]]
-        radius_plot = [radius_points[0]]
+            # Handle azimuth wraparound by detecting large jumps in the ORIGINAL order
+            # Insert NaN values at discontinuities to break the line
+            azimuth_plot = [azimuth_points[0]]
+            radius_plot = [radius_points[0]]
 
-        for i in range(1, len(azimuth_points)):
-            # If there's a jump greater than π, we've crossed the -π to π discontinuity
-            if abs(azimuth_points[i] - azimuth_points[i-1]) > np.pi:
-                # Insert NaN to break the line
-                azimuth_plot.append(np.nan)
-                radius_plot.append(np.nan)
+            for i in range(1, len(azimuth_points)):
+                # If there's a jump greater than π, we've crossed the -π to π discontinuity
+                if abs(azimuth_points[i] - azimuth_points[i - 1]) > np.pi:
+                    # Insert NaN to break the line
+                    azimuth_plot.append(np.nan)
+                    radius_plot.append(np.nan)
 
-            azimuth_plot.append(azimuth_points[i])
-            radius_plot.append(radius_points[i])
+                azimuth_plot.append(azimuth_points[i])
+                radius_plot.append(radius_points[i])
 
-        # Close the circle by connecting back to the first point
-        # Check if we need to handle wraparound at the end
-        if abs(azimuth_points[0] - azimuth_points[-1]) > np.pi:
-            # Large jump at the end - don't connect
-            pass
-        else:
-            # Normal case - connect back to start
-            azimuth_plot.append(azimuth_points[0])
-            radius_plot.append(radius_points[0])
+            # Close the circle by connecting back to the first point
+            # Check if we need to handle wraparound at the end
+            if abs(azimuth_points[0] - azimuth_points[-1]) > np.pi:
+                # Large jump at the end - don't connect
+                pass
+            else:
+                # Normal case - connect back to start
+                azimuth_plot.append(azimuth_points[0])
+                radius_plot.append(radius_points[0])
 
-        azimuth_plot = np.array(azimuth_plot)
-        radius_plot = np.array(radius_plot)
+            azimuth_plot = np.array(azimuth_plot)
+            radius_plot = np.array(radius_plot)
 
-        # Convert radius to degrees for legend
-        radius_deg = np.degrees(circle.radius_angle)
-        azimuth_deg = np.degrees(circle.azimuth)
-        polar_deg = np.degrees(circle.polar)
-        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
+            # Convert radius to degrees for legend
+            radius_deg = np.degrees(circle.radius_angle)
+            azimuth_deg = np.degrees(circle.azimuth)
+            polar_deg = np.degrees(circle.polar)
+            label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
-        # Plot in polar coordinates using plot instead of scatter for continuous lines
-        ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label)
+            # Plot in polar coordinates using plot instead of scatter for continuous lines
+            ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label)
+
+    # Generate points for each arc
+    if arcs is not None:
+        for idx, arc in enumerate(arcs):
+
+            # Generate spherical arc points
+            azimuth_points, polar_points = generate_spherical_arc_points(
+                arc, num_points
+            )
+
+            # Map polar angle to radius (0 to 1) for polar plot
+            radius_points = (polar_points + np.pi / 2) / np.pi
+
+            # Handle azimuth wraparound
+            azimuth_plot = [azimuth_points[0]]
+            radius_plot = [radius_points[0]]
+
+            for i in range(1, len(azimuth_points)):
+                # If there's a jump greater than π, we've crossed the -π to π discontinuity
+                if abs(azimuth_points[i] - azimuth_points[i - 1]) > np.pi:
+                    # Insert NaN to break the line
+                    azimuth_plot.append(np.nan)
+                    radius_plot.append(np.nan)
+
+                azimuth_plot.append(azimuth_points[i])
+                radius_plot.append(radius_points[i])
+
+            azimuth_plot = np.array(azimuth_plot)
+            radius_plot = np.array(radius_plot)
+
+            # Convert to degrees for legend
+            arc_length_deg = np.degrees(arc.arc_length)
+            azimuth_deg = np.degrees(arc.azimuth)
+            polar_deg = np.degrees(arc.polar)
+            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
+
+            # Plot the arc
+            ax.plot(
+                azimuth_plot,
+                radius_plot,
+                linewidth=2,
+                alpha=0.8,
+                label=label,
+                marker="o",
+                markersize=3,
+            )
 
     ax.set_title(title, fontsize=14, pad=20)
 
@@ -304,8 +436,9 @@ def plot_spherical_small_circles_polar(
     return fig, ax
 
 
-def plot_spherical_small_circles_3d(
-    circles: List[UnitSphericalSmallCircle],
+def plot_unit_spherical_3d(
+    circles: List[UnitSphericalSmallCircle] | None = None,
+    arcs: List[UnitSphericalArc] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 10),
     title: str = "Small Circles on Unit Sphere (3D)",
@@ -315,12 +448,16 @@ def plot_spherical_small_circles_3d(
     ax: Optional[Axes] = None,
 ) -> Tuple[Figure, Axes]:
     """
-    Plot small circles on a 3D unit sphere.
+    Plot small circles and arcs on a 3D unit sphere.
 
     Parameters:
     -----------
     circles : List[UnitSphericalSmallCircle] or array-like
         List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
+    arcs : List[UnitSphericalArc], optional
+        List of UnitSphericalArc objects.
+        Each arc starts at (azimuth, polar) and extends along a great circle
+        for the specified arc_length (positive or negative)
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
@@ -359,28 +496,61 @@ def plot_spherical_small_circles_3d(
         ax.plot_surface(x_sphere, y_sphere, z_sphere, alpha=0.1, color="lightblue")
 
     # Plot each circle
-    for idx, circle in enumerate(circles):
+    if circles is not None:
+        for idx, circle in enumerate(circles):
 
-        # Generate true spherical small circle points
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            circle, num_points
-        )
+            # Generate true spherical small circle points
+            azimuth_points, polar_points = generate_spherical_small_circle_points(
+                circle, num_points
+            )
 
-        # Convert to Cartesian coordinates (unit sphere, r=1, physics convention)
-        # theta (polar) from 0 (north pole) to pi (south pole)
-        # phi (azimuth) rotation about Z axis
-        x = np.sin(polar_points) * np.cos(azimuth_points)
-        y = np.sin(polar_points) * np.sin(azimuth_points)
-        z = np.cos(polar_points)
+            # Convert to Cartesian coordinates (unit sphere, r=1, physics convention)
+            # theta (polar) from 0 (north pole) to pi (south pole)
+            # phi (azimuth) rotation about Z axis
+            x = np.sin(polar_points) * np.cos(azimuth_points)
+            y = np.sin(polar_points) * np.sin(azimuth_points)
+            z = np.cos(polar_points)
 
-        # Convert radius to degrees for legend
-        radius_deg = np.degrees(circle.radius_angle)
-        azimuth_deg = np.degrees(circle.azimuth)
-        polar_deg = np.degrees(circle.polar)
-        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
+            # Convert radius to degrees for legend
+            radius_deg = np.degrees(circle.radius_angle)
+            azimuth_deg = np.degrees(circle.azimuth)
+            polar_deg = np.degrees(circle.polar)
+            label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
-        # Plot the circle
-        ax.scatter(x, y, z, s=10, alpha=0.8, label=label)
+            # Plot the circle
+            ax.scatter(x, y, z, s=10, alpha=0.8, label=label)
+
+    # Plot each arc
+    if arcs is not None:
+        for idx, arc in enumerate(arcs):
+
+            # Generate spherical arc points
+            azimuth_points, polar_points = generate_spherical_arc_points(
+                arc, num_points
+            )
+
+            # Convert to Cartesian coordinates (unit sphere, r=1, physics convention)
+            x = np.sin(polar_points) * np.cos(azimuth_points)
+            y = np.sin(polar_points) * np.sin(azimuth_points)
+            z = np.cos(polar_points)
+
+            # Convert to degrees for legend
+            arc_length_deg = np.degrees(arc.arc_length)
+            azimuth_deg = np.degrees(arc.azimuth)
+            polar_deg = np.degrees(arc.polar)
+            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
+
+            # Plot the arc as a line
+            ax.plot(
+                x,
+                y,
+                z,
+                linewidth=2,
+                alpha=0.8,
+                label=label,
+                marker="o",
+                markersize=3,
+            )
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -407,8 +577,9 @@ def plot_spherical_small_circles_3d(
     return fig, ax
 
 
-def plot_spherical_small_circles_multiplot(
-    circles: Union[List[UnitSphericalSmallCircle], List[List[float]]],
+def plot_unit_spherical_multiplot(
+    circles: List[UnitSphericalSmallCircle] | None = None,
+    arcs: List[UnitSphericalArc] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (24, 6),
     title: str = "Small Circles on Unit Sphere - Multiple Views",
@@ -444,8 +615,9 @@ def plot_spherical_small_circles_multiplot(
     ax3 = fig.add_subplot(133, projection="3d")  # 3D view
 
     # 1. Plate Carrée projection using advanced plot function
-    plot_spherical_small_circles_advanced(
+    plot_unit_spherical_advanced(
         circles=circles,
+        arcs=arcs,
         num_points=num_points,
         title="Plate Carrée Projection",
         show_centers=False,
@@ -457,8 +629,9 @@ def plot_spherical_small_circles_multiplot(
     ax1.set_title("Plate Carrée Projection", fontsize=12)
 
     # 2. Top view (looking down z-axis)
-    plot_spherical_small_circles_polar(
+    plot_unit_spherical_polar(
         circles=circles,
+        arcs=arcs,
         num_points=num_points,
         title="Top View (Down Z-Axis)",
         ax=ax2,
@@ -469,8 +642,9 @@ def plot_spherical_small_circles_multiplot(
     ax2.set_title("Top View (Down Z-Axis)", fontsize=12)
 
     # 3. 3D view
-    plot_spherical_small_circles_3d(
+    plot_unit_spherical_3d(
         circles=circles,
+        arcs=arcs,
         num_points=num_points,
         title="3D View",
         show_sphere=True,
@@ -501,80 +675,69 @@ def demo() -> None:
         UnitSphericalSmallCircle(
             azimuth=0,
             polar=0,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
             polar=np.pi / 2,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
             polar=np.pi,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
             polar=-np.pi / 2,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=-np.pi / 2,
             polar=np.pi / 2,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=np.pi / 2,
             polar=np.pi / 2,
-            radius_angle=np.deg2rad(45),
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
-            azimuth=-np.deg2rad(45),
-            polar=np.deg2rad(45),
-            radius_angle=np.deg2rad(45),
+            azimuth=-deg45,
+            polar=deg45,
+            radius_angle=deg45,
         ),
         UnitSphericalSmallCircle(
             azimuth=np.deg2rad(135),
-            polar=np.deg2rad(45),
-            radius_angle=np.deg2rad(45),
+            polar=deg45,
+            radius_angle=deg45,
         ),
-        # UnitSphericalSmallCircle(  # should overlap circle 1
-        #     azimuth=np.pi / 2,
-        #     polar=0,
-        #     radius_angle=np.deg2rad(45),
-        # ),
-        # UnitSphericalSmallCircle(
-        #     azimuth=np.deg2rad(10),
-        #     polar=np.deg2rad(-80),
-        #     radius_angle=np.deg2rad(45),
-        # ),
-        # UnitSphericalSmallCircle(
-        #     azimuth=np.deg2rad(10),
-        #     polar=np.deg2rad(80),
-        #     radius_angle=np.deg2rad(45),
-        # ),
-        # UnitSphericalSmallCircle(
-        #     azimuth=np.pi,  # 180°
-        #     polar=np.pi / 4,  # 45° north
-        #     radius_angle=0.2,
-        # ),
-        # UnitSphericalSmallCircle(
-        #     azimuth=3 * np.pi / 2,  # 270°
-        #     polar=-np.pi / 6,  # -30° south
-        #     radius_angle=0.25,
-        # ),
     ]
 
-    # Create the multiplot showing all three views
-    _ = plot_spherical_small_circles_multiplot(
-        circles,
-        num_points=240,
-        title="Unit Spherical Small Circles - Plate Carrée, Gauss-Krüger, and 3D Views",
-        show_plot=True,
-    )
+    # # Create the multiplot showing all three views
+    # _ = plot_unit_spherical_multiplot(
+    #     circles=circles,
+    #     num_points=240,
+    #     title="Unit Spherical Small Circles - Plate Carrée, Gauss-Krüger, and 3D Views",
+    #     show_plot=True,
+    # )
 
-    _ = plot_spherical_small_circles(
-        circles=circles,
+    # _ = plot_unit_spherical(
+    #     circles=circles,
+    #     show_plot=True,
+    # )
+
+    arcs: List[UnitSphericalArc] = [
+        UnitSphericalArc(orient=0, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg45, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg90, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArc(orient=0, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg45, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArc(orient=deg90, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+    ]
+
+    _ = plot_unit_spherical_multiplot(
+        arcs=arcs,
         show_plot=True,
     )
 
