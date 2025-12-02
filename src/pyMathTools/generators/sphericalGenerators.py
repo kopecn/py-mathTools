@@ -14,15 +14,13 @@ from numpy import (
     dot,
 )
 from numpy.linalg import norm
+from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 
-
-from pyMathTools.hints import FloatOrNDArray, FloatNDArray
+from pyMathTools.hints import FloatNDArray
 
 
 def generate_spherical_small_circle_points(
-    azimuth_center: FloatOrNDArray,
-    polar_center: FloatOrNDArray,
-    radius_angle: FloatOrNDArray,
+    circle: UnitSphericalSmallCircle,
     num_points: int = 120,
 ) -> Tuple[FloatNDArray, FloatNDArray]:
     """
@@ -33,7 +31,7 @@ def generate_spherical_small_circle_points(
 
     Parameters:
     -----------
-    azimuth_center : float or NDArray
+    circle.azimuth : float or NDArray
         Azimuth angle of circle center (radians, -2π to 2π)
     polar_center : float or NDArray
         Polar angle of circle center (radians, 0 to π)
@@ -52,9 +50,9 @@ def generate_spherical_small_circle_points(
     # Convert center to Cartesian coordinates (physics convention)
     # theta (polar) = 0 at north pole, pi at south pole
     # phi (azimuth) = rotation about Z axis
-    x_center = sin(polar_center) * cos(azimuth_center)
-    y_center = sin(polar_center) * sin(azimuth_center)
-    z_center = cos(polar_center)
+    x_center = sin(circle.polar) * cos(circle.azimuth)
+    y_center = sin(circle.polar) * sin(circle.azimuth)
+    z_center = cos(circle.polar)
     center = array([x_center, y_center, z_center])
 
     # Create orthonormal basis at the center point
@@ -92,8 +90,8 @@ def generate_spherical_small_circle_points(
         if axis_norm > 1e-10:
             axis = axis / axis_norm
             # Rotate center around axis by radius_angle
-            cos_angle = cos(radius_angle)
-            sin_angle = sin(radius_angle)
+            cos_angle = cos(circle.radius_angle)
+            sin_angle = sin(circle.radius_angle)
 
             point = (
                 cos_angle * center
