@@ -34,9 +34,9 @@ def generate_spherical_small_circle_points(
     Parameters:
     -----------
     azimuth_center : float or NDArray
-        Azimuth angle of circle center (radians, 0 to 2π)
+        Azimuth angle of circle center (radians, -2π to 2π)
     polar_center : float or NDArray
-        Polar angle of circle center (radians, -π/2 to π/2)
+        Polar angle of circle center (radians, 0 to π)
     radius_angle : float or NDArray
         Angular radius of the circle (radians)
     num_points : int

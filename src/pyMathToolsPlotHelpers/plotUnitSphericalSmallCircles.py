@@ -21,6 +21,7 @@ def plot_spherical_small_circles(
     figsize: Tuple[int, int] = (10, 6),
     title: str = "Small Circles on Sphere (Mercator Projection)",
     show_legend: bool = True,
+    show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles on a sphere using Mercator projection.
@@ -93,6 +94,9 @@ def plot_spherical_small_circles(
 
     plt.tight_layout()
 
+    if show_plot:
+        plt.show()
+
     return fig, ax
 
 
@@ -104,6 +108,8 @@ def plot_spherical_small_circles_advanced(
     colors: Optional[List[str]] = None,
     labels: Optional[List[str]] = None,
     show_centers: bool = True,
+    show_plot: bool = False,
+    ax: Optional[Axes] = None,
 ) -> Tuple[Figure, Axes]:
     """
     Advanced version with more customization options.
@@ -115,7 +121,7 @@ def plot_spherical_small_circles_advanced(
     num_points : int, optional
         Number of points to generate around each circle
     figsize : tuple, optional
-        Figure size
+        Figure size (ignored if ax is provided)
     title : str, optional
         Plot title
     colors : list, optional
@@ -124,12 +130,22 @@ def plot_spherical_small_circles_advanced(
         List of labels for each circle
     show_centers : bool, optional
         Whether to show center points (default: True)
+    show_plot : bool, optional
+        Whether to show the plot (default: False, ignored if ax is provided)
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on. If None, creates new figure and axes
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
-    fig, ax = plt.subplots(figsize=figsize)
+    # Track whether we created the axes or it was provided
+    created_ax = ax is None
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.get_figure()
 
     # Convert UnitSphericalSmallCircle objects to arrays if needed
     if circles and isinstance(circles[0], UnitSphericalSmallCircle):
@@ -186,7 +202,11 @@ def plot_spherical_small_circles_advanced(
     if labels is not None:
         ax.legend()
 
-    plt.tight_layout()
+    # Only call tight_layout and show if we created the axes
+    if created_ax:
+        plt.tight_layout()
+        if show_plot:
+            plt.show()
 
     return fig, ax
 
@@ -196,8 +216,10 @@ def plot_spherical_small_circles_gauss_kruger(
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 6),
     title: str = "Small Circles on Sphere (Gauss-Krüger Projection)",
-    central_meridian: float = np.pi,
+    central_meridian: float = 0,
     show_legend: bool = True,
+    show_plot: bool = False,
+    ax: Optional[Axes] = None,
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles on a sphere using Gauss-Krüger (Transverse Mercator) projection.
@@ -209,19 +231,29 @@ def plot_spherical_small_circles_gauss_kruger(
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
-        Figure size (default: (10, 6))
+        Figure size (default: (10, 6), ignored if ax is provided)
     title : str, optional
         Plot title
     central_meridian : float, optional
-        Central meridian in radians (default: π)
+        Central meridian in radians (default: 0)
     show_legend : bool, optional
         Whether to show the legend (default: True)
+    show_plot : bool, optional
+        Whether to show the plot (default: False, ignored if ax is provided)
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on. If None, creates new figure and axes
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
-    fig, ax = plt.subplots(figsize=figsize)
+    # Track whether we created the axes or it was provided
+    created_ax = ax is None
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.get_figure()
 
     # Convert UnitSphericalSmallCircle objects to arrays if needed
     if circles and isinstance(circles[0], UnitSphericalSmallCircle):
@@ -251,7 +283,7 @@ def plot_spherical_small_circles_gauss_kruger(
         # Plot with swapped coordinates to view down at equator
         # x-axis (azimuth-related) = northing
         # y-axis (polar-related) = easting
-        ax.scatter(northing, easting, s=10, alpha=0.6, label=label)
+        ax.scatter(easting, northing, s=10, alpha=0.6, label=label)
 
     ax.set_xlabel("Azimuth-related (radians)", fontsize=12)
     ax.set_ylabel("Polar-related (radians)", fontsize=12)
@@ -263,7 +295,11 @@ def plot_spherical_small_circles_gauss_kruger(
     if show_legend:
         ax.legend()
 
-    plt.tight_layout()
+    # Only call tight_layout and show if we created the axes
+    if created_ax:
+        plt.tight_layout()
+        if show_plot:
+            plt.show()
 
     return fig, ax
 
@@ -273,6 +309,7 @@ def plot_spherical_small_circles_polar(
     num_points: int = 120,
     figsize: Tuple[int, int] = (8, 8),
     title: str = "Small Circles on Sphere (Polar View)",
+    show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles on a sphere using polar projection.
@@ -328,6 +365,9 @@ def plot_spherical_small_circles_polar(
 
     plt.tight_layout()
 
+    if show_plot:
+        plt.show()
+
     return fig, ax
 
 
@@ -338,6 +378,8 @@ def plot_spherical_small_circles_3d(
     title: str = "Small Circles on Unit Sphere (3D)",
     show_sphere: bool = True,
     show_legend: bool = True,
+    show_plot: bool = False,
+    ax: Optional[Axes] = None,
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles on a 3D unit sphere.
@@ -349,20 +391,30 @@ def plot_spherical_small_circles_3d(
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
-        Figure size (default: (10, 10))
+        Figure size (default: (10, 10), ignored if ax is provided)
     title : str, optional
         Plot title
     show_sphere : bool, optional
         Whether to show the sphere surface (default: True)
     show_legend : bool, optional
         Whether to show the legend (default: True)
+    show_plot : bool, optional
+        Whether to show the plot (default: False, ignored if ax is provided)
+    ax : matplotlib.axes.Axes, optional
+        3D axes to plot on. If None, creates new figure and axes
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111, projection="3d")
+    # Track whether we created the axes or it was provided
+    created_ax = ax is None
+
+    if ax is None:
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(111, projection="3d")
+    else:
+        fig = ax.get_figure()
 
     # Convert UnitSphericalSmallCircle objects to arrays if needed
     if circles and isinstance(circles[0], UnitSphericalSmallCircle):
@@ -397,7 +449,11 @@ def plot_spherical_small_circles_3d(
 
         # Convert radius to degrees for legend
         radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
+        azimuth_deg = np.degrees(azimuth_center)
+        polar_deg = np.degrees(polar_center)
+        label = (
+            f"Circle {idx + 1}: {azimuth_deg:.1f}°, {polar_deg:.1f}°, {radius_deg:.1f}°"
+        )
 
         # Plot the circle
         ax.scatter(x, y, z, s=10, alpha=0.8, label=label)
@@ -407,14 +463,22 @@ def plot_spherical_small_circles_3d(
     ax.set_zlabel("Z")
     ax.set_title(title, fontsize=14)
 
-    # Add legend if requested
+    # Add legend if requested, positioned outside the plot area
     if show_legend:
-        ax.legend()
+        ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0))
 
     # Set equal aspect ratio
     ax.set_box_aspect([1, 1, 1])
 
-    plt.tight_layout()
+    # Set initial view angle: physics convention with Z up, Y right, X down-left
+    # elev=20 looks from slightly above, azim=45 gives the proper orientation
+    ax.view_init(elev=20, azim=45)
+
+    # Only call tight_layout and show if we created the axes
+    if created_ax:
+        plt.tight_layout()
+        if show_plot:
+            plt.show()
 
     return fig, ax
 
@@ -424,6 +488,7 @@ def plot_spherical_small_circles_multiplot(
     num_points: int = 120,
     figsize: Tuple[int, int] = (18, 6),
     title: str = "Small Circles on Unit Sphere - Multiple Views",
+    show_plot: bool = False,
 ) -> Figure:
     """
     Create a multiplot showing Mercator, Gauss-Krüger, and 3D views of spherical small circles.
@@ -438,96 +503,70 @@ def plot_spherical_small_circles_multiplot(
         Figure size (default: (18, 6))
     title : str, optional
         Overall title
+    show_plot : bool, optional
+        Whether to show the plot (default: False)
 
     Returns:
     --------
     fig : matplotlib figure object
     """
+    # Create figure with overall title
     fig = plt.figure(figsize=figsize)
     fig.suptitle(title, fontsize=16)
 
-    # Convert UnitSphericalSmallCircle objects to arrays if needed
-    circles_array = circles
-    if circles and isinstance(circles[0], UnitSphericalSmallCircle):
-        circles_array = [[c.azimuth, c.polar, c.radius_angle] for c in circles]
+    # Create subplots
+    ax1 = fig.add_subplot(131)  # Mercator projection
+    ax2 = fig.add_subplot(132)  # Gauss-Krüger projection
+    ax3 = fig.add_subplot(133, projection="3d")  # 3D view
 
-    circles_array = np.array(circles_array)
-    if circles_array.ndim == 1:
-        circles_array = circles_array.reshape(1, -1)
-
-    # 1. Mercator projection view
-    ax1 = fig.add_subplot(131)
-    for idx, circle in enumerate(circles_array):
-        azimuth_center, polar_center, radius_angle = circle
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            azimuth_center, polar_center, radius_angle, num_points
-        )
-        x_points, y_points = mercator_transform(azimuth_points, polar_points)
-        radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
-        ax1.scatter(x_points, y_points, s=10, alpha=0.6, label=label)
-
+    # 1. Mercator projection using advanced plot function
+    plot_spherical_small_circles_advanced(
+        circles=circles,
+        num_points=num_points,
+        title="Mercator Projection",
+        show_centers=False,
+        ax=ax1,
+    )
+    # Customize for multiplot
     ax1.set_xlabel("Azmuth (radians)", fontsize=10)
     ax1.set_ylabel("Polar (radians)", fontsize=10)
-    ax1.set_xlim(0, 2 * np.pi)
-    ax1.grid(True, alpha=0.3)
     ax1.set_title("Mercator Projection", fontsize=12)
-    # No legend in Mercator view
 
-    # 2. Gauss-Krüger view
-    ax2 = fig.add_subplot(132)
-    central_meridian = np.pi  # Central meridian at 180°
-    for idx, circle in enumerate(circles_array):
-        azimuth_center, polar_center, radius_angle = circle
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            azimuth_center, polar_center, radius_angle, num_points
-        )
-        easting, northing = gauss_kruger_transform(
-            azimuth_points, polar_points, central_meridian
-        )
-        radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
-        # Swap coordinates: x=northing (azimuth-related), y=easting (polar-related)
-        ax2.scatter(northing, easting, s=10, alpha=0.6, label=label)
-
+    # 2. Gauss-Krüger projection
+    plot_spherical_small_circles_gauss_kruger(
+        circles=circles,
+        num_points=num_points,
+        title="Gauss-Krüger Projection",
+        central_meridian=0,
+        show_legend=False,
+        ax=ax2,
+    )
+    # Customize for multiplot
     ax2.set_xlabel("Azimuth-related (radians)", fontsize=10)
     ax2.set_ylabel("Polar-related (radians)", fontsize=10)
     ax2.set_title("Gauss-Krüger Projection", fontsize=12)
-    ax2.set_aspect("equal", adjustable="box")
-    ax2.grid(True, alpha=0.3)
-    # No legend in Gauss-Krüger view
 
     # 3. 3D view
-    ax3 = fig.add_subplot(133, projection="3d")
-
-    # Plot sphere surface
-    u = np.linspace(0, 2 * np.pi, 30)
-    v = np.linspace(-np.pi / 2, np.pi / 2, 20)
-    x_sphere = np.outer(np.cos(v), np.cos(u))
-    y_sphere = np.outer(np.cos(v), np.sin(u))
-    z_sphere = np.outer(np.sin(v), np.ones(np.size(u)))
-    ax3.plot_surface(x_sphere, y_sphere, z_sphere, alpha=0.1, color="lightblue")
-
-    for idx, circle in enumerate(circles_array):
-        azimuth_center, polar_center, radius_angle = circle
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            azimuth_center, polar_center, radius_angle, num_points
-        )
-        x = np.cos(polar_points) * np.cos(azimuth_points)
-        y = np.cos(polar_points) * np.sin(azimuth_points)
-        z = np.sin(polar_points)
-        radius_deg = np.degrees(radius_angle)
-        label = f"Circle {idx + 1}: {radius_deg:.1f}°"
-        ax3.scatter(x, y, z, s=10, alpha=0.8, label=label)
-
+    plot_spherical_small_circles_3d(
+        circles=circles,
+        num_points=num_points,
+        title="3D View",
+        show_sphere=True,
+        show_legend=True,
+        ax=ax3,
+    )
+    # Customize for multiplot
     ax3.set_xlabel("X", fontsize=10)
     ax3.set_ylabel("Y", fontsize=10)
     ax3.set_zlabel("Z", fontsize=10)
     ax3.set_title("3D View", fontsize=12)
-    ax3.legend(fontsize=8)
-    ax3.set_box_aspect([1, 1, 1])
+    # Position legend outside plot area with smaller font
+    ax3.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=8)
 
     plt.tight_layout()
+
+    if show_plot:
+        plt.show()
 
     return fig
 
@@ -543,28 +582,28 @@ def demo() -> None:
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
-            azimuth=0,
-            polar=np.pi / 2,
+            azimuth=np.pi / 2,
+            polar=0,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
-            azimuth=0,
-            polar=np.pi,
-            radius_angle=np.deg2rad(45),
-        ),
-        UnitSphericalSmallCircle(
-            azimuth=0,
-            polar=np.deg2rad(-90),
-            radius_angle=np.deg2rad(45),
-        ),
-        UnitSphericalSmallCircle(
-            azimuth=np.deg2rad(90),
+            azimuth=np.pi,
             polar=0,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
             azimuth=np.deg2rad(-90),
             polar=0,
+            radius_angle=np.deg2rad(45),
+        ),
+        UnitSphericalSmallCircle(
+            azimuth=0,
+            polar=np.deg2rad(90),
+            radius_angle=np.deg2rad(45),
+        ),
+        UnitSphericalSmallCircle(
+            azimuth=0,
+            polar=np.deg2rad(-90),
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
@@ -595,14 +634,22 @@ def demo() -> None:
     ]
 
     # Create the multiplot showing all three views
-    fig = plot_spherical_small_circles_multiplot(
+    _ = plot_spherical_small_circles_multiplot(
         circles,
         num_points=240,
         title="Unit Spherical Small Circles - Mercator, Gauss-Krüger, and 3D Views",
+        show_plot=True,
     )
 
-    # Show the plot
-    plt.show()
+    _ = plot_spherical_small_circles(
+        circles=circles,
+        show_plot=True,
+    )
+
+    _ = plot_spherical_small_circles_polar(
+        circles=circles,
+        show_plot=True,
+    )
 
 
 if __name__ == "__main__":

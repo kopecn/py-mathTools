@@ -41,7 +41,7 @@ def mercator_transform(
 def gauss_kruger_transform(
     azimuth: FloatOrNDArray,
     polar: FloatOrNDArray,
-    central_meridian: float = pi,
+    central_meridian: float = 0,
 ) -> tuple[FloatOrNDArray, FloatOrNDArray]:
     """
     Apply Gauss-Krüger (Transverse Mercator) projection to spherical coordinates.
