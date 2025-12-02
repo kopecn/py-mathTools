@@ -32,7 +32,7 @@ from pyMathTools.constructors.constructUnitSphericalSmallCircle import (
     quat_to_unitSphericalSmallCircle,
 )
 
-from pyMathToolsPlotHelpers.plotUnitSphericalSmallCircles import (
+from pyMathToolsPlotHelpers.plotUnitSpherical import (
     plot_unit_spherical_multiplot,
 )
 

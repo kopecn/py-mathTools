@@ -7,10 +7,12 @@ from matplotlib.axes import Axes
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
+from pyMathTools.spatial.Quaternion import Quaternion
 from pyMathTools.transforms.sphericalTransforms import plate_carree_transform
 from pyMathTools.generators.sphericalGenerators import (
     generate_spherical_small_circle_points,
     generate_spherical_arc_points,
+    quaternion_to_spherical_vector,
 )
 
 deg45 = np.deg2rad(45)
@@ -19,129 +21,10 @@ deg180 = np.deg2rad(180)
 deg22_5 = np.pi / 8
 
 
-def plot_unit_spherical(
-    circles: List[UnitSphericalSmallCircle] | None = None,
-    arcs: List[UnitSphericalArc] | None = None,
-    num_points: int = 120,
-    figsize: Tuple[int, int] = (10, 6),
-    title: str = "Small Circles on Sphere (Plate Carrée Projection)",
-    show_legend: bool = True,
-    show_plot: bool = False,
-) -> Tuple[Figure, Axes]:
-    """
-    Plot small circles and arcs on a sphere using plate carrée (equirectangular) projection.
-
-    Parameters:
-    -----------
-    circles : List[UnitSphericalSmallCircle], optional
-        List of UnitSphericalSmallCircle objects.
-        Each circle represents a small circle on the unit sphere
-    arcs : List[UnitSphericalArc], optional
-        List of UnitSphericalArc objects.
-        Each arc starts at (azimuth, polar) and extends along a great circle
-        for the specified arc_length (positive or negative)
-    num_points : int, optional
-        Number of points to generate for each circle/arc (default: 120)
-    figsize : tuple, optional
-        Figure size (default: (10, 6))
-    title : str, optional
-        Plot title
-    show_legend : bool, optional
-        Whether to show the legend (default: True)
-    show_plot : bool, optional
-        Whether to display the plot (default: False)
-
-    Returns:
-    --------
-    fig, ax : matplotlib figure and axes objects
-    """
-    fig, ax = plt.subplots(figsize=figsize)
-
-    # Generate points for each circle
-    if circles is not None:
-        for idx, circle in enumerate(circles):
-
-            # Generate true spherical small circle points
-            azimuth_points, polar_points = generate_spherical_small_circle_points(
-                circle, num_points
-            )
-
-            # Apply Plate Carrée projection
-            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
-
-            # Convert radius to degrees for legend
-            radius_deg = np.degrees(circle.radius_angle)
-            azimuth_deg = np.degrees(circle.azimuth)
-            polar_deg = np.degrees(circle.polar)
-            label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
-
-            # Plot the circle
-            ax.scatter(
-                np.degrees(x_points),
-                np.degrees(y_points),
-                s=10,
-                alpha=0.6,
-                label=label,
-            )
-
-    # Generate points for each arc
-    if arcs is not None:
-        for idx, arc in enumerate(arcs):
-
-            # Generate spherical arc points
-            azimuth_points, polar_points = generate_spherical_arc_points(
-                arc, num_points
-            )
-
-            # Apply Plate Carrée projection
-            x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
-
-            # Convert to degrees for legend
-            arc_length_deg = np.degrees(arc.arc_length)
-            azimuth_deg = np.degrees(arc.azimuth)
-            polar_deg = np.degrees(arc.polar)
-            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
-
-            # Plot the arc as a line
-            ax.plot(
-                np.degrees(x_points),
-                np.degrees(y_points),
-                linewidth=2,
-                alpha=0.8,
-                label=label,
-                marker="o",
-                markersize=3,
-            )
-
-    # Set up axes
-    ax.set_xlabel("Azimuth (deg)", fontsize=12)
-    ax.set_ylabel("Latitude (deg)", fontsize=12)
-    ax.set_xlim(-180, 180)
-
-    # Add grid
-    ax.grid(True, alpha=0.3)
-
-    # Set x-axis ticks
-    ax.set_xticks([-180, -90, 0, 90, 180])
-    ax.set_xticklabels(["-180°", "-90°", "0°", "90°", "180°"])
-
-    ax.set_title(title, fontsize=14)
-
-    # Add legend if requested
-    if show_legend:
-        ax.legend()
-
-    plt.tight_layout()
-
-    if show_plot:
-        plt.show()
-
-    return fig, ax
-
-
 def plot_unit_spherical_advanced(
     circles: List[UnitSphericalSmallCircle] | None = None,
     arcs: List[UnitSphericalArc] | None = None,
+    quaternions: List[Quaternion] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 6),
     title: str = "Small Circles on Sphere (Flattened)",
@@ -162,6 +45,9 @@ def plot_unit_spherical_advanced(
         List of UnitSphericalArc objects.
         Each arc starts at (azimuth, polar) and extends along a great circle
         for the specified arc_length (positive or negative)
+    quaternions : List[Quaternion], optional
+        List of Quaternion objects.
+        Each quaternion is visualized as a unit vector from origin to its pointing direction
     num_points : int, optional
         Number of points to generate around each circle
     figsize : tuple, optional
@@ -258,6 +144,51 @@ def plot_unit_spherical_advanced(
                 markersize=3,
             )
 
+    # Plot quaternions as vectors
+    if quaternions is not None:
+        for idx, quat in enumerate(quaternions):
+            # Convert quaternion to spherical coordinates
+            _, azimuth, polar = quaternion_to_spherical_vector(quat)
+
+            # Apply Plate Carrée projection to the endpoint
+            x_end, y_end = plate_carree_transform(azimuth, polar)
+
+            # Origin is at (0, 0) in this projection
+            x_origin, y_origin = plate_carree_transform(0, np.pi / 2)
+
+            # Determine color and label
+            color = colors[idx] if colors is not None and idx < len(colors) else None
+            label = labels[idx] if labels is not None and idx < len(labels) else None
+
+            if label is None:
+                azimuth_deg = np.degrees(azimuth)
+                polar_deg = np.degrees(polar)
+                label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+
+            # Plot vector as an arrow from origin to the point
+            ax.annotate(
+                "",
+                xy=(np.degrees(x_end), np.degrees(y_end)),
+                xytext=(np.degrees(x_origin), np.degrees(y_origin)),
+                arrowprops=dict(
+                    arrowstyle="->",
+                    lw=2,
+                    color=color if color else f"C{idx}",
+                    alpha=0.8,
+                ),
+            )
+
+            # Plot endpoint
+            ax.scatter(
+                np.degrees(x_end),
+                np.degrees(y_end),
+                s=100,
+                marker="*",
+                c=color,
+                label=label,
+                zorder=10,
+            )
+
     # Set up axes
     ax.set_xlabel("Azimuth (deg)", fontsize=12)
     ax.set_ylabel("Latitude (deg)", fontsize=12)
@@ -287,6 +218,7 @@ def plot_unit_spherical_advanced(
 def plot_unit_spherical_polar(
     circles: List[UnitSphericalSmallCircle] | None = None,
     arcs: List[UnitSphericalArc] | None = None,
+    quaternions: List[Quaternion] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (8, 8),
     title: str = "Small Circles on Sphere (Polar View)",
@@ -407,7 +339,8 @@ def plot_unit_spherical_polar(
             arc_length_deg = np.degrees(arc.arc_length)
             azimuth_deg = np.degrees(arc.azimuth)
             polar_deg = np.degrees(arc.polar)
-            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
+            orient_deg = np.degrees(arc.orient)
+            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
 
             # Plot the arc
             ax.plot(
@@ -419,6 +352,30 @@ def plot_unit_spherical_polar(
                 marker="o",
                 markersize=3,
             )
+
+    # Plot quaternions as vectors
+    if quaternions is not None:
+        for idx, quat in enumerate(quaternions):
+            # Convert quaternion to spherical coordinates
+            _, azimuth, polar = quaternion_to_spherical_vector(quat)
+
+            # Map polar angle to radius (0 to 1) for polar plot
+            radius = (polar + np.pi / 2) / np.pi
+
+            # Plot vector as an arrow from origin
+            ax.annotate(
+                "",
+                xy=(azimuth, radius),
+                xytext=(0, 0),
+                arrowprops=dict(arrowstyle="->", lw=2, color=f"C{idx}", alpha=0.8),
+            )
+
+            # Plot endpoint
+            azimuth_deg = np.degrees(azimuth)
+            polar_deg = np.degrees(polar)
+            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+
+            ax.scatter(azimuth, radius, s=150, marker="*", label=label, zorder=10)
 
     ax.set_title(title, fontsize=14, pad=20)
 
@@ -439,6 +396,7 @@ def plot_unit_spherical_polar(
 def plot_unit_spherical_3d(
     circles: List[UnitSphericalSmallCircle] | None = None,
     arcs: List[UnitSphericalArc] | None = None,
+    quaternions: List[Quaternion] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (10, 10),
     title: str = "Small Circles on Unit Sphere (3D)",
@@ -538,7 +496,8 @@ def plot_unit_spherical_3d(
             arc_length_deg = np.degrees(arc.arc_length)
             azimuth_deg = np.degrees(arc.azimuth)
             polar_deg = np.degrees(arc.polar)
-            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°"
+            orient_deg = np.degrees(arc.orient)
+            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
 
             # Plot the arc as a line
             ax.plot(
@@ -551,6 +510,35 @@ def plot_unit_spherical_3d(
                 marker="o",
                 markersize=3,
             )
+
+    # Plot quaternions as vectors
+    if quaternions is not None:
+        for idx, quat in enumerate(quaternions):
+            # Convert quaternion to Cartesian coordinates
+            cartesian, azimuth, polar = quaternion_to_spherical_vector(quat)
+            x, y, z = cartesian
+
+            # Plot vector from origin to the point
+            ax.quiver(
+                0,
+                0,
+                0,
+                x,
+                y,
+                z,
+                length=1.0,
+                arrow_length_ratio=0.15,
+                color=f"C{idx}",
+                linewidth=2.5,
+                alpha=0.9,
+            )
+
+            # Plot endpoint
+            azimuth_deg = np.degrees(azimuth)
+            polar_deg = np.degrees(polar)
+            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+
+            ax.scatter(x, y, z, s=150, marker="*", label=label, zorder=10)
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -580,6 +568,7 @@ def plot_unit_spherical_3d(
 def plot_unit_spherical_multiplot(
     circles: List[UnitSphericalSmallCircle] | None = None,
     arcs: List[UnitSphericalArc] | None = None,
+    quaternions: List[Quaternion] | None = None,
     num_points: int = 120,
     figsize: Tuple[int, int] = (24, 6),
     title: str = "Small Circles on Unit Sphere - Multiple Views",
@@ -618,6 +607,7 @@ def plot_unit_spherical_multiplot(
     plot_unit_spherical_advanced(
         circles=circles,
         arcs=arcs,
+        quaternions=quaternions,
         num_points=num_points,
         title="Plate Carrée Projection",
         show_centers=False,
@@ -632,6 +622,7 @@ def plot_unit_spherical_multiplot(
     plot_unit_spherical_polar(
         circles=circles,
         arcs=arcs,
+        quaternions=quaternions,
         num_points=num_points,
         title="Top View (Down Z-Axis)",
         ax=ax2,
@@ -645,6 +636,7 @@ def plot_unit_spherical_multiplot(
     plot_unit_spherical_3d(
         circles=circles,
         arcs=arcs,
+        quaternions=quaternions,
         num_points=num_points,
         title="3D View",
         show_sphere=True,
@@ -732,9 +724,23 @@ def demo() -> None:
         UnitSphericalArc(orient=0, azimuth=deg90, polar=deg45, arc_length=-deg22_5),
     ]
 
+    quats: List[Quaternion] = [
+        Quaternion.from_components(w=1, x=0, y=0, z=0),
+        Quaternion.from_components(w=0, x=1, y=0, z=0),
+        Quaternion.from_components(w=0, x=0, y=1, z=0),
+        Quaternion.from_components(w=0, x=0, y=0, z=1),
+        Quaternion.from_components(w=0, x=0.707, y=0, z=0.707),
+        Quaternion.from_components(w=0, x=0.707, y=0.707, z=0),
+        Quaternion.from_components(w=0, x=0, y=0.707, z=0.707),
+        Quaternion.from_components(w=0.707, x=0.707, y=0, z=0),
+        Quaternion.from_components(w=0.707, x=0, y=0.707, z=0),
+        Quaternion.from_components(w=0.707, x=0, y=0, z=0.707),
+    ]
+
     _ = plot_unit_spherical_multiplot(
-        circles=circles,
-        arcs=arcs,
+        # circles=circles,
+        # arcs=arcs,
+        quaternions=quats,
         show_plot=True,
     )
 

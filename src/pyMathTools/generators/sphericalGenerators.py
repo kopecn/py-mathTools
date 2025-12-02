@@ -17,7 +17,7 @@ from numpy.linalg import norm
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
-from pyMathTools.hints import FloatNDArray
+from pyMathTools.hints import FloatNDArray, FloatArray3
 
 
 def generate_spherical_small_circle_points(
@@ -224,3 +224,45 @@ def generate_spherical_arc_points(
         azimuth_points[i] = arctan2(y, x)  # azimuth
 
     return azimuth_points, polar_points
+
+
+def quaternion_to_spherical_vector(quaternion) -> Tuple[FloatArray3, float, float]:
+    """
+    Convert a quaternion to a unit vector in spherical coordinates.
+
+    The quaternion is applied to a reference direction (positive Z-axis)
+    to get the pointing direction, which is then converted to spherical coordinates.
+
+    Parameters:
+    -----------
+    quaternion : Quaternion
+        A quaternion object representing a rotation
+
+    Returns:
+    --------
+    cartesian_point : FloatArray3
+        The Cartesian coordinates [x, y, z] of the rotated unit vector
+    azimuth : float
+        Azimuth angle in radians (-π to π)
+    polar : float
+        Polar angle in radians (0 to π, physics convention: 0 = north pole)
+    """
+    # Reference direction: positive Z-axis (north pole)
+    reference_direction = array([0.0, 0.0, 1.0])
+
+    # Apply quaternion rotation to the reference direction
+    rotated_vector = quaternion.rotate_vector(reference_direction)
+
+    # Normalize to ensure it's a unit vector
+    x, y, z = rotated_vector
+    r = sqrt(x**2 + y**2 + z**2)
+    if r > 1e-10:
+        x, y, z = x / r, y / r, z / r
+
+    # Convert to spherical coordinates (physics convention)
+    polar = arccos(clip(z, -1, 1))  # colatitude (0 to π)
+    azimuth = arctan2(y, x)  # azimuth (-π to π)
+
+    cartesian_point = array([x, y, z])
+
+    return cartesian_point, azimuth, polar
