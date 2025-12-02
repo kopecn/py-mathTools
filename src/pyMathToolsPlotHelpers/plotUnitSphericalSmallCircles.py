@@ -424,13 +424,13 @@ def plot_spherical_small_circles_3d(
     if circles.ndim == 1:
         circles = circles.reshape(1, -1)
 
-    # Optionally plot the sphere surface
+    # Optionally plot the sphere surface (physics convention)
     if show_sphere:
-        u = np.linspace(0, 2 * np.pi, 30)
-        v = np.linspace(-np.pi / 2, np.pi / 2, 20)
-        x_sphere = np.outer(np.cos(v), np.cos(u))
-        y_sphere = np.outer(np.cos(v), np.sin(u))
-        z_sphere = np.outer(np.sin(v), np.ones(np.size(u)))
+        phi = np.linspace(0, 2 * np.pi, 30)  # azimuth
+        theta = np.linspace(0, np.pi, 20)  # polar angle from north to south
+        x_sphere = np.outer(np.sin(theta), np.cos(phi))
+        y_sphere = np.outer(np.sin(theta), np.sin(phi))
+        z_sphere = np.outer(np.cos(theta), np.ones(np.size(phi)))
         ax.plot_surface(x_sphere, y_sphere, z_sphere, alpha=0.1, color="lightblue")
 
     # Plot each circle
@@ -442,18 +442,18 @@ def plot_spherical_small_circles_3d(
             azimuth_center, polar_center, radius_angle, num_points
         )
 
-        # Convert to Cartesian coordinates (unit sphere, r=1)
-        x = np.cos(polar_points) * np.cos(azimuth_points)
-        y = np.cos(polar_points) * np.sin(azimuth_points)
-        z = np.sin(polar_points)
+        # Convert to Cartesian coordinates (unit sphere, r=1, physics convention)
+        # theta (polar) from 0 (north pole) to pi (south pole)
+        # phi (azimuth) rotation about Z axis
+        x = np.sin(polar_points) * np.cos(azimuth_points)
+        y = np.sin(polar_points) * np.sin(azimuth_points)
+        z = np.cos(polar_points)
 
         # Convert radius to degrees for legend
         radius_deg = np.degrees(radius_angle)
         azimuth_deg = np.degrees(azimuth_center)
         polar_deg = np.degrees(polar_center)
-        label = (
-            f"Circle {idx + 1}: {azimuth_deg:.1f}°, {polar_deg:.1f}°, {radius_deg:.1f}°"
-        )
+        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
         # Plot the circle
         ax.scatter(x, y, z, s=10, alpha=0.8, label=label)
@@ -581,29 +581,34 @@ def demo() -> None:
             polar=0,
             radius_angle=np.deg2rad(45),
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircle(  # should overlap circle 1
             azimuth=np.pi / 2,
             polar=0,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
-            azimuth=np.pi,
-            polar=0,
-            radius_angle=np.deg2rad(45),
-        ),
-        UnitSphericalSmallCircle(
-            azimuth=np.deg2rad(-90),
-            polar=0,
+            azimuth=0,
+            polar=np.pi / 2,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
-            polar=np.deg2rad(90),
+            polar=np.pi,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
             azimuth=0,
-            polar=np.deg2rad(-90),
+            polar=np.pi,  # Fixed: was -π/2 (invalid), now π (south pole)
+            radius_angle=np.deg2rad(45),
+        ),
+        UnitSphericalSmallCircle(
+            azimuth=-np.pi / 2,
+            polar=np.pi / 2,
+            radius_angle=np.deg2rad(45),
+        ),
+        UnitSphericalSmallCircle(
+            azimuth=np.pi / 2,
+            polar=np.pi / 2,
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
