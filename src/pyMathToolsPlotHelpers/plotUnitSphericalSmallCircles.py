@@ -6,10 +6,7 @@ from matplotlib.axes import Axes
 
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 
-from pyMathTools.transforms.sphericalTransforms import (
-    plate_carree_transform,
-    gauss_kruger_transform,
-)
+from pyMathTools.transforms.sphericalTransforms import plate_carree_transform
 from pyMathTools.generators.sphericalGenerators import (
     generate_spherical_small_circle_points,
 )
@@ -74,19 +71,25 @@ def plot_spherical_small_circles(
         label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
         # Plot the circle
-        ax.scatter(x_points, y_points, s=10, alpha=0.6, label=label)
+        ax.scatter(
+            np.degrees(x_points),
+            np.degrees(y_points),
+            s=10,
+            alpha=0.6,
+            label=label,
+        )
 
     # Set up axes
-    ax.set_xlabel("Azimuth (radians)", fontsize=12)
-    ax.set_ylabel("Latitude (radians)", fontsize=12)
-    ax.set_xlim(0, 2 * np.pi)
+    ax.set_xlabel("Azimuth (deg)", fontsize=12)
+    ax.set_ylabel("Latitude (deg)", fontsize=12)
+    ax.set_xlim(0, 180)
 
     # Add grid
     ax.grid(True, alpha=0.3)
 
-    # Set x-axis ticks to show multiples of pi
-    ax.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi])
-    ax.set_xticklabels([r"$0$", r"$\pi/2$", r"$\pi$", r"$3\pi/2$", r"$2\pi$"])
+    # Set x-axis ticks
+    ax.set_xticks([0, 90, 180, 270, 360])
+    ax.set_xticklabels(["0°", "90°", "180°", "270°", "360°"])
 
     ax.set_title(title, fontsize=14)
 
@@ -173,14 +176,21 @@ def plot_spherical_small_circles_advanced(
         label = labels[idx] if labels is not None and idx < len(labels) else None
 
         # Plot the circle
-        ax.scatter(x_points, y_points, s=10, alpha=0.6, c=color, label=label)
+        ax.scatter(
+            np.degrees(x_points),
+            np.degrees(y_points),
+            s=10,
+            alpha=0.6,
+            c=color,
+            label=label,
+        )
 
         # Plot center point if requested
         if show_centers:
             x_center, y_center = plate_carree_transform(azimuth_center, polar_center)
             ax.scatter(
-                x_center,
-                y_center,
+                np.degrees(x_center),
+                np.degrees(y_center),
                 s=100,
                 marker="x",
                 c=color if color else "red",
@@ -188,114 +198,20 @@ def plot_spherical_small_circles_advanced(
             )
 
     # Set up axes
-    ax.set_xlabel("Azimuth (radians)", fontsize=12)
-    ax.set_ylabel("Latitude (radians)", fontsize=12)
-    ax.set_xlim(0, 2 * np.pi)
+    ax.set_xlabel("Azimuth (deg)", fontsize=12)
+    ax.set_ylabel("Latitude (deg)", fontsize=12)
+    ax.set_xlim(0, 180)
 
     # Add grid
     ax.grid(True, alpha=0.3)
 
     # Set ticks
-    ax.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi])
-    ax.set_xticklabels([r"$0$", r"$\pi/2$", r"$\pi$", r"$3\pi/2$", r"$2\pi$"])
+    ax.set_xticks([0, 90, 180, 270, 360])
+    ax.set_xticklabels(["0°", "90°", "180°", "270°", "360°"])
 
     ax.set_title(title, fontsize=14)
 
     if labels is not None:
-        ax.legend()
-
-    # Only call tight_layout and show if we created the axes
-    if created_ax:
-        plt.tight_layout()
-        if show_plot:
-            plt.show()
-
-    return fig, ax
-
-
-def plot_spherical_small_circles_gauss_kruger(
-    circles: Union[List[UnitSphericalSmallCircle], List[List[float]]],
-    num_points: int = 120,
-    figsize: Tuple[int, int] = (10, 6),
-    title: str = "Small Circles on Sphere (Gauss-Krüger Projection)",
-    central_meridian: float = 0,
-    show_legend: bool = True,
-    show_plot: bool = False,
-    ax: Optional[Axes] = None,
-) -> Tuple[Figure, Axes]:
-    """
-    Plot small circles on a sphere using Gauss-Krüger (Transverse Mercator) projection.
-
-    Parameters:
-    -----------
-    circles : List[UnitSphericalSmallCircle] or array-like
-        List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
-    num_points : int, optional
-        Number of points to generate around each circle (default: 120)
-    figsize : tuple, optional
-        Figure size (default: (10, 6), ignored if ax is provided)
-    title : str, optional
-        Plot title
-    central_meridian : float, optional
-        Central meridian in radians (default: 0)
-    show_legend : bool, optional
-        Whether to show the legend (default: True)
-    show_plot : bool, optional
-        Whether to show the plot (default: False, ignored if ax is provided)
-    ax : matplotlib.axes.Axes, optional
-        Axes to plot on. If None, creates new figure and axes
-
-    Returns:
-    --------
-    fig, ax : matplotlib figure and axes objects
-    """
-    # Track whether we created the axes or it was provided
-    created_ax = ax is None
-
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-    else:
-        fig = ax.get_figure()
-
-    # Convert UnitSphericalSmallCircle objects to arrays if needed
-    if circles and isinstance(circles[0], UnitSphericalSmallCircle):
-        circles = [[c.azimuth, c.polar, c.radius_angle] for c in circles]
-
-    circles = np.array(circles)
-    if circles.ndim == 1:
-        circles = circles.reshape(1, -1)
-
-    for idx, circle in enumerate(circles):
-        azimuth_center, polar_center, radius_angle = circle
-
-        # Generate true spherical small circle points
-        azimuth_points, polar_points = generate_spherical_small_circle_points(
-            azimuth_center, polar_center, radius_angle, num_points
-        )
-
-        # Apply Gauss-Krüger projection
-        easting, northing = gauss_kruger_transform(
-            azimuth_points, polar_points, central_meridian
-        )
-
-        # Convert radius to degrees for legend
-        radius_deg = np.degrees(radius_angle)
-        azimuth_deg = np.degrees(azimuth_center)
-        polar_deg = np.degrees(polar_center)
-        label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
-
-        # Plot in Gauss-Krüger projection coordinates
-        # x-axis = easting, y-axis = northing
-        ax.scatter(easting, northing, s=10, alpha=0.6, label=label)
-
-    ax.set_xlabel("Easting", fontsize=12)
-    ax.set_ylabel("Northing", fontsize=12)
-    ax.grid(True, alpha=0.3)
-    ax.set_title(title, fontsize=14)
-    ax.set_aspect("equal", adjustable="box")
-
-    # Add legend if requested
-    if show_legend:
         ax.legend()
 
     # Only call tight_layout and show if we created the axes
@@ -520,9 +436,8 @@ def plot_spherical_small_circles_multiplot(
     fig.suptitle(title, fontsize=16)
 
     # Create subplots
-    ax1 = fig.add_subplot(131)  # Plate Carrée projection
-    ax2 = fig.add_subplot(132)  # Gauss-Krüger projection
-    ax3 = fig.add_subplot(133, projection="3d")  # 3D view
+    ax1 = fig.add_subplot(121)  # Plate Carrée projection
+    ax2 = fig.add_subplot(122, projection="3d")  # 3D view
 
     # 1. Plate Carrée projection using advanced plot function
     plot_spherical_small_circles_advanced(
@@ -537,36 +452,22 @@ def plot_spherical_small_circles_multiplot(
     ax1.set_ylabel("Latitude (radians)", fontsize=10)
     ax1.set_title("Plate Carrée Projection", fontsize=12)
 
-    # 2. Gauss-Krüger projection
-    plot_spherical_small_circles_gauss_kruger(
-        circles=circles,
-        num_points=num_points,
-        title="Gauss-Krüger Projection",
-        central_meridian=0,
-        show_legend=False,
-        ax=ax2,
-    )
-    # Customize for multiplot
-    ax2.set_xlabel("Azimuth-related (radians)", fontsize=10)
-    ax2.set_ylabel("Polar-related (radians)", fontsize=10)
-    ax2.set_title("Gauss-Krüger Projection", fontsize=12)
-
-    # 3. 3D view
+    # 2. 3D view
     plot_spherical_small_circles_3d(
         circles=circles,
         num_points=num_points,
         title="3D View",
         show_sphere=True,
         show_legend=True,
-        ax=ax3,
+        ax=ax2,
     )
     # Customize for multiplot
-    ax3.set_xlabel("X", fontsize=10)
-    ax3.set_ylabel("Y", fontsize=10)
-    ax3.set_zlabel("Z", fontsize=10)
-    ax3.set_title("3D View", fontsize=12)
+    ax2.set_xlabel("X", fontsize=10)
+    ax2.set_ylabel("Y", fontsize=10)
+    ax2.set_zlabel("Z", fontsize=10)
+    ax2.set_title("3D View", fontsize=12)
     # Position legend outside plot area with smaller font
-    ax3.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=8)
+    ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=8)
 
     plt.tight_layout()
 
@@ -612,9 +513,14 @@ def demo() -> None:
             radius_angle=np.deg2rad(45),
         ),
         UnitSphericalSmallCircle(
-            azimuth=np.deg2rad(30),
-            polar=np.deg2rad(30),
-            radius_angle=np.deg2rad(30),
+            azimuth=-np.deg2rad(45),
+            polar=np.deg2rad(45),
+            radius_angle=np.deg2rad(45),
+        ),
+        UnitSphericalSmallCircle(
+            azimuth=np.deg2rad(135),
+            polar=np.deg2rad(45),
+            radius_angle=np.deg2rad(45),
         ),
         # UnitSphericalSmallCircle(  # should overlap circle 1
         #     azimuth=np.pi / 2,
