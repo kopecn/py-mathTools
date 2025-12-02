@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import pi
 import quaternion
 
 from pyMathTools.constructors.constructUnitSphericalSmallCircle import (
@@ -14,8 +14,8 @@ def main():
 
     _ = plot_spherical_small_circles_multiplot(
         circles=[
-            quat_to_unitSphericalSmallCircle(q=quaternion.one, radius_angle=np.pi / 8),
-            quat_to_unitSphericalSmallCircle(q=quaternion.x, radius_angle=np.pi / 8),
+            quat_to_unitSphericalSmallCircle(q=quaternion.one, radius_angle=pi / 8),
+            quat_to_unitSphericalSmallCircle(q=quaternion.x, radius_angle=pi / 8),
             quat_to_unitSphericalSmallCircle(q=quaternion.y),
             quat_to_unitSphericalSmallCircle(q=quaternion.z),
         ],
