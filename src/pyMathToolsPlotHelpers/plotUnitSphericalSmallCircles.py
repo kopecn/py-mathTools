@@ -251,14 +251,42 @@ def plot_spherical_small_circles_polar(
         # polar ranges from -pi/2 to pi/2, map to 0 to 1
         radius_points = (polar_points + np.pi / 2) / np.pi
 
+        # Handle azimuth wraparound by detecting large jumps in the ORIGINAL order
+        # Insert NaN values at discontinuities to break the line
+        azimuth_plot = [azimuth_points[0]]
+        radius_plot = [radius_points[0]]
+
+        for i in range(1, len(azimuth_points)):
+            # If there's a jump greater than π, we've crossed the -π to π discontinuity
+            if abs(azimuth_points[i] - azimuth_points[i-1]) > np.pi:
+                # Insert NaN to break the line
+                azimuth_plot.append(np.nan)
+                radius_plot.append(np.nan)
+
+            azimuth_plot.append(azimuth_points[i])
+            radius_plot.append(radius_points[i])
+
+        # Close the circle by connecting back to the first point
+        # Check if we need to handle wraparound at the end
+        if abs(azimuth_points[0] - azimuth_points[-1]) > np.pi:
+            # Large jump at the end - don't connect
+            pass
+        else:
+            # Normal case - connect back to start
+            azimuth_plot.append(azimuth_points[0])
+            radius_plot.append(radius_points[0])
+
+        azimuth_plot = np.array(azimuth_plot)
+        radius_plot = np.array(radius_plot)
+
         # Convert radius to degrees for legend
         radius_deg = np.degrees(circle.radius_angle)
         azimuth_deg = np.degrees(circle.azimuth)
         polar_deg = np.degrees(circle.polar)
         label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
-        # Plot in polar coordinates
-        ax.scatter(azimuth_points, radius_points, s=10, alpha=0.6, label=label)
+        # Plot in polar coordinates using plot instead of scatter for continuous lines
+        ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label)
 
     ax.set_title(title, fontsize=14, pad=20)
 
