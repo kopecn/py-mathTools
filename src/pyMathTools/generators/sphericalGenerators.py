@@ -71,7 +71,7 @@ def generate_spherical_small_circle_points(
     north_tangent = north_tangent / norm(north_tangent)
 
     # Generate points around the circle
-    theta = linspace(0, 2 * pi, num_points)
+    theta = linspace(-pi, pi, num_points)
 
     # Points on the small circle using rotation
     # The small circle is at angular distance radius_angle from center
@@ -107,11 +107,7 @@ def generate_spherical_small_circle_points(
         r = sqrt(x**2 + y**2 + z**2)
         x, y, z = x / r, y / r, z / r  # Normalize to unit sphere
 
-        # theta (polar) = arccos(z), ranges from 0 (north pole) to pi (south pole)
         polar_points[i] = arccos(clip(z, -1, 1))
-        # phi (azimuth) = atan2(y, x)
         azimuth_points[i] = arctan2(y, x)
-        if azimuth_points[i] < 0:
-            azimuth_points[i] += 2 * pi
 
     return azimuth_points, polar_points

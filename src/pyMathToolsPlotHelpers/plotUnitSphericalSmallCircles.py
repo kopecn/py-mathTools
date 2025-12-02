@@ -72,14 +72,14 @@ def plot_spherical_small_circles(
     # Set up axes
     ax.set_xlabel("Azimuth (deg)", fontsize=12)
     ax.set_ylabel("Latitude (deg)", fontsize=12)
-    ax.set_xlim(0, 180)
+    ax.set_xlim(-180, 180)
 
     # Add grid
     ax.grid(True, alpha=0.3)
 
     # Set x-axis ticks
-    ax.set_xticks([0, 90, 180, 270, 360])
-    ax.set_xticklabels(["0°", "90°", "180°", "270°", "360°"])
+    ax.set_xticks([-180, -90, 0, 90, 180])
+    ax.set_xticklabels(["-180°", "-90°", "0°", "90°", "180°"])
 
     ax.set_title(title, fontsize=14)
 
@@ -181,14 +181,14 @@ def plot_spherical_small_circles_advanced(
     # Set up axes
     ax.set_xlabel("Azimuth (deg)", fontsize=12)
     ax.set_ylabel("Latitude (deg)", fontsize=12)
-    ax.set_xlim(0, 180)
+    ax.set_xlim(-180, 180)
 
     # Add grid
     ax.grid(True, alpha=0.3)
 
     # Set ticks
-    ax.set_xticks([0, 90, 180, 270, 360])
-    ax.set_xticklabels(["0°", "90°", "180°", "270°", "360°"])
+    ax.set_xticks([-180, -90, 0, 90, 180])
+    ax.set_xticklabels(["-180°", "-90°", "0°", "90°", "180°"])
 
     ax.set_title(title, fontsize=14)
 
@@ -209,6 +209,8 @@ def plot_spherical_small_circles_polar(
     num_points: int = 120,
     figsize: Tuple[int, int] = (8, 8),
     title: str = "Small Circles on Sphere (Polar View)",
+    labels: Optional[List[str]] = None,
+    ax: Optional[Axes] = None,
     show_plot: bool = False,
 ) -> Tuple[Figure, Axes]:
     """
@@ -230,7 +232,13 @@ def plot_spherical_small_circles_polar(
     --------
     fig, ax : matplotlib figure and axes objects
     """
-    fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+    # Track whether we created the axes or it was provided
+    created_ax = ax is None
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+    else:
+        fig = ax.get_figure()
 
     for idx, circle in enumerate(circles):
 
@@ -253,13 +261,17 @@ def plot_spherical_small_circles_polar(
         ax.scatter(azimuth_points, radius_points, s=10, alpha=0.6, label=label)
 
     ax.set_title(title, fontsize=14, pad=20)
-    ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
+
+    if labels is not None:
+        ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1))
+
     ax.grid(True, alpha=0.3)
 
-    plt.tight_layout()
-
-    if show_plot:
-        plt.show()
+    # Only call tight_layout and show if we created the axes
+    if created_ax:
+        plt.tight_layout()
+        if show_plot:
+            plt.show()
 
     return fig, ax
 
@@ -370,12 +382,12 @@ def plot_spherical_small_circles_3d(
 def plot_spherical_small_circles_multiplot(
     circles: Union[List[UnitSphericalSmallCircle], List[List[float]]],
     num_points: int = 120,
-    figsize: Tuple[int, int] = (18, 6),
+    figsize: Tuple[int, int] = (24, 6),
     title: str = "Small Circles on Unit Sphere - Multiple Views",
     show_plot: bool = False,
 ) -> Figure:
     """
-    Create a multiplot showing Plate Carrée, Gauss-Krüger, and 3D views of spherical small circles.
+    Create a multiplot showing Plate Carrée, Top View, and 3D views of spherical small circles.
 
     Parameters:
     -----------
@@ -384,7 +396,7 @@ def plot_spherical_small_circles_multiplot(
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
-        Figure size (default: (18, 6))
+        Figure size (default: (24, 6))
     title : str, optional
         Overall title
     show_plot : bool, optional
@@ -399,8 +411,9 @@ def plot_spherical_small_circles_multiplot(
     fig.suptitle(title, fontsize=16)
 
     # Create subplots
-    ax1 = fig.add_subplot(121)  # Plate Carrée projection
-    ax2 = fig.add_subplot(122, projection="3d")  # 3D view
+    ax1 = fig.add_subplot(131)  # Plate Carrée projection
+    ax2 = fig.add_subplot(132, projection="polar")  # Top view
+    ax3 = fig.add_subplot(133, projection="3d")  # 3D view
 
     # 1. Plate Carrée projection using advanced plot function
     plot_spherical_small_circles_advanced(
@@ -411,26 +424,38 @@ def plot_spherical_small_circles_multiplot(
         ax=ax1,
     )
     # Customize for multiplot
-    ax1.set_xlabel("Azimuth (radians)", fontsize=10)
-    ax1.set_ylabel("Latitude (radians)", fontsize=10)
+    ax1.set_xlabel("Azimuth (deg)", fontsize=10)
+    ax1.set_ylabel("Latitude (deg)", fontsize=10)
     ax1.set_title("Plate Carrée Projection", fontsize=12)
 
-    # 2. 3D view
+    # 2. Top view (looking down z-axis)
+    plot_spherical_small_circles_polar(
+        circles=circles,
+        num_points=num_points,
+        title="Top View (Down Z-Axis)",
+        ax=ax2,
+    )
+    # Customize for multiplot
+    ax2.set_xlabel("Azimuth (deg)", fontsize=10)
+    ax2.set_ylabel("Latitude (deg)", fontsize=10)
+    ax2.set_title("Top View (Down Z-Axis)", fontsize=12)
+
+    # 3. 3D view
     plot_spherical_small_circles_3d(
         circles=circles,
         num_points=num_points,
         title="3D View",
         show_sphere=True,
         show_legend=True,
-        ax=ax2,
+        ax=ax3,
     )
     # Customize for multiplot
-    ax2.set_xlabel("X", fontsize=10)
-    ax2.set_ylabel("Y", fontsize=10)
-    ax2.set_zlabel("Z", fontsize=10)
-    ax2.set_title("3D View", fontsize=12)
+    ax3.set_xlabel("X", fontsize=10)
+    ax3.set_ylabel("Y", fontsize=10)
+    ax3.set_zlabel("Z", fontsize=10)
+    ax3.set_title("3D View", fontsize=12)
     # Position legend outside plot area with smaller font
-    ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=8)
+    ax3.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=8)
 
     plt.tight_layout()
 
@@ -521,11 +546,6 @@ def demo() -> None:
     )
 
     _ = plot_spherical_small_circles(
-        circles=circles,
-        show_plot=True,
-    )
-
-    _ = plot_spherical_small_circles_polar(
         circles=circles,
         show_plot=True,
     )
