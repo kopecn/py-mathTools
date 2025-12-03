@@ -163,7 +163,7 @@ def plot_unit_spherical_advanced(
             if label is None:
                 azimuth_deg = np.degrees(azimuth)
                 polar_deg = np.degrees(polar)
-                label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+                label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
             # Plot vector as an arrow from origin to the point
             ax.annotate(
@@ -373,7 +373,7 @@ def plot_unit_spherical_polar(
             # Plot endpoint
             azimuth_deg = np.degrees(azimuth)
             polar_deg = np.degrees(polar)
-            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
             ax.scatter(azimuth, radius, s=150, marker="*", label=label, zorder=10)
 
@@ -536,7 +536,7 @@ def plot_unit_spherical_3d(
             # Plot endpoint
             azimuth_deg = np.degrees(azimuth)
             polar_deg = np.degrees(polar)
-            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.x:.1f}, z:{quat.x:.1f}"
+            label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
             ax.scatter(x, y, z, s=150, marker="*", label=label, zorder=10)
 
@@ -735,6 +735,7 @@ def demo() -> None:
         Quaternion.from_components(w=0.707, x=0.707, y=0, z=0),
         Quaternion.from_components(w=0.707, x=0, y=0.707, z=0),
         Quaternion.from_components(w=0.707, x=0, y=0, z=0.707),
+        Quaternion.from_components(w=0, x=0.577, y=-0.577, z=0.577),
     ]
 
     _ = plot_unit_spherical_multiplot(

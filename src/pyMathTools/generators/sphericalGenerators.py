@@ -1,3 +1,41 @@
+"""
+Generators for spherical geometry primitives.
+
+This module provides functions for generating points on spherical circles, arcs,
+and converting quaternions to spherical vectors.
+
+ISO Physics Convention for Spherical Coordinates
+-------------------------------------------------
+All functions in this module use the ISO physics convention:
+
+Notation: (r, θ, φ) where r=1 for unit sphere
+
+θ (theta) - Polar Angle (Colatitude):
+  - Measured from +z axis downward
+  - Range: [0, π]
+  - θ = 0: North pole (+z axis)
+  - θ = π/2: Equator (xy-plane)
+  - θ = π: South pole (-z axis)
+
+φ (phi) - Azimuthal Angle:
+  - Measured from +x axis in xy-plane, counterclockwise when viewed from above
+  - Range: [0, 2π)
+  - φ = 0: +x axis
+  - φ = π/2: +y axis
+  - φ = π: -x axis
+  - φ = 3π/2: -y axis
+
+Cartesian Conversion:
+  x = r*sin(θ)*cos(φ)
+  y = r*sin(θ)*sin(φ)
+  z = r*cos(θ)
+
+Inverse Conversion:
+  θ = arccos(z/r)
+  φ = arctan2(y, x)
+  r = sqrt(x² + y² + z²)
+"""
+
 from typing import Tuple
 from numpy import (
     clip,
@@ -30,24 +68,24 @@ def generate_spherical_small_circle_points(
     A small circle is the set of all points at a fixed angular distance (radius_angle)
     from a center point on the sphere.
 
+    Uses ISO Physics Convention (see module docstring for details).
+
     Parameters:
     -----------
-    circle.azimuth : float or NDArray
-        Azimuth angle of circle center (radians, -2π to 2π)
-    circle.polar : float or NDArray
-        Polar angle of circle center (radians, physics convention: 0 to π)
-        where 0 = north pole, π/2 = equator, π = south pole
-    circle.radius_angle : float or NDArray
-        Angular radius of the circle (radians)
+    circle : UnitSphericalSmallCircle
+        Small circle specification with:
+          - azimuth (φ): angle in xy-plane from +x axis [0, 2π)
+          - polar (θ): angle from +z axis (colatitude) [0, π]
+          - radius_angle: angular radius of the circle
     num_points : int
         Number of points to generate around the circle
 
     Returns:
     --------
     azimuth_points : NDArray
-        Azimuth angles of points on the circle (radians)
+        Azimuth angles (φ) of points on the circle in radians
     polar_points : NDArray
-        Polar angles of points on the circle (physics convention: 0 to π, colatitude)
+        Polar angles (θ) of points on the circle in radians
     """
     # Use physics convention directly: polar ∈ [0, π], where 0 = north pole, π/2 = equator
     # Convert center to Cartesian coordinates (physics convention)
@@ -131,24 +169,26 @@ def generate_spherical_arc_points(
     vector (from origin through the start point), and your fingers curl in the positive
     direction of rotation (positive orient).
 
+    Uses ISO Physics Convention (see module docstring for details).
+
     Parameters:
     -----------
     arc : UnitSphericalArc
         Arc specification with:
-        - azimuth: starting point longitude (radians)
-        - polar: starting point colatitude in physics convention (0 to π, 0 = north pole)
-        - orient: rotation angle about the radial vector (radians, -π to π)
-                  Following right-hand rule: thumb along radial, fingers curl in +orient direction
-        - arc_length: extension along great circle (radians, can be negative)
+          - azimuth (φ): starting point angle in xy-plane from +x axis [0, 2π)
+          - polar (θ): starting point angle from +z axis (colatitude) [0, π]
+          - orient: rotation angle about the radial vector (radians)
+                    Following right-hand rule: thumb along radial, fingers curl in +orient direction
+          - arc_length: extension along great circle (radians, can be negative)
     num_points : int
         Number of points to generate along the arc
 
     Returns:
     --------
     azimuth_points : NDArray
-        Azimuth angles of points along the arc (radians)
+        Azimuth angles (φ) of points along the arc in radians
     polar_points : NDArray
-        Polar angles of points along the arc (physics convention: 0 to π, colatitude)
+        Polar angles (θ) of points along the arc in radians
     """
     # Use physics convention directly: polar ∈ [0, π], where 0 = north pole, π/2 = equator
     # Convert starting point to Cartesian coordinates (physics convention)
@@ -230,8 +270,10 @@ def quaternion_to_spherical_vector(quaternion) -> Tuple[FloatArray3, float, floa
     """
     Convert a quaternion to a unit vector in spherical coordinates.
 
-    The quaternion is applied to a reference direction (positive Z-axis)
-    to get the pointing direction, which is then converted to spherical coordinates.
+    The quaternion is applied to a reference direction (+X axis) to get the
+    pointing direction, which is then converted to spherical coordinates.
+
+    Uses ISO Physics Convention (see module docstring for details).
 
     Parameters:
     -----------
@@ -243,12 +285,21 @@ def quaternion_to_spherical_vector(quaternion) -> Tuple[FloatArray3, float, floa
     cartesian_point : FloatArray3
         The Cartesian coordinates [x, y, z] of the rotated unit vector
     azimuth : float
-        Azimuth angle in radians (-π to π)
+        Azimuth angle (φ) in radians, range (-π, π]
+        Angle in xy-plane from +x axis
     polar : float
-        Polar angle in radians (0 to π, physics convention: 0 = north pole)
+        Polar angle (θ) in radians, range [0, π]
+        Angle from +z axis (colatitude)
+
+    Notes:
+    ------
+    Reference direction is +X axis: [1, 0, 0]
+    - Identity quaternion (1,0,0,0) points to +X: azimuth=0, polar=π/2
+    - Quaternion (0,0,1,0) is 180° rotation about Y, points to -X: azimuth=π, polar=π/2
     """
-    # Reference direction: positive Z-axis (north pole)
-    reference_direction = array([0.0, 0.0, 1.0])
+    # Reference direction: positive X-axis
+    # Identity quaternion (1,0,0,0) will point to +X
+    reference_direction = array([1.0, 0.0, 0.0])
 
     # Apply quaternion rotation to the reference direction
     rotated_vector = quaternion.rotate_vector(reference_direction)
@@ -266,3 +317,84 @@ def quaternion_to_spherical_vector(quaternion) -> Tuple[FloatArray3, float, floa
     cartesian_point = array([x, y, z])
 
     return cartesian_point, azimuth, polar
+
+
+def compute_spherical_arc_endpoint(
+    arc: UnitSphericalArc,
+) -> Tuple[float, float]:
+    """
+    Compute the endpoint of a UnitSphericalArc on a unit sphere.
+
+    Parameters
+    ----------
+    arc : UnitSphericalArc
+        The spherical arc containing:
+        - azimuth: Starting azimuth angle in radians (0 to 2π)
+        - polar: Starting polar angle in radians (colatitude/zenith angle)
+                 measured from vertical +Z axis (0 at north pole,
+                 π/2 at equator, π at south pole)
+        - arc_length: Length of the arc in radians (angular distance to travel)
+        - orient: Orientation/bearing of the arc in radians (-π to π)
+                  This is the direction to travel from the start point
+
+    Returns
+    -------
+    Tuple[float, float]
+        (azimuth_end, polar_end) - endpoint in spherical coordinates
+        polar_end uses the same colatitude convention
+
+    Notes
+    -----
+    This uses spherical trigonometry to compute great circle navigation.
+    The polar angle uses colatitude convention (angle from +Z axis):
+    - polar = 0 at north pole (+z axis)
+    - polar = π/2 at equator
+    - polar = π at south pole (-z axis)
+
+    Examples
+    --------
+    >>> arc = UnitSphericalArc(
+    ...     arc_length=deg2rad(45),
+    ...     azimuth=0.0,
+    ...     orient=0.0,
+    ...     polar=deg2rad(90)  # Starting at equator
+    ... )
+    >>> azimuth_end, polar_end = compute_spherical_arc_endpoint(arc)
+    """
+    # polar is already in colatitude convention (angle from +Z axis)
+    theta_start = arc.polar
+
+    # Using spherical trigonometry formulas for great circle navigation:
+    # cos(theta_end) = cos(theta_start)*cos(arc_length) +
+    #                  sin(theta_start)*sin(arc_length)*cos(orient)
+    cos_theta_end = cos(theta_start) * cos(arc.arc_length) + sin(theta_start) * sin(
+        arc.arc_length
+    ) * cos(arc.orient)
+    theta_end = arccos(clip(cos_theta_end, -1.0, 1.0))
+
+    # Compute the change in azimuth using:
+    # sin(Δazimuth) = sin(arc_length)*sin(orient) / sin(theta_end)
+    # cos(Δazimuth) = (cos(arc_length) - cos(theta_start)*cos(theta_end)) /
+    #                 (sin(theta_start)*sin(theta_end))
+
+    if abs(sin(theta_start)) < 1e-10:
+        # Special case: starting point at pole
+        # When starting from a pole, the ending azimuth is simply the bearing direction
+        azimuth_end = arc.orient
+    elif abs(sin(theta_end)) < 1e-10:
+        # Special case: endpoint at pole
+        azimuth_end = arc.azimuth
+    else:
+        sin_delta_az = sin(arc.arc_length) * sin(arc.orient) / sin(theta_end)
+        cos_delta_az = (cos(arc.arc_length) - cos(theta_start) * cos(theta_end)) / (
+            sin(theta_start) * sin(theta_end)
+        )
+        delta_azimuth = arctan2(sin_delta_az, cos_delta_az)
+        azimuth_end = arc.azimuth + delta_azimuth
+
+    # Normalize azimuth to [0, 2π)
+    azimuth_end = azimuth_end % (2 * pi)
+
+    polar_end = theta_end
+
+    return azimuth_end, polar_end
