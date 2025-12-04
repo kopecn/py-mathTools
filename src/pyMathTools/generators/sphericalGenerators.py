@@ -56,6 +56,7 @@ from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmal
 from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
 from pyMathTools.hints import FloatNDArray, FloatArray3
+from pyMathTools.spatial import Quaternion
 
 
 def generate_spherical_small_circle_points(
@@ -266,7 +267,9 @@ def generate_spherical_arc_points(
     return azimuth_points, polar_points
 
 
-def quaternion_to_spherical_vector(quaternion) -> Tuple[FloatArray3, float, float]:
+def quaternion_to_spherical_vector(
+    quaternion: Quaternion,
+) -> Tuple[FloatArray3, float, float]:
     """
     Convert a quaternion to a unit vector in spherical coordinates.
 
