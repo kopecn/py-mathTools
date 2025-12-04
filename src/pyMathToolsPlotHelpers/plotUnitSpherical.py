@@ -12,7 +12,6 @@ from pyMathTools.transforms.sphericalTransforms import plate_carree_transform
 from pyMathTools.generators.sphericalGenerators import (
     generate_spherical_small_circle_points,
     generate_spherical_arc_points,
-    quaternion_to_spherical_vector,
 )
 
 deg45 = np.deg2rad(45)
@@ -81,6 +80,7 @@ def plot_unit_spherical_advanced(
     --------
     fig, ax : matplotlib figure and axes objects
     """
+
     # Helper function to get color with fallback to matplotlib's color cycle
     def get_color(color_list: Optional[List[str]], idx: int) -> str:
         """Get color from list or fallback to matplotlib's color cycle."""
@@ -172,7 +172,7 @@ def plot_unit_spherical_advanced(
     if quaternions is not None:
         for idx, quat in enumerate(quaternions):
             # Convert quaternion to spherical coordinates
-            _, azimuth, polar = quaternion_to_spherical_vector(quat)
+            azimuth, polar = quat.vector_spherical
 
             # Apply Plate Carrée projection to the endpoint
             x_end, y_end = plate_carree_transform(azimuth, polar)
@@ -289,6 +289,7 @@ def plot_unit_spherical_polar(
     --------
     fig, ax : matplotlib figure and axes objects
     """
+
     # Helper function to get color with fallback to matplotlib's color cycle
     def get_color(color_list: Optional[List[str]], idx: int) -> str:
         """Get color from list or fallback to matplotlib's color cycle."""
@@ -356,7 +357,14 @@ def plot_unit_spherical_polar(
             color = get_color(circle_colors, idx)
 
             # Plot in polar coordinates using plot instead of scatter for continuous lines
-            ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label, color=color)
+            ax.plot(
+                azimuth_plot,
+                radius_plot,
+                linewidth=2,
+                alpha=0.7,
+                label=label,
+                color=color,
+            )
 
     # Generate points for each arc
     if arcs is not None:
@@ -413,7 +421,7 @@ def plot_unit_spherical_polar(
     if quaternions is not None:
         for idx, quat in enumerate(quaternions):
             # Convert quaternion to spherical coordinates
-            _, azimuth, polar = quaternion_to_spherical_vector(quat)
+            azimuth, polar = quat.vector_spherical
 
             # Map polar angle to radius (0 to 1) for polar plot
             radius = (polar + np.pi / 2) / np.pi
@@ -434,7 +442,9 @@ def plot_unit_spherical_polar(
             polar_deg = np.degrees(polar)
             label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
-            ax.scatter(azimuth, radius, s=150, marker="*", label=label, c=color, zorder=10)
+            ax.scatter(
+                azimuth, radius, s=150, marker="*", label=label, c=color, zorder=10
+            )
 
     ax.set_title(title, fontsize=14, pad=20)
 
@@ -603,8 +613,7 @@ def plot_unit_spherical_3d(
     if quaternions is not None:
         for idx, quat in enumerate(quaternions):
             # Convert quaternion to Cartesian coordinates
-            cartesian, azimuth, polar = quaternion_to_spherical_vector(quat)
-            x, y, z = cartesian
+            x, y, z = quat.vector_cartesian
 
             # Get color for this quaternion
             color = get_color(quaternion_colors, idx)
@@ -625,8 +634,6 @@ def plot_unit_spherical_3d(
             )
 
             # Plot endpoint
-            azimuth_deg = np.degrees(azimuth)
-            polar_deg = np.degrees(polar)
             label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
             ax.scatter(x, y, z, s=150, marker="*", label=label, c=color, zorder=10)
@@ -855,8 +862,8 @@ def demo() -> None:
     ]
 
     _ = plot_unit_spherical_multiplot(
-        circles=circles,
-        arcs=arcs,
+        # circles=circles,
+        # arcs=arcs,
         quaternions=quats,
         show_plot=True,
     )

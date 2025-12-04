@@ -14,8 +14,21 @@ All functions use the ISO physics convention for spherical coordinates:
 See pyMathTools.generators.sphericalGenerators module docstring for complete details.
 """
 
-from numpy import pi
+from typing import Tuple
 from pyMathTools.hints import FloatOrNDArray
+from numpy import float64
+from numpy.typing import NDArray
+from numpy import (
+    clip,
+    pi,
+    arctan2,
+    cos,
+    sin,
+    arccos,
+)
+from numpy.linalg import norm
+
+from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
 
 def plate_carree_transform(
@@ -60,3 +73,110 @@ def plate_carree_transform(
     # latitude = π/2 - θ
     y = pi / 2 - polar
     return x, y
+
+
+def cartesian_to_spherical(point: NDArray[float64]) -> tuple:
+    """
+    Convert Cartesian coordinates to spherical coordinates.
+
+    Uses ISO physics convention:
+    - polar (theta): angle from +z axis (colatitude), range [0, π]
+    - azimuth (phi): angle in xy-plane from +x axis, range (-π, π]
+
+    Args:
+        point: Cartesian coordinates [x, y, z]
+
+    Returns:
+        Tuple of (azimuth, polar) in radians
+    """
+    point = point / norm(point)
+    x, y, z = point
+
+    # Azimuth: angle in xy-plane from +x axis
+    azimuth = arctan2(y, x)
+
+    # Polar: angle from +z axis (colatitude)
+    polar = arccos(clip(z, -1.0, 1.0))
+
+    return azimuth, polar
+
+
+def compute_spherical_arc_endpoint(
+    arc: UnitSphericalArc,
+) -> Tuple[float, float]:
+    """
+    Compute the endpoint of a UnitSphericalArc on a unit sphere.
+
+    Parameters
+    ----------
+    arc : UnitSphericalArc
+        The spherical arc containing:
+        - azimuth: Starting azimuth angle in radians (0 to 2π)
+        - polar: Starting polar angle in radians (colatitude/zenith angle)
+                 measured from vertical +Z axis (0 at north pole,
+                 π/2 at equator, π at south pole)
+        - arc_length: Length of the arc in radians (angular distance to travel)
+        - orient: Orientation/bearing of the arc in radians (-π to π)
+                  This is the direction to travel from the start point
+
+    Returns
+    -------
+    Tuple[float, float]
+        (azimuth_end, polar_end) - endpoint in spherical coordinates
+        polar_end uses the same colatitude convention
+
+    Notes
+    -----
+    This uses spherical trigonometry to compute great circle navigation.
+    The polar angle uses colatitude convention (angle from +Z axis):
+    - polar = 0 at north pole (+z axis)
+    - polar = π/2 at equator
+    - polar = π at south pole (-z axis)
+
+    Examples
+    --------
+    >>> arc = UnitSphericalArc(
+    ...     arc_length=deg2rad(45),
+    ...     azimuth=0.0,
+    ...     orient=0.0,
+    ...     polar=deg2rad(90)  # Starting at equator
+    ... )
+    >>> azimuth_end, polar_end = compute_spherical_arc_endpoint(arc)
+    """
+    # polar is already in colatitude convention (angle from +Z axis)
+    theta_start = arc.polar
+
+    # Using spherical trigonometry formulas for great circle navigation:
+    # cos(theta_end) = cos(theta_start)*cos(arc_length) +
+    #                  sin(theta_start)*sin(arc_length)*cos(orient)
+    cos_theta_end = cos(theta_start) * cos(arc.arc_length) + sin(theta_start) * sin(
+        arc.arc_length
+    ) * cos(arc.orient)
+    theta_end = arccos(clip(cos_theta_end, -1.0, 1.0))
+
+    # Compute the change in azimuth using:
+    # sin(Δazimuth) = sin(arc_length)*sin(orient) / sin(theta_end)
+    # cos(Δazimuth) = (cos(arc_length) - cos(theta_start)*cos(theta_end)) /
+    #                 (sin(theta_start)*sin(theta_end))
+
+    if abs(sin(theta_start)) < 1e-10:
+        # Special case: starting point at pole
+        # When starting from a pole, the ending azimuth is simply the bearing direction
+        azimuth_end = arc.orient
+    elif abs(sin(theta_end)) < 1e-10:
+        # Special case: endpoint at pole
+        azimuth_end = arc.azimuth
+    else:
+        sin_delta_az = sin(arc.arc_length) * sin(arc.orient) / sin(theta_end)
+        cos_delta_az = (cos(arc.arc_length) - cos(theta_start) * cos(theta_end)) / (
+            sin(theta_start) * sin(theta_end)
+        )
+        delta_azimuth = arctan2(sin_delta_az, cos_delta_az)
+        azimuth_end = arc.azimuth + delta_azimuth
+
+    # Normalize azimuth to [0, 2π)
+    azimuth_end = azimuth_end % (2 * pi)
+
+    polar_end = theta_end
+
+    return azimuth_end, polar_end

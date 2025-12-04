@@ -295,6 +295,68 @@ class Quaternion(QuaternionType):
             return np.array([0.0, 0.0, 1.0])  # Default axis for identity
         return vect / norm
 
+    @property
+    def vector_spherical(self) -> tuple[float, float]:
+        """Return the quaternion's pointing direction in spherical coordinates (ISO physics convention).
+
+        The quaternion is applied to a reference direction (+X axis) to get the
+        pointing direction, which is then converted to spherical coordinates.
+
+        Returns:
+            tuple[azimuth, polar] where:
+                - azimuth (φ): angle in xy-plane from +x axis, range (-π, π]
+                - polar (θ): angle from +z axis (colatitude), range [0, π]
+
+        Notes:
+            Reference direction is +X axis: [1, 0, 0]
+            - Identity quaternion (1,0,0,0) points to +X: azimuth=0, polar=π/2
+        """
+        # Reference direction: positive X-axis
+        reference_direction = np.array([1.0, 0.0, 0.0])
+
+        # Apply quaternion rotation to the reference direction
+        rotated_vector = self.rotate_vector(reference_direction)
+
+        # Normalize to ensure it's a unit vector
+        x, y, z = rotated_vector
+        r = np.sqrt(x**2 + y**2 + z**2)
+        if r > 1e-10:
+            x, y, z = x / r, y / r, z / r
+
+        # Convert to spherical coordinates (physics convention)
+        polar = float(np.arccos(np.clip(z, -1, 1)))  # colatitude (0 to π)
+        azimuth = float(np.arctan2(y, x))  # azimuth (-π to π)
+
+        return (azimuth, polar)
+
+    @property
+    def vector_cartesian(self) -> tuple[float, float, float]:
+        """Return the quaternion's pointing direction as a cartesian unit vector.
+
+        The quaternion is applied to a reference direction (+X axis) to get the
+        pointing direction as a unit vector in cartesian coordinates.
+
+        Returns:
+            tuple[x, y, z] - unit vector components
+
+        Notes:
+            Reference direction is +X axis: [1, 0, 0]
+            - Identity quaternion (1,0,0,0) points to +X: (1, 0, 0)
+        """
+        # Reference direction: positive X-axis
+        reference_direction = np.array([1.0, 0.0, 0.0])
+
+        # Apply quaternion rotation to the reference direction
+        rotated_vector = self.rotate_vector(reference_direction)
+
+        # Normalize to ensure it's a unit vector
+        x, y, z = rotated_vector
+        r = np.sqrt(x**2 + y**2 + z**2)
+        if r > 1e-10:
+            x, y, z = x / r, y / r, z / r
+
+        return (float(x), float(y), float(z))
+
     # MARK: - Array Conversion Methods
 
     def as_float_array(self) -> FloatArray4:
