@@ -570,7 +570,7 @@ def plot_unit_spherical_3d(
             color = get_color(circle_colors, idx)
 
             # Plot the circle
-            ax.scatter(x, y, z, s=10, alpha=0.8, label=label, c=color)
+            ax.scatter(x, y, z, s=2, alpha=0.8, label=label, c=color)
 
     # Plot each arc
     if arcs is not None:
@@ -601,11 +601,11 @@ def plot_unit_spherical_3d(
                 x,
                 y,
                 z,
-                linewidth=2,
+                linewidth=1.5,
                 alpha=0.8,
                 label=label,
                 marker="o",
-                markersize=3,
+                markersize=1,
                 color=color,
             )
 
@@ -627,16 +627,16 @@ def plot_unit_spherical_3d(
                 y,
                 z,
                 length=1.0,
-                arrow_length_ratio=0.15,
+                arrow_length_ratio=0.05,
                 color=color,
-                linewidth=2.5,
+                linewidth=1.5,
                 alpha=0.9,
             )
 
             # Plot endpoint
             label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
-            ax.scatter(x, y, z, s=150, marker="*", label=label, c=color, zorder=10)
+            ax.scatter(x, y, z, s=50, marker="*", label=label, c=color, zorder=10)
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")

@@ -34,6 +34,8 @@ from pyMathTools.hints import (
     RotationMatrix,
     FloatOrQuaternion,
 )
+from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+
 
 T = TypeVar("T", bound="Quaternion")
 
@@ -621,6 +623,140 @@ class Quaternion(QuaternionType):
         )
 
     @classmethod
+    def _from_unit_direction_to_vector(
+        cls: Type[T],
+        start_direction: FloatArray3,
+        target_vector: FloatArray3,
+        perpendicular_axis: FloatArray3,
+    ) -> T:
+        """Helper method to create a quaternion rotating from a unit direction to target.
+
+        Args:
+            start_direction: Starting unit direction vector
+            target_vector: Target direction vector (will be normalized)
+            perpendicular_axis: Axis to use for 180° rotation case
+
+        Returns:
+            Unit quaternion representing the rotation
+        """
+        # Normalize target vector
+        target = np.array(target_vector, dtype=float)
+        target_norm = np.linalg.norm(target)
+        if target_norm < 1e-10:
+            # Zero vector, return identity
+            return cls.identity()
+        target = target / target_norm
+
+        # Compute dot product
+        dot = np.dot(start_direction, target)
+
+        # Check for special cases
+        if dot > 0.9999:
+            # Vectors are parallel (same direction)
+            return cls.identity()
+        elif dot < -0.9999:
+            # Vectors are opposite (180° rotation needed)
+            # Use the provided perpendicular axis
+            perp = np.array(perpendicular_axis, dtype=float)
+            perp = perp / np.linalg.norm(perp)
+            return cls.from_components(w=0.0, x=perp[0], y=perp[1], z=perp[2])
+
+        # General case: compute rotation axis and angle
+        # Rotation axis is perpendicular to both vectors
+        axis = np.cross(start_direction, target)
+        axis = axis / np.linalg.norm(axis)
+
+        # Compute rotation angle
+        angle = np.arccos(np.clip(dot, -1.0, 1.0))
+
+        # Create quaternion from axis-angle
+        return cls.from_axis_angle(axis, angle)
+
+    @classmethod
+    def from_unit_x_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+        """Create a quaternion that rotates the +X axis to point toward target_vector.
+
+        This constructor computes the rotation that transforms the unit X direction
+        [1, 0, 0] to align with the given target vector.
+
+        Args:
+            target_vector: Target direction vector (will be normalized)
+
+        Returns:
+            Unit quaternion representing the rotation from +X to target_vector
+
+        Notes:
+            - If target_vector points in +X direction, returns identity quaternion
+            - If target_vector points in -X direction, returns 180° rotation about +Z axis
+            - For all other directions, uses the shortest rotation path
+
+        Examples:
+            >>> # Rotate +X to point toward +Y
+            >>> q = Quaternion.from_unit_x_to_vector([0, 1, 0])
+            >>> # Rotate +X to point toward +Z
+            >>> q = Quaternion.from_unit_x_to_vector([0, 0, 1])
+        """
+        start = np.array([1.0, 0.0, 0.0])
+        perpendicular = np.array([0.0, 0.0, 1.0])  # +Z for 180° case
+        return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
+
+    @classmethod
+    def from_unit_y_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+        """Create a quaternion that rotates the +Y axis to point toward target_vector.
+
+        This constructor computes the rotation that transforms the unit Y direction
+        [0, 1, 0] to align with the given target vector.
+
+        Args:
+            target_vector: Target direction vector (will be normalized)
+
+        Returns:
+            Unit quaternion representing the rotation from +Y to target_vector
+
+        Notes:
+            - If target_vector points in +Y direction, returns identity quaternion
+            - If target_vector points in -Y direction, returns 180° rotation about +Z axis
+            - For all other directions, uses the shortest rotation path
+
+        Examples:
+            >>> # Rotate +Y to point toward +X
+            >>> q = Quaternion.from_unit_y_to_vector([1, 0, 0])
+            >>> # Rotate +Y to point toward +Z
+            >>> q = Quaternion.from_unit_y_to_vector([0, 0, 1])
+        """
+        start = np.array([0.0, 1.0, 0.0])
+        perpendicular = np.array([0.0, 0.0, 1.0])  # +Z for 180° case
+        return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
+
+    @classmethod
+    def from_unit_z_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+        """Create a quaternion that rotates the +Z axis to point toward target_vector.
+
+        This constructor computes the rotation that transforms the unit Z direction
+        [0, 0, 1] to align with the given target vector.
+
+        Args:
+            target_vector: Target direction vector (will be normalized)
+
+        Returns:
+            Unit quaternion representing the rotation from +Z to target_vector
+
+        Notes:
+            - If target_vector points in +Z direction, returns identity quaternion
+            - If target_vector points in -Z direction, returns 180° rotation about +X axis
+            - For all other directions, uses the shortest rotation path
+
+        Examples:
+            >>> # Rotate +Z to point toward +X
+            >>> q = Quaternion.from_unit_z_to_vector([1, 0, 0])
+            >>> # Rotate +Z to point toward +Y
+            >>> q = Quaternion.from_unit_z_to_vector([0, 1, 0])
+        """
+        start = np.array([0.0, 0.0, 1.0])
+        perpendicular = np.array([1.0, 0.0, 0.0])  # +X for 180° case
+        return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
+
+    @classmethod
     def from_dict(cls, obj: Any) -> "Quaternion":
         """Create a quaternion instance from a dictionary representation.
 
@@ -637,3 +773,10 @@ class Quaternion(QuaternionType):
         # Note: This calls the concrete implementation's from_components
         # cls ensures the correct subclass type is returned
         return cls.from_components(w, x, y, z)
+
+    def to_unitSphericalSmallCircle(
+        q: Quaternion, radius_angle: float = np.pi / 4
+    ) -> UnitSphericalSmallCircle:
+        """ """
+        a, p = q.vector_spherical
+        return UnitSphericalSmallCircle(azimuth=a, polar=p, radius_angle=radius_angle)
