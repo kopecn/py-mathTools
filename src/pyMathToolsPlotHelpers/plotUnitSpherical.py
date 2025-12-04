@@ -33,6 +33,9 @@ def plot_unit_spherical_advanced(
     show_centers: bool = True,
     show_plot: bool = False,
     ax: Optional[Axes] = None,
+    arc_colors: Optional[List[str]] = ["red", "green", "blue"],
+    circle_colors: Optional[List[str]] = ["red", "green", "blue"],
+    quaternion_colors: Optional[List[str]] = ["red", "green", "blue"],
 ) -> Tuple[Figure, Axes]:
     """
     Advanced version with more customization options.
@@ -55,7 +58,7 @@ def plot_unit_spherical_advanced(
     title : str, optional
         Plot title
     colors : list, optional
-        List of colors for each circle
+        List of colors for each circle (deprecated, use circle_colors instead)
     labels : list, optional
         List of labels for each circle
     show_centers : bool, optional
@@ -64,11 +67,29 @@ def plot_unit_spherical_advanced(
         Whether to show the plot (default: False, ignored if ax is provided)
     ax : matplotlib.axes.Axes, optional
         Axes to plot on. If None, creates new figure and axes
+    arc_colors : List[str], optional
+        List of colors for arcs. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    circle_colors : List[str], optional
+        List of colors for circles. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    quaternion_colors : List[str], optional
+        List of colors for quaternions. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
+    # Helper function to get color with fallback to matplotlib's color cycle
+    def get_color(color_list: Optional[List[str]], idx: int) -> str:
+        """Get color from list or fallback to matplotlib's color cycle."""
+        if color_list is None or len(color_list) == 0:
+            return f"C{idx}"
+        if idx < len(color_list):
+            return color_list[idx]
+        return f"C{idx}"
+
     # Track whether we created the axes or it was provided
     created_ax = ax is None
 
@@ -88,8 +109,11 @@ def plot_unit_spherical_advanced(
             # Apply Plate Carrée projection
             x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
-            # Determine color and label
-            color = colors[idx] if colors is not None and idx < len(colors) else None
+            # Determine color and label (prioritize new color parameters over deprecated colors)
+            if colors is not None and idx < len(colors):
+                color = colors[idx]
+            else:
+                color = get_color(circle_colors, idx)
             label = labels[idx] if labels is not None and idx < len(labels) else None
 
             # Plot the circle
@@ -112,7 +136,7 @@ def plot_unit_spherical_advanced(
                     np.degrees(y_center),
                     s=100,
                     marker="x",
-                    c=color if color else "red",
+                    c=color,
                     linewidths=2,
                 )
 
@@ -129,7 +153,7 @@ def plot_unit_spherical_advanced(
             x_points, y_points = plate_carree_transform(azimuth_points, polar_points)
 
             # Determine color and label
-            color = colors[idx] if colors is not None and idx < len(colors) else None
+            color = get_color(arc_colors, idx)
             label = labels[idx] if labels is not None and idx < len(labels) else None
 
             # Plot the arc as a line
@@ -157,12 +181,10 @@ def plot_unit_spherical_advanced(
             x_origin, y_origin = plate_carree_transform(0, np.pi / 2)
 
             # Determine color and label
-            color = colors[idx] if colors is not None and idx < len(colors) else None
+            color = get_color(quaternion_colors, idx)
             label = labels[idx] if labels is not None and idx < len(labels) else None
 
             if label is None:
-                azimuth_deg = np.degrees(azimuth)
-                polar_deg = np.degrees(polar)
                 label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
             # Plot vector as an arrow from origin to the point
@@ -173,7 +195,7 @@ def plot_unit_spherical_advanced(
                 arrowprops=dict(
                     arrowstyle="->",
                     lw=2,
-                    color=color if color else f"C{idx}",
+                    color=color,
                     alpha=0.8,
                 ),
             )
@@ -225,6 +247,9 @@ def plot_unit_spherical_polar(
     labels: Optional[List[str]] = None,
     ax: Optional[Axes] = None,
     show_plot: bool = False,
+    arc_colors: Optional[List[str]] = ["red", "green", "blue"],
+    circle_colors: Optional[List[str]] = ["red", "green", "blue"],
+    quaternion_colors: Optional[List[str]] = ["red", "green", "blue"],
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles and arcs on a sphere using polar projection.
@@ -244,11 +269,35 @@ def plot_unit_spherical_polar(
         Figure size (default: (8, 8))
     title : str, optional
         Plot title
+    labels : list, optional
+        List of labels for each element
+    ax : matplotlib.axes.Axes, optional
+        Axes to plot on. If None, creates new figure and axes
+    show_plot : bool, optional
+        Whether to show the plot (default: False, ignored if ax is provided)
+    arc_colors : List[str], optional
+        List of colors for arcs. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    circle_colors : List[str], optional
+        List of colors for circles. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    quaternion_colors : List[str], optional
+        List of colors for quaternions. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
+    # Helper function to get color with fallback to matplotlib's color cycle
+    def get_color(color_list: Optional[List[str]], idx: int) -> str:
+        """Get color from list or fallback to matplotlib's color cycle."""
+        if color_list is None or len(color_list) == 0:
+            return f"C{idx}"
+        if idx < len(color_list):
+            return color_list[idx]
+        return f"C{idx}"
+
     # Track whether we created the axes or it was provided
     created_ax = ax is None
 
@@ -303,8 +352,11 @@ def plot_unit_spherical_polar(
             polar_deg = np.degrees(circle.polar)
             label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
+            # Get color for this circle
+            color = get_color(circle_colors, idx)
+
             # Plot in polar coordinates using plot instead of scatter for continuous lines
-            ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label)
+            ax.plot(azimuth_plot, radius_plot, linewidth=2, alpha=0.7, label=label, color=color)
 
     # Generate points for each arc
     if arcs is not None:
@@ -342,6 +394,9 @@ def plot_unit_spherical_polar(
             orient_deg = np.degrees(arc.orient)
             label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
 
+            # Get color for this arc
+            color = get_color(arc_colors, idx)
+
             # Plot the arc
             ax.plot(
                 azimuth_plot,
@@ -351,6 +406,7 @@ def plot_unit_spherical_polar(
                 label=label,
                 marker="o",
                 markersize=3,
+                color=color,
             )
 
     # Plot quaternions as vectors
@@ -362,12 +418,15 @@ def plot_unit_spherical_polar(
             # Map polar angle to radius (0 to 1) for polar plot
             radius = (polar + np.pi / 2) / np.pi
 
+            # Get color for this quaternion
+            color = get_color(quaternion_colors, idx)
+
             # Plot vector as an arrow from origin
             ax.annotate(
                 "",
                 xy=(azimuth, radius),
                 xytext=(0, 0),
-                arrowprops=dict(arrowstyle="->", lw=2, color=f"C{idx}", alpha=0.8),
+                arrowprops=dict(arrowstyle="->", lw=2, color=color, alpha=0.8),
             )
 
             # Plot endpoint
@@ -375,7 +434,7 @@ def plot_unit_spherical_polar(
             polar_deg = np.degrees(polar)
             label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
-            ax.scatter(azimuth, radius, s=150, marker="*", label=label, zorder=10)
+            ax.scatter(azimuth, radius, s=150, marker="*", label=label, c=color, zorder=10)
 
     ax.set_title(title, fontsize=14, pad=20)
 
@@ -404,6 +463,9 @@ def plot_unit_spherical_3d(
     show_legend: bool = True,
     show_plot: bool = False,
     ax: Optional[Axes] = None,
+    arc_colors: Optional[List[str]] = ["red", "green", "blue"],
+    circle_colors: Optional[List[str]] = ["red", "green", "blue"],
+    quaternion_colors: Optional[List[str]] = ["red", "green", "blue"],
 ) -> Tuple[Figure, Axes]:
     """
     Plot small circles and arcs on a 3D unit sphere.
@@ -430,11 +492,30 @@ def plot_unit_spherical_3d(
         Whether to show the plot (default: False, ignored if ax is provided)
     ax : matplotlib.axes.Axes, optional
         3D axes to plot on. If None, creates new figure and axes
+    arc_colors : List[str], optional
+        List of colors for arcs. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    circle_colors : List[str], optional
+        List of colors for circles. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    quaternion_colors : List[str], optional
+        List of colors for quaternions. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
 
     Returns:
     --------
     fig, ax : matplotlib figure and axes objects
     """
+
+    # Helper function to get color with fallback to matplotlib's color cycle
+    def get_color(color_list: Optional[List[str]], idx: int) -> str:
+        """Get color from list or fallback to matplotlib's color cycle."""
+        if color_list is None or len(color_list) == 0:
+            return f"C{idx}"
+        if idx < len(color_list):
+            return color_list[idx]
+        return f"C{idx}"
+
     # Track whether we created the axes or it was provided
     created_ax = ax is None
 
@@ -475,8 +556,11 @@ def plot_unit_spherical_3d(
             polar_deg = np.degrees(circle.polar)
             label = f"Circle {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, R:{radius_deg:.1f}°"
 
+            # Get color for this circle
+            color = get_color(circle_colors, idx)
+
             # Plot the circle
-            ax.scatter(x, y, z, s=10, alpha=0.8, label=label)
+            ax.scatter(x, y, z, s=10, alpha=0.8, label=label, c=color)
 
     # Plot each arc
     if arcs is not None:
@@ -499,6 +583,9 @@ def plot_unit_spherical_3d(
             orient_deg = np.degrees(arc.orient)
             label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
 
+            # Get color for this arc
+            color = get_color(arc_colors, idx)
+
             # Plot the arc as a line
             ax.plot(
                 x,
@@ -509,6 +596,7 @@ def plot_unit_spherical_3d(
                 label=label,
                 marker="o",
                 markersize=3,
+                color=color,
             )
 
     # Plot quaternions as vectors
@@ -517,6 +605,9 @@ def plot_unit_spherical_3d(
             # Convert quaternion to Cartesian coordinates
             cartesian, azimuth, polar = quaternion_to_spherical_vector(quat)
             x, y, z = cartesian
+
+            # Get color for this quaternion
+            color = get_color(quaternion_colors, idx)
 
             # Plot vector from origin to the point
             ax.quiver(
@@ -528,7 +619,7 @@ def plot_unit_spherical_3d(
                 z,
                 length=1.0,
                 arrow_length_ratio=0.15,
-                color=f"C{idx}",
+                color=color,
                 linewidth=2.5,
                 alpha=0.9,
             )
@@ -538,7 +629,7 @@ def plot_unit_spherical_3d(
             polar_deg = np.degrees(polar)
             label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
 
-            ax.scatter(x, y, z, s=150, marker="*", label=label, zorder=10)
+            ax.scatter(x, y, z, s=150, marker="*", label=label, c=color, zorder=10)
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -573,6 +664,9 @@ def plot_unit_spherical_multiplot(
     figsize: Tuple[int, int] = (24, 6),
     title: str = "Small Circles on Unit Sphere - Multiple Views",
     show_plot: bool = False,
+    arc_colors: Optional[List[str]] = ["red", "green", "blue"],
+    circle_colors: Optional[List[str]] = ["red", "green", "blue"],
+    quaternion_colors: Optional[List[str]] = ["red", "green", "blue"],
 ) -> Figure:
     """
     Create a multiplot showing Plate Carrée, Top View, and 3D views of spherical small circles.
@@ -581,6 +675,10 @@ def plot_unit_spherical_multiplot(
     -----------
     circles : List[UnitSphericalSmallCircle] or array-like
         List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
+    arcs : List[UnitSphericalArc], optional
+        List of UnitSphericalArc objects
+    quaternions : List[Quaternion], optional
+        List of Quaternion objects
     num_points : int, optional
         Number of points to generate around each circle (default: 120)
     figsize : tuple, optional
@@ -589,6 +687,15 @@ def plot_unit_spherical_multiplot(
         Overall title
     show_plot : bool, optional
         Whether to show the plot (default: False)
+    arc_colors : List[str], optional
+        List of colors for arcs. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    circle_colors : List[str], optional
+        List of colors for circles. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
+    quaternion_colors : List[str], optional
+        List of colors for quaternions. Defaults to ["red", "green", "blue"].
+        If insufficient colors, uses matplotlib's color cycle.
 
     Returns:
     --------
@@ -612,6 +719,9 @@ def plot_unit_spherical_multiplot(
         title="Plate Carrée Projection",
         show_centers=False,
         ax=ax1,
+        arc_colors=arc_colors,
+        circle_colors=circle_colors,
+        quaternion_colors=quaternion_colors,
     )
     # Customize for multiplot
     ax1.set_xlabel("Azimuth (deg)", fontsize=10)
@@ -626,6 +736,9 @@ def plot_unit_spherical_multiplot(
         num_points=num_points,
         title="Top View (Down Z-Axis)",
         ax=ax2,
+        arc_colors=arc_colors,
+        circle_colors=circle_colors,
+        quaternion_colors=quaternion_colors,
     )
     # Customize for multiplot
     ax2.set_xlabel("Azimuth (deg)", fontsize=10)
@@ -642,6 +755,9 @@ def plot_unit_spherical_multiplot(
         show_sphere=True,
         show_legend=True,
         ax=ax3,
+        arc_colors=arc_colors,
+        circle_colors=circle_colors,
+        quaternion_colors=quaternion_colors,
     )
     # Customize for multiplot
     ax3.set_xlabel("X", fontsize=10)
@@ -739,8 +855,8 @@ def demo() -> None:
     ]
 
     _ = plot_unit_spherical_multiplot(
-        # circles=circles,
-        # arcs=arcs,
+        circles=circles,
+        arcs=arcs,
         quaternions=quats,
         show_plot=True,
     )

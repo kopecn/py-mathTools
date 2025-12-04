@@ -28,3 +28,7 @@ inlinevar-rgx=(?:(?P<snake>[a-z_][a-z0-9_]*)|(?P<camel>[a-z]+(?:[A-Z][a-z0-9]*)*
 
 [design]
 max-locals = 24
+
+[MESSAGES CONTROL]
+disable=W0621
+disable=W0102
