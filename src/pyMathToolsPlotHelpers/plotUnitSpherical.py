@@ -8,8 +8,8 @@ from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmal
 from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
 from pyMathTools.spatial.Quaternion import Quaternion
-from pyMathTools.transforms.sphericalTransforms import plate_carree_transform
-from pyMathTools.generators.sphericalGenerators import (
+from pyMathTools.spherical.sphericalTransforms import plate_carree_transform
+from pyMathTools.spherical.sphericalGenerators import (
     generate_spherical_small_circle_points,
     generate_spherical_arc_points,
 )

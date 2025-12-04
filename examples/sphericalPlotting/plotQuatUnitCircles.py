@@ -28,7 +28,7 @@ Expected Output:
 from numpy import pi
 import quaternion
 
-from pyMathTools.constructors.constructUnitSphericalSmallCircle import (
+from pyMathTools.spherical.constructors import (
     quat_to_unitSphericalSmallCircle,
 )
 
