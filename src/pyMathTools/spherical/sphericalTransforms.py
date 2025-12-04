@@ -75,6 +75,34 @@ def plate_carree_transform(
     return x, y
 
 
+def spherical_to_cartesian(azimuth: float, polar: float) -> tuple[float, float, float]:
+    """
+    Convert spherical coordinates to Cartesian coordinates on the unit sphere.
+
+    Uses ISO physics convention:
+    - polar (theta): angle from +z axis (colatitude), range [0, π]
+    - azimuth (phi): angle in xy-plane from +x axis, range (-π, π] or [0, 2π)
+
+    Args:
+        azimuth: Azimuth angle (φ) in radians - angle in xy-plane from +x axis
+        polar: Polar angle (θ) in radians - angle from +z axis (colatitude)
+
+    Returns:
+        Tuple with Cartesian coordinates [x, y, z] on unit sphere
+
+    Notes:
+        Conversion formulas (ISO physics convention):
+        - x = sin(θ) * cos(φ)
+        - y = sin(θ) * sin(φ)
+        - z = cos(θ)
+    """
+    x = sin(polar) * cos(azimuth)
+    y = sin(polar) * sin(azimuth)
+    z = cos(polar)
+
+    return (x, y, z)
+
+
 def cartesian_to_spherical(point: NDArray[float64]) -> tuple:
     """
     Convert Cartesian coordinates to spherical coordinates.
