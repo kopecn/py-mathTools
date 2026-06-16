@@ -13,9 +13,9 @@ endif
 VERSION=v$(shell grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
 PIP := $(PYTHON) -m pip
 
-help:  ## Show available make commands with descriptions
-	@echo "Makefile for pyMathTools"
-	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z0-9_-]+:.*?## / {printf "%-30s -> %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+help: ## Show this help
+	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
 bumpPatch:
 	bump2version patch
