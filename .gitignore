@@ -1,157 +1,148 @@
-# Byte-compiled / optimized / DLL files
+# ==============================
+# Python Build / Bytecode Artifacts
+# ==============================
+
+# Compiled Python files (bytecode)
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Cython and C extensions
+# Compiled binary extensions
 *.c
 *.so
 *.pyd
 *.dll
 
-# Distribution / packaging
-.Python
+# Directory-level compiled artifacts
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
+develop-eggs/
 sdist/
+parts/
 var/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# PyInstaller
-# Usually contains a dist/ folder and build/ artifacts
-*.manifest
-*.spec
 
-# PyBuilder
-target/
+# ==============================
+# Virtual Environments & Dependencies
+# ==============================
 
-# Virtual environments
-.env/
+# General virtual environments (Modern and Classic)
 .venv/
-env/
+# Throwaway clean-room venv for `make testInEnv` (VENV in .env)
+.cleanroom-venv/
 venv/
-ENV/
-env.bak/
-venv.bak/
+env/
+.env/
 
-# pipenv
-Pipfile.lock
-
-# poetry
+# Specific package manager caches / lock files
 poetry.lock
+Pipfile.lock
+# uv.lock is intentionally NOT committed: this is a library, so we declare version
+# ranges (requires-python) and stay on uv's `uv pip` interface, which never writes a
+# lockfile (only `uv sync`/`uv lock` do). Ignored as belt-and-suspenders.
+uv.lock
+# NOTE: requirements.txt and requirements-release.txt are COMMITTED, not ignored. Per the
+# dependency BKM pyproject.toml declares dependency NAMES ONLY; the requirements files carry
+# the pins + git-based pointers and every install path leans on them. No `lock`/compile step.
+# requirements-local.txt is the per-machine local editable sibling overlay (`-e ../sibling`
+# lines) consumed by `make uv-sync-local`. Never committed.
+requirements-local.txt
+# Generic wheel/package info folders
+*.egg-info/
 
-# hatch
-*.hatch/
-
-# pdm
-__pypackages__/
-
-# tox and nox
+# PDK / Environment Specific Cache Folders
 .tox/
 .nox/
-
-# pytest
-.cache/
-.pytest_cache/
-
-# mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
 
-# coverage and test reports
+# ==============================
+# Tooling and Static Analysis Caches
+# ==============================
+
+# Coverage / Testing Reports
 .coverage
 .coverage.*
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
+htmlcov/
 
-# Pyre type checker
-.pyre/
+# Pytest cache directory
+.pytest_cache/ 
 
-# CMake files
+# Mypy specific files
+dmypy.json
+
+# Ruff (Linter) cache
+.ruff_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+
+# ==============================
+# IDEs, Editors, and OS System Files
+# ==============================
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Standard VCS/Code Editor folders
+# IntelliJ IDEA family
+.idea/
+# Generic module file
+*.iml
+# VS Code workspace settings
+.vscode/
+
+# Python boilerplate / Framework config
+# Django specific local overrides
+local_settings.py
+
+
+# ==============================
+# Packaging, Installation & Build Systems
+# ==============================
+
+# General package distribution folders (PyInstaller/Build tools)
+# PyInstaller spec files
+*.spec
+# Setuptools directory
+.Python
+# Man pages/manifests
+MANIFEST
+
+# CMake build system files
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 
 
-# Translations
+# ==============================
+# Documentation and Translations
+# ==============================
+
+# Sphinx documentation builds
+docs/_build/
+
+# Translation files (gettext)
 *.mo
 *.pot
 
-# Django stuff
-*.log
-local_settings.py
+
+# ==============================
+# Local Runtime Data & Logs 
+# (DO NOT COMMIT THESE FILES!)
+# ==============================
+
+# Databases and local state files
+# SQLite database file
 db.sqlite3
-
-# Flask stuff
+# Flask application instance folder
 instance/
-.webassets-cache
+# General storage data folder (if applicable)
+storage/*
 
-# Scrapy stuff
-.scrapy
-
-# IPython / Jupyter
-.ipynb_checkpoints/
-profile
-
-# macOS system files
-*.DS_Store
-.AppleDouble
-.LSOverride
-
-# Thumbnails and metadata
-._*
-
-# Files that might appear in root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-
-# Directories created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-# Installer logs
+# Logs
+# Generic log files
+*.log
 pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-
-# Sphinx documentation build
-docs/_build/
-
-# IDEs and editors
-# IntelliJ IDEA family
-.idea/
-*.iml
-*.ipr
-*.iws
-.idea_modules/
-
-# Visual Studio Code
-.vscode/
-
-# Cookiecutter
-output/
-python_boilerplate/
-cookiecutter-pypackage-env/

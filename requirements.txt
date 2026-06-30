@@ -1,0 +1,22 @@
+# Runtime dependencies
+#
+# pyproject.toml is the source of truth for dependency declarations, version ranges,
+# and optional dependency groups.
+#
+# This file is intentionally minimal and is used by installation workflows that
+# expect a requirements file (e.g., `make installDev`, `make uv-sync`).
+#
+# Add runtime dependencies here only as needed and keep them aligned with
+# pyproject.toml.
+
+# Examples
+#
+# Tag:      some-package @ git+https://github.com/example-org/some-package.git@v1.4.2
+# Commit:   some-package @ git+https://github.com/example-org/some-package.git@a1b2c3d4e5f6
+# Branch:   some-package @ git+https://github.com/example-org/some-package.git@main
+# Monorepo: some-package @ git+https://github.com/example-org/monorepo.git@v2.0.0#subdirectory=packages/some-package
+# Extras:   some-package[dev,test] @ git+https://github.com/example-org/some-package.git@v1.4.2
+# Editable: -e git+https://github.com/example-org/some-package.git@develop#egg=some-package
+
+
+pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev

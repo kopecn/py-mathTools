@@ -4,44 +4,57 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "pyMathTools"
+name = "py_math_tools"
 version = "0.0.1"
 description = "Python Boilerplate contains all the boilerplate you need to create a Python package."
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">= 3.10"
+requires-python = ">=3.10"
 authors = [
   {name = "Nicholas Bergantz", email = "nicholas.bergantz@gmail.com"}
 ]
-keywords = [
-  
-]
+keywords = ["my_package", "python", "package"]
 classifiers = [
-
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
 ]
 license = {text = "MIT"}
+# Runtime dependencies — NAMES ONLY, never version-pinned (BKM: only the application
+# layer pins; module-level pins cause dependency conflicts). Put any version pins,
+# tag-pins, or git-based pointers in requirements*.txt — NEVER here (git URLs in
+# pyproject are a module-deployment disaster). e.g.:
+#   dependencies = ["requests"]
 dependencies = [
-    "pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev",
+    "pyFoundationTools",
     "matplotlib",
     "numpy-quaternion",
 ]
 
 [project.optional-dependencies]
-develop = [
+dev = [
     "pytest",
-    "black",
+    "pytest-asyncio",
+    "ruff",
     "build",
     "bump2version",
-    "pylint",
     "mypy",
+    "ty",
     "twine",
 ]
-personal_repos = []
 
 [project.urls]
 
-bugs = "https://github.com/kopecn/pyMathTools/issues"
-changelog = "https://github.com/kopecn/pyMathTools/blob/master/changelog.md"
-homepage = "https://github.com/kopecn/pyMathTools"
+bugs = "https://github.com/kopecn/py_math_tools/issues"
+changelog = "https://github.com/kopecn/py_math_tools/blob/prod/HISTORY.md"
+homepage = "https://github.com/kopecn/py_math_tools"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -53,3 +66,29 @@ package-dir = {"" = "src"}
 testpaths = ["tests/*"]
 python_functions = ["test*"]
 python_files = ["test*.py"]
+# src/ layout: let pytest import the package without an install (so `make test` and a
+# bare `pytest` work on a fresh checkout).
+pythonpath = ["src"]
+
+# Path resolution: the Makefile scopes quality targets via PY_* vars (.env sets
+# PY_SRC=src for this src/ layout). The src/files config below is the fallback that
+# makes a bare `ruff check .` / `mypy .` (no path args) and IDE integrations resolve
+# the same scope. The Makefile is byte-identical across halves.
+[tool.ruff]
+target-version = "py310"  # support floor; default dev interpreter is 3.13
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["D301"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src", "tests"]
+
+# Multi-repo co-development: local editable sibling repos and any git-based pointers
+# go in requirements-local.txt (NEVER in pyproject — git URLs / path overrides here
+# are a module-deployment disaster). `make uv-sync-local` installs that overlay on top
+# of the normal env; it is gitignored and never read by CI/release.

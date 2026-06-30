@@ -1,0 +1,47 @@
+name: Create Release Tag
+
+on:
+  push:
+    branches:
+      - prod
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version change
+        id: changed
+        run: |
+          if git diff --quiet HEAD^ HEAD -- pyproject.toml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get version from pyproject.toml
+        if: steps.changed.outputs.changed == 'true'
+        id: version
+        run: |
+          VERSION=$(grep '^version =' pyproject.toml | cut -d'"' -f2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag if missing
+        if: steps.changed.outputs.changed == 'true'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists"
+            exit 0
+          fi
+
+          git tag "$TAG"
+          git push origin "$TAG"

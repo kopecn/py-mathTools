@@ -1,0 +1,45 @@
+# Publish-on-tag workflow — SCAFFOLD ONLY.
+#
+# `tag-on-prod.yml` creates a `v<version>` tag when pyproject.toml's version changes
+# on `prod`. This workflow is the intended consumer: it builds and uploads that tagged
+# artifact to PyPI. It is deliberately left UNIMPLEMENTED for you to finish.
+#
+# To enable publishing:
+#   1. Choose an auth method and uncomment the matching block below:
+#        (a) Trusted Publishing (recommended) — configure a PyPI "pending publisher"
+#            for this repo/workflow; needs `permissions: id-token: write`, no secret.
+#        (b) API token — add a `PYPI_API_TOKEN` repository secret.
+#   2. Remove the `exit 1` guard in the `not-configured` step.
+#
+# Until then this workflow no-ops loudly so a tag never silently fails to publish.
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    # permissions:
+    #   id-token: write        # (a) Trusted Publishing
+    steps:
+      - name: Not configured
+        run: |
+          echo "::error::publish.yml is a scaffold — wire up PyPI auth before enabling."
+          echo "See the header comment in .github/workflows/publish.yml."
+          exit 1
+
+      # - uses: actions/checkout@v4
+      # - uses: astral-sh/setup-uv@v5
+      # - name: Build
+      #   run: make build
+      # - name: Publish (Trusted Publishing)
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      # - name: Publish (API token)
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
