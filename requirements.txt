@@ -19,4 +19,4 @@
 # Editable: -e git+https://github.com/example-org/some-package.git@develop#egg=some-package
 
 
-pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev
+pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@feat/switch-to-new-template

@@ -42,7 +42,7 @@ PY_ALL ?= $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
 # Tool runner for uv- quality/test recipes. `--extra dev` ensures ruff/mypy/pytest are
 # resolved (and installed if missing) from the "[dev]" extra even on a FRESH checkout —
 # no reliance on a pre-existing .venv, rather than the ambient PATH.
-UV := uv run --extra dev
+UV := uv run --extra dev --no-project
 PIP := $(PYTHON) -m pip
 BUMPVERSION := bumpversion --allow-dirty
 REPO := $(notdir $(CURDIR))

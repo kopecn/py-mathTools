@@ -36,24 +36,23 @@ Inverse Conversion:
   r = sqrt(x² + y² + z²)
 """
 
-from typing import Tuple
+from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
+from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 from numpy import (
-    clip,
-    pi,
-    arctan2,
-    cos,
-    sin,
-    array,
-    cross,
-    linspace,
-    zeros,
-    sqrt,
     arccos,
+    arctan2,
+    array,
+    clip,
+    cos,
+    cross,
     dot,
+    linspace,
+    pi,
+    sin,
+    sqrt,
+    zeros,
 )
 from numpy.linalg import norm
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 
 from pyMathTools.hints import FloatNDArray
 
@@ -61,7 +60,7 @@ from pyMathTools.hints import FloatNDArray
 def generate_spherical_small_circle_points(
     circle: UnitSphericalSmallCircle,
     num_points: int = 120,
-) -> Tuple[FloatNDArray, FloatNDArray]:
+) -> tuple[FloatNDArray, FloatNDArray]:
     """
     Generate points on a true small circle on a unit sphere.
 
@@ -158,7 +157,7 @@ def generate_spherical_small_circle_points(
 def generate_spherical_arc_points(
     arc: UnitSphericalArc,
     num_points: int = 120,
-) -> Tuple[FloatNDArray, FloatNDArray]:
+) -> tuple[FloatNDArray, FloatNDArray]:
     """
     Generate points along an arc on a unit sphere.
 

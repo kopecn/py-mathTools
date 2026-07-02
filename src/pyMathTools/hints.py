@@ -5,11 +5,12 @@ This module provides reusable type hints for NumPy arrays and scalars,
 enabling strict and clear typing in mathematical code throughout the package.
 """
 
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
+
 import numpy as np
+import quaternion
 from numpy import float64
 from numpy.typing import NDArray
-import quaternion
 
 if TYPE_CHECKING:
     from pyMathTools.spatial.quaternion import Quaternion

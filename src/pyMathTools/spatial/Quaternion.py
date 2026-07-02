@@ -3,39 +3,41 @@ Fully-typed OOP wrapper around numpy-quaternions library
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TypeVar, Type, Any
-import numpy as np
-from foundationTypes.mathTypes.QuaternionType import QuaternionType
 
-# Import all necessary functions from quaternion module
+from dataclasses import dataclass
+from typing import Any, TypeVar
+
+import numpy as np
+from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
+from foundationTypes.mathTypes.quaternionABC import QuaternionABC
+from quaternion import allclose as quat_allclose
 from quaternion import (
+    as_euler_angles,
     as_float_array,
     as_quat_array,
-    from_float_array,
     as_rotation_matrix,
-    from_rotation_matrix,
     as_rotation_vector,
-    from_rotation_vector,
-    as_euler_angles,
-    from_euler_angles,
     as_vector_part,
+    from_euler_angles,
+    from_float_array,
+    from_rotation_matrix,
+    from_rotation_vector,
     from_vector_part,
     rotate_vectors,
-    isclose as quat_isclose,
-    allclose as quat_allclose,
 )
-from quaternion.quaternion_time_series import slerp as quat_slerp
+from quaternion import (
+    isclose as quat_isclose,
+)
+from quaternion import quaternion as np_quaternion
+from quaternion.quaternion_time_series import slerp as quat_slerp  # type: ignore[import-untyped]
 
 # Import custom type hints
 from pyMathTools.hints import (
     FloatArray3,
     FloatArray4,
-    RotationMatrix,
     FloatOrQuaternion,
+    RotationMatrix,
 )
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
-
 
 T = TypeVar("T", bound="Quaternion")
 
@@ -46,23 +48,21 @@ def from_float(x: Any) -> float:
 
 
 @dataclass
-class Quaternion(QuaternionType):
+class Quaternion(QuaternionABC):
     """
     wrapper class for numpy-quaternion for allowing
     """
 
-    __q: np.quaternion
+    __q: np_quaternion
 
     # MARK: - Constructors
 
     @staticmethod
-    def fromNumpyQuaternion(q: np.quaternion) -> "Quaternion":
+    def fromNumpyQuaternion(q: np_quaternion) -> Quaternion:
         return Quaternion(q)
 
     @classmethod
-    def from_components(
-        cls: Type[T], w: float = 1, x: float = 0, y: float = 0, z: float = 0
-    ) -> T:
+    def from_components(cls: type[T], w: float = 1, x: float = 0, y: float = 0, z: float = 0) -> T:
         """Create a quaternion instance from individual w, x, y, z components.
 
         Args:
@@ -74,10 +74,10 @@ class Quaternion(QuaternionType):
         Returns:
             A concrete QuaternionType instance of the calling class type
         """
-        return cls(np.quaternion(w, x, y, z))
+        return cls(np_quaternion(w, x, y, z))
 
     @classmethod
-    def from_float_array(cls: Type[T], array: FloatArray4) -> T:
+    def from_float_array(cls: type[T], array: FloatArray4) -> T:
         """Create a quaternion from a 4-element float array [w, x, y, z].
 
         Args:
@@ -141,7 +141,7 @@ class Quaternion(QuaternionType):
         return self.__q.z
 
     @property
-    def q(self) -> np.quaternion:
+    def q(self) -> np_quaternion:
         return self.__q
 
     # MARK: - Arithmetic Operators
@@ -152,7 +152,7 @@ class Quaternion(QuaternionType):
             return Quaternion(self.__q + other.q)
         elif isinstance(other, (float, int)):
             return Quaternion(self.__q + other)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(self.__q + other)
         return NotImplemented
 
@@ -166,7 +166,7 @@ class Quaternion(QuaternionType):
             return Quaternion(self.__q - other.q)
         elif isinstance(other, (float, int)):
             return Quaternion(self.__q - other)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(self.__q - other)
         return NotImplemented
 
@@ -174,7 +174,7 @@ class Quaternion(QuaternionType):
         """Right subtraction."""
         if isinstance(other, (float, int)):
             return Quaternion(other - self.__q)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(other - self.__q)
         return NotImplemented
 
@@ -184,7 +184,7 @@ class Quaternion(QuaternionType):
             return Quaternion(self.__q * other.q)
         elif isinstance(other, (float, int)):
             return Quaternion(self.__q * other)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(self.__q * other)
         return NotImplemented
 
@@ -198,7 +198,7 @@ class Quaternion(QuaternionType):
             return Quaternion(self.__q / other.q)
         elif isinstance(other, (float, int)):
             return Quaternion(self.__q / other)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(self.__q / other)
         return NotImplemented
 
@@ -206,7 +206,7 @@ class Quaternion(QuaternionType):
         """Right division."""
         if isinstance(other, (float, int)):
             return Quaternion(other / self.__q)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return Quaternion(other / self.__q)
         return NotImplemented
 
@@ -232,7 +232,7 @@ class Quaternion(QuaternionType):
         """Check equality with another quaternion."""
         if isinstance(other, Quaternion):
             return bool(self.__q == other.q)
-        elif isinstance(other, np.quaternion):
+        elif isinstance(other, np_quaternion):
             return bool(self.__q == other)
         return False
 
@@ -391,7 +391,7 @@ class Quaternion(QuaternionType):
         return as_rotation_matrix(self.__q)
 
     @classmethod
-    def from_rotation_matrix(cls: Type[T], matrix: RotationMatrix) -> T:
+    def from_rotation_matrix(cls: type[T], matrix: RotationMatrix) -> T:
         """Create a quaternion from a 3x3 rotation matrix.
 
         Args:
@@ -422,7 +422,7 @@ class Quaternion(QuaternionType):
         return as_rotation_vector(self.__q)
 
     @classmethod
-    def from_rotation_vector(cls: Type[T], rotation_vector: FloatArray3) -> T:
+    def from_rotation_vector(cls: type[T], rotation_vector: FloatArray3) -> T:
         """Create a quaternion from axis-angle representation.
 
         Args:
@@ -454,7 +454,7 @@ class Quaternion(QuaternionType):
 
     @classmethod
     def from_euler_angles(
-        cls: Type[T],
+        cls: type[T],
         alpha: float,
         beta: float,
         gamma: float,
@@ -481,7 +481,7 @@ class Quaternion(QuaternionType):
     # MARK: - Vector Part Operations
 
     @classmethod
-    def from_vector_part(cls: Type[T], vector: FloatArray3) -> T:
+    def from_vector_part(cls: type[T], vector: FloatArray3) -> T:
         """Create a quaternion from a 3D vector (pure quaternion).
 
         This creates a quaternion with w=0 and vector part equal to the input.
@@ -593,7 +593,7 @@ class Quaternion(QuaternionType):
     # MARK: - Special Constructors
 
     @classmethod
-    def identity(cls: Type[T]) -> T:
+    def identity(cls: type[T]) -> T:
         """Create an identity quaternion (no rotation).
 
         Returns:
@@ -602,7 +602,7 @@ class Quaternion(QuaternionType):
         return cls.from_components(w=1.0, x=0.0, y=0.0, z=0.0)
 
     @classmethod
-    def from_axis_angle(cls: Type[T], axis: FloatArray3, angle: float) -> T:
+    def from_axis_angle(cls: type[T], axis: FloatArray3, angle: float) -> T:
         """Create a quaternion from a rotation axis and angle.
 
         Args:
@@ -624,7 +624,7 @@ class Quaternion(QuaternionType):
 
     @classmethod
     def _from_unit_direction_to_vector(
-        cls: Type[T],
+        cls: type[T],
         start_direction: FloatArray3,
         target_vector: FloatArray3,
         perpendicular_axis: FloatArray3,
@@ -673,7 +673,7 @@ class Quaternion(QuaternionType):
         return cls.from_axis_angle(axis, angle)
 
     @classmethod
-    def from_unit_x_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+    def from_unit_x_to_vector(cls: type[T], target_vector: FloatArray3) -> T:
         """Create a quaternion that rotates the +X axis to point toward target_vector.
 
         This constructor computes the rotation that transforms the unit X direction
@@ -701,7 +701,7 @@ class Quaternion(QuaternionType):
         return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
 
     @classmethod
-    def from_unit_y_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+    def from_unit_y_to_vector(cls: type[T], target_vector: FloatArray3) -> T:
         """Create a quaternion that rotates the +Y axis to point toward target_vector.
 
         This constructor computes the rotation that transforms the unit Y direction
@@ -729,7 +729,7 @@ class Quaternion(QuaternionType):
         return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
 
     @classmethod
-    def from_unit_z_to_vector(cls: Type[T], target_vector: FloatArray3) -> T:
+    def from_unit_z_to_vector(cls: type[T], target_vector: FloatArray3) -> T:
         """Create a quaternion that rotates the +Z axis to point toward target_vector.
 
         This constructor computes the rotation that transforms the unit Z direction
@@ -757,7 +757,7 @@ class Quaternion(QuaternionType):
         return cls._from_unit_direction_to_vector(start, target_vector, perpendicular)
 
     @classmethod
-    def from_dict(cls, obj: Any) -> "Quaternion":
+    def from_dict(cls, obj: Any) -> Quaternion:
         """Create a quaternion instance from a dictionary representation.
 
         Args:
@@ -776,7 +776,7 @@ class Quaternion(QuaternionType):
 
     def to_unitSphericalSmallCircle(
         q: Quaternion, radius_angle: float = np.pi / 4
-    ) -> UnitSphericalSmallCircle:
+    ) -> UnitSphericalSmallCircleType:
         """ """
         a, p = q.vector_spherical
-        return UnitSphericalSmallCircle(azimuth=a, polar=p, radius_angle=radius_angle)
+        return UnitSphericalSmallCircleType(azimuth=a, polar=p, radius_angle=radius_angle)

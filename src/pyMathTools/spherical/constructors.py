@@ -6,9 +6,8 @@ from various representations, using ISO Physics Convention for spherical coordin
 """
 
 import numpy as np
-from numpy import atan2, acos, pi
-
 from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
+from numpy import atan2
 
 
 def arc_from_two_points(

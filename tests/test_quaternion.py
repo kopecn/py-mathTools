@@ -13,6 +13,7 @@ Tests cover:
 """
 
 import unittest
+
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal
 
@@ -252,7 +253,7 @@ class TestQuaternionArithmetic(unittest.TestCase):
     def test_power(self):
         """Test quaternion power operation."""
         q1 = Quaternion.from_axis_angle(np.array([0, 0, 1]), np.pi / 2)
-        q2 = q1 ** 2
+        q2 = q1**2
 
         # (90° rotation)^2 should be 180° rotation
         assert_allclose(q2.angle, np.pi, rtol=1e-10)
@@ -408,11 +409,7 @@ class TestRotationMatrixConversions(unittest.TestCase):
         matrix = q.to_rotation_matrix()
 
         # 90° Z rotation matrix
-        expected = np.array([
-            [0, -1, 0],
-            [1,  0, 0],
-            [0,  0, 1]
-        ])
+        expected = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
         assert_array_almost_equal(matrix, expected, decimal=10)
 
     def test_to_rotation_matrix_180x(self):
@@ -421,11 +418,7 @@ class TestRotationMatrixConversions(unittest.TestCase):
         matrix = q.to_rotation_matrix()
 
         # 180° X rotation matrix
-        expected = np.array([
-            [1,  0,  0],
-            [0, -1,  0],
-            [0,  0, -1]
-        ])
+        expected = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
         assert_array_almost_equal(matrix, expected, decimal=10)
 
     def test_from_rotation_matrix_identity(self):
@@ -437,11 +430,7 @@ class TestRotationMatrixConversions(unittest.TestCase):
 
     def test_from_rotation_matrix_90z(self):
         """Test creating quaternion from 90° Z rotation matrix."""
-        matrix = np.array([
-            [0, -1, 0],
-            [1,  0, 0],
-            [0,  0, 1]
-        ])
+        matrix = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
         q = Quaternion.from_rotation_matrix(matrix)
 
         expected = Quaternion.from_axis_angle(np.array([0, 0, 1]), np.pi / 2)

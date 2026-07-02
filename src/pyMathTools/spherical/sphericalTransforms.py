@@ -14,21 +14,20 @@ All functions use the ISO physics convention for spherical coordinates:
 See pyMathTools.generators.sphericalGenerators module docstring for complete details.
 """
 
-from typing import Tuple
-from pyMathTools.hints import FloatOrNDArray
-from numpy import float64
-from numpy.typing import NDArray
+from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
 from numpy import (
-    clip,
-    pi,
-    arctan2,
-    cos,
-    sin,
     arccos,
+    arctan2,
+    clip,
+    cos,
+    float64,
+    pi,
+    sin,
 )
 from numpy.linalg import norm
+from numpy.typing import NDArray
 
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
+from pyMathTools.hints import FloatOrNDArray
 
 
 def plate_carree_transform(
@@ -131,7 +130,7 @@ def cartesian_to_spherical(point: NDArray[float64]) -> tuple:
 
 def compute_spherical_arc_endpoint(
     arc: UnitSphericalArc,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     Compute the endpoint of a UnitSphericalArc on a unit sphere.
 
