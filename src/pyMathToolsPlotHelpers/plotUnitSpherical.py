@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,6 +8,7 @@ from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
 from foundationTypes.mathTypes.unitSphericalSmallCircleABC import UnitSphericalSmallCircleABC
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import-untyped]
 
 from pyMathTools.spatial.Quaternion import Quaternion
 from pyMathTools.spherical.sphericalGenerators import (
@@ -22,8 +24,8 @@ deg22_5 = np.pi / 8
 
 
 def plot_unit_spherical_advanced(
-    circles: list[UnitSphericalSmallCircleABC] | None = None,
-    arcs: list[UnitSphericalArcABC] | None = None,
+    circles: Sequence[UnitSphericalSmallCircleABC] | None = None,
+    arcs: Sequence[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (10, 6),
@@ -104,7 +106,7 @@ def plot_unit_spherical_advanced(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = ax.get_figure()
+        fig = cast(Figure, ax.get_figure())
 
     if circles is not None:
         for idx, circle in enumerate(circles):
@@ -246,8 +248,8 @@ def plot_unit_spherical_advanced(
 
 
 def plot_unit_spherical_polar(
-    circles: list[UnitSphericalSmallCircleABC] | None = None,
-    arcs: list[UnitSphericalArcABC] | None = None,
+    circles: Sequence[UnitSphericalSmallCircleABC] | None = None,
+    arcs: Sequence[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (8, 8),
@@ -320,7 +322,7 @@ def plot_unit_spherical_polar(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
     else:
-        fig = ax.get_figure()
+        fig = cast(Figure, ax.get_figure())
 
     if circles is not None:
         for idx, circle in enumerate(circles):
@@ -358,8 +360,8 @@ def plot_unit_spherical_polar(
                 azimuth_plot.append(azimuth_points[0])
                 radius_plot.append(radius_points[0])
 
-            azimuth_plot = np.array(azimuth_plot)
-            radius_plot = np.array(radius_plot)
+            azimuth_arr = np.array(azimuth_plot)
+            radius_arr = np.array(radius_plot)
 
             # Convert radius to degrees for legend
             radius_deg = np.degrees(circle.radius_angle)
@@ -374,8 +376,8 @@ def plot_unit_spherical_polar(
 
             # Plot in polar coordinates using plot instead of scatter for continuous lines
             ax.plot(
-                azimuth_plot,
-                radius_plot,
+                azimuth_arr,
+                radius_arr,
                 linewidth=2,
                 alpha=0.7,
                 label=label,
@@ -405,8 +407,8 @@ def plot_unit_spherical_polar(
                 azimuth_plot.append(azimuth_points[i])
                 radius_plot.append(radius_points[i])
 
-            azimuth_plot = np.array(azimuth_plot)
-            radius_plot = np.array(radius_plot)
+            azimuth_arr = np.array(azimuth_plot)
+            radius_arr = np.array(radius_plot)
 
             # Convert to degrees for legend
             arc_length_deg = np.degrees(arc.arc_length)
@@ -426,8 +428,8 @@ def plot_unit_spherical_polar(
 
             # Plot the arc
             ax.plot(
-                azimuth_plot,
-                radius_plot,
+                azimuth_arr,
+                radius_arr,
                 linewidth=2,
                 alpha=0.8,
                 label=label,
@@ -482,8 +484,8 @@ def plot_unit_spherical_polar(
 
 
 def plot_unit_spherical_3d(
-    circles: list[UnitSphericalSmallCircleABC] | None = None,
-    arcs: list[UnitSphericalArcABC] | None = None,
+    circles: Sequence[UnitSphericalSmallCircleABC] | None = None,
+    arcs: Sequence[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (10, 10),
@@ -491,7 +493,7 @@ def plot_unit_spherical_3d(
     show_sphere: bool = True,
     show_legend: bool = True,
     show_plot: bool = False,
-    ax: Axes | None = None,
+    ax: Axes3D | None = None,
     arc_colors: list[str] | None = None,
     circle_colors: list[str] | None = None,
     quaternion_colors: list[str] | None = None,
@@ -559,7 +561,7 @@ def plot_unit_spherical_3d(
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111, projection="3d")
     else:
-        fig = ax.get_figure()
+        fig = cast(Figure, ax.get_figure())
 
     # Optionally plot the sphere surface (physics convention)
     if show_sphere:
@@ -643,7 +645,7 @@ def plot_unit_spherical_3d(
     if quaternions is not None:
         for idx, quat in enumerate(quaternions):
             # Convert quaternion to Cartesian coordinates
-            x, y, z = quat.vector_cartesian
+            qx, qy, qz = quat.vector_cartesian
 
             # Get color for this quaternion
             color = get_color(quaternion_colors, idx)
@@ -653,9 +655,9 @@ def plot_unit_spherical_3d(
                 0,
                 0,
                 0,
-                x,
-                y,
-                z,
+                qx,
+                qy,
+                qz,
                 length=1.0,
                 arrow_length_ratio=0.05,
                 color=color,
@@ -668,7 +670,7 @@ def plot_unit_spherical_3d(
                 f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
             )
 
-            ax.scatter(x, y, z, s=50, marker="*", label=label, c=color, zorder=10)
+            ax.scatter(qx, qy, qz, s=50, marker="*", label=label, c=color, zorder=10)
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")

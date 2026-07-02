@@ -120,25 +120,25 @@ class Quaternion(QuaternionABC):
             >>> Quaternion.as_quat_array([[1,0,0,0], [0.707,0,0,0.707]])
             array([quaternion(1, 0, 0, 0), quaternion(0.707, 0, 0, 0.707)])
         """
-        return as_quat_array(array)
+        return np.asarray(as_quat_array(array))
 
     # MARK: - Properties
 
     @property
     def w(self) -> float:
-        return self.__q.w
+        return float(self.__q.w)
 
     @property
     def x(self) -> float:
-        return self.__q.x
+        return float(self.__q.x)
 
     @property
     def y(self) -> float:
-        return self.__q.y
+        return float(self.__q.y)
 
     @property
     def z(self) -> float:
-        return self.__q.z
+        return float(self.__q.z)
 
     @property
     def q(self) -> np_quaternion:
@@ -295,7 +295,7 @@ class Quaternion(QuaternionABC):
         norm = np.linalg.norm(vect)
         if norm < 1e-10:
             return np.array([0.0, 0.0, 1.0])  # Default axis for identity
-        return vect / norm
+        return np.asarray(vect / norm, dtype=np.float64)
 
     @property
     def vector_spherical(self) -> tuple[float, float]:
@@ -369,7 +369,7 @@ class Quaternion(QuaternionABC):
         This function is fast because no data is copied; the returned
         quantity is just a "view" of the original.
         """
-        return as_float_array(self.__q)
+        return np.asarray(as_float_array(self.__q), dtype=np.float64)
 
     def to_components(self) -> tuple[float, float, float, float]:
         """Return quaternion components as a tuple (w, x, y, z)."""
@@ -390,7 +390,7 @@ class Quaternion(QuaternionABC):
         Raises:
             ZeroDivisionError: If this quaternion has zero norm
         """
-        return as_rotation_matrix(self.__q)
+        return np.asarray(as_rotation_matrix(self.__q), dtype=np.float64)
 
     @classmethod
     def from_rotation_matrix(cls: type[T], matrix: RotationMatrix) -> T:
@@ -421,7 +421,7 @@ class Quaternion(QuaternionABC):
         Returns:
             3-element array representing axis-angle rotation
         """
-        return as_rotation_vector(self.__q)
+        return np.asarray(as_rotation_vector(self.__q), dtype=np.float64)
 
     @classmethod
     def from_rotation_vector(cls: type[T], rotation_vector: FloatArray3) -> T:
@@ -452,7 +452,7 @@ class Quaternion(QuaternionABC):
         Returns:
             Array of (alpha, beta, gamma) in radians
         """
-        return as_euler_angles(self.__q)
+        return np.asarray(as_euler_angles(self.__q), dtype=np.float64)
 
     @classmethod
     def from_euler_angles(
@@ -503,7 +503,7 @@ class Quaternion(QuaternionABC):
         Returns:
             3-element array [x, y, z]
         """
-        return as_vector_part(self.__q)
+        return np.asarray(as_vector_part(self.__q), dtype=np.float64)
 
     def rotate_vector(self, vector: FloatArray3) -> FloatArray3:
         """Rotate a 3D vector by this quaternion.
@@ -517,7 +517,7 @@ class Quaternion(QuaternionABC):
         Returns:
             Rotated 3-element vector
         """
-        return rotate_vectors(self.__q, vector)
+        return np.asarray(rotate_vectors(self.__q, vector), dtype=np.float64)
 
     # MARK: - Interpolation Methods
 

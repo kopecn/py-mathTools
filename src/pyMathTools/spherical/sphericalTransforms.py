@@ -102,7 +102,7 @@ def spherical_to_cartesian(azimuth: float, polar: float) -> tuple[float, float, 
     return (x, y, z)
 
 
-def cartesian_to_spherical(point: NDArray[float64]) -> tuple:
+def cartesian_to_spherical(point: NDArray[float64]) -> tuple[float, float]:
     """
     Convert Cartesian coordinates to spherical coordinates.
 
