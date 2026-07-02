@@ -805,11 +805,11 @@ class TestQuaternionSerialization(unittest.TestCase):
         self.assertEqual(q.x, 2.0)
 
     def test_inheritance_from_quaternion_type(self) -> None:
-        """Test that Quaternion properly inherits from QuaternionType."""
-        from foundationTypes.mathTypes.MathTypes import QuaternionType
+        """Test that Quaternion properly inherits from the shared QuaternionABC."""
+        from foundationTypes.mathTypes.quaternionABC import QuaternionABC
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
-        self.assertIsInstance(q, QuaternionType)
+        self.assertIsInstance(q, QuaternionABC)
 
     def test_inheritance_from_data_model_helper(self) -> None:
         """Test that Quaternion inherits from DataModelHelper."""
