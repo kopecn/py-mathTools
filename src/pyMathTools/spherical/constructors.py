@@ -6,7 +6,8 @@ from various representations, using ISO Physics Convention for spherical coordin
 """
 
 import numpy as np
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
+from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType
+from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
 from numpy import atan2
 
 
@@ -16,7 +17,7 @@ def arc_from_two_points(
     azimuth2: float,
     polar2: float,
     isPositive: bool = True,
-) -> UnitSphericalArc:
+) -> UnitSphericalArcABC:
     """
     Create a UnitSphericalArc connecting two points on a unit sphere.
 
@@ -88,7 +89,7 @@ def arc_from_two_points(
     if not isPositive:
         arc_length = -arc_length
 
-    return UnitSphericalArc(
+    return UnitSphericalArcType(
         azimuth=azimuth1,
         polar=polar1,
         orient=orient,

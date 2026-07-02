@@ -1,7 +1,10 @@
+from collections.abc import Sequence
+
 import matplotlib.pyplot as plt
 import numpy as np
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType, UnitSphericalSmallCircleType
+from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
+from foundationTypes.mathTypes.unitSphericalSmallCircleABC import UnitSphericalSmallCircleABC
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
@@ -19,8 +22,8 @@ deg22_5 = np.pi / 8
 
 
 def plot_unit_spherical_advanced(
-    circles: list[UnitSphericalSmallCircle] | None = None,
-    arcs: list[UnitSphericalArc] | None = None,
+    circles: list[UnitSphericalSmallCircleABC] | None = None,
+    arcs: list[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (10, 6),
@@ -184,7 +187,13 @@ def plot_unit_spherical_advanced(
             label = labels[idx] if labels is not None and idx < len(labels) else None
 
             if label is None:
-                label = f"Quat {idx + 1}: w:{quat.w:.1f}, x:{quat.x:.1f}, y:{quat.y:.1f}, z:{quat.z:.1f}"
+                label = (
+                    f"Quat {idx + 1}: "
+                    f"w:{quat.w:.1f}, "
+                    f"x:{quat.x:.1f}, "
+                    f"y:{quat.y:.1f}, "
+                    f"z:{quat.z:.1f}"
+                )
 
             # Plot vector as an arrow from origin to the point
             ax.annotate(
@@ -237,8 +246,8 @@ def plot_unit_spherical_advanced(
 
 
 def plot_unit_spherical_polar(
-    circles: list[UnitSphericalSmallCircle] | None = None,
-    arcs: list[UnitSphericalArc] | None = None,
+    circles: list[UnitSphericalSmallCircleABC] | None = None,
+    arcs: list[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (8, 8),
@@ -404,7 +413,13 @@ def plot_unit_spherical_polar(
             azimuth_deg = np.degrees(arc.azimuth)
             polar_deg = np.degrees(arc.polar)
             orient_deg = np.degrees(arc.orient)
-            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
+            label = (
+                f"Arc {idx + 1}: "
+                f"A:{azimuth_deg:.1f}°, "
+                f"P:{polar_deg:.1f}°, "
+                f"L:{arc_length_deg:.1f}°, "
+                f"O:{orient_deg:.1f}°"
+            )
 
             # Get color for this arc
             color = get_color(arc_colors, idx)
@@ -467,8 +482,8 @@ def plot_unit_spherical_polar(
 
 
 def plot_unit_spherical_3d(
-    circles: list[UnitSphericalSmallCircle] | None = None,
-    arcs: list[UnitSphericalArc] | None = None,
+    circles: list[UnitSphericalSmallCircleABC] | None = None,
+    arcs: list[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (10, 10),
@@ -600,7 +615,13 @@ def plot_unit_spherical_3d(
             azimuth_deg = np.degrees(arc.azimuth)
             polar_deg = np.degrees(arc.polar)
             orient_deg = np.degrees(arc.orient)
-            label = f"Arc {idx + 1}: A:{azimuth_deg:.1f}°, P:{polar_deg:.1f}°, L:{arc_length_deg:.1f}°, O:{orient_deg:.1f}°"
+            label = (
+                f"Arc {idx + 1}: "
+                f"A:{azimuth_deg:.1f}°, "
+                f"P:{polar_deg:.1f}°, "
+                f"L:{arc_length_deg:.1f}°, "
+                f"O:{orient_deg:.1f}°"
+            )
 
             # Get color for this arc
             color = get_color(arc_colors, idx)
@@ -675,8 +696,8 @@ def plot_unit_spherical_3d(
 
 
 def plot_unit_spherical_multiplot(
-    circles: list[UnitSphericalSmallCircle] | None = None,
-    arcs: list[UnitSphericalArc] | None = None,
+    circles: Sequence[UnitSphericalSmallCircleABC] | None = None,
+    arcs: Sequence[UnitSphericalArcABC] | None = None,
     quaternions: list[Quaternion] | None = None,
     num_points: int = 120,
     figsize: tuple[int, int] = (24, 6),
@@ -691,8 +712,8 @@ def plot_unit_spherical_multiplot(
 
     Parameters:
     -----------
-    circles : List[UnitSphericalSmallCircle] or array-like
-        List of UnitSphericalSmallCircle objects or array of [azimuth, polar, radius] lists
+    circles : List[UnitSphericalSmallCircleABC] or array-like
+        List of UnitSphericalSmallCircleABC objects or array of [azimuth, polar, radius] lists
     arcs : List[UnitSphericalArc], optional
         List of UnitSphericalArc objects
     quaternions : List[Quaternion], optional
@@ -800,68 +821,71 @@ def plot_unit_spherical_multiplot(
 
 
 def demo() -> None:
-    """Demonstration of multiplot view showing spherical small circles in three different projections."""
+    """
+    Demonstration of multiplot view showing spherical small circles in three
+    different projections.
+    """
 
     # Define 4 circles using UnitSphericalSmallCircle dataclass
-    [
-        UnitSphericalSmallCircle(
+    circles = [
+        UnitSphericalSmallCircleType(
             azimuth=0,
             polar=0,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=0,
             polar=np.pi / 2,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=0,
             polar=np.pi,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=0,
             polar=-np.pi / 2,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=-np.pi / 2,
             polar=np.pi / 2,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=np.pi / 2,
             polar=np.pi / 2,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=-deg45,
             polar=deg45,
             radius_angle=deg45,
         ),
-        UnitSphericalSmallCircle(
+        UnitSphericalSmallCircleType(
             azimuth=np.deg2rad(135),
             polar=deg45,
             radius_angle=deg45,
         ),
     ]
 
-    [
-        UnitSphericalArc(orient=0, azimuth=0, polar=0, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg45, azimuth=0, polar=0, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg90, azimuth=0, polar=0, arc_length=deg22_5),
-        UnitSphericalArc(orient=0, azimuth=0, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=0, azimuth=deg45, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=0, azimuth=deg90, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg45, azimuth=0, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg45, azimuth=deg45, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg45, azimuth=deg90, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg90, azimuth=0, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg90, azimuth=deg45, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=deg90, azimuth=deg90, polar=deg45, arc_length=deg22_5),
-        UnitSphericalArc(orient=0, azimuth=0, polar=deg45, arc_length=-deg22_5),
-        UnitSphericalArc(orient=0, azimuth=deg45, polar=deg45, arc_length=-deg22_5),
-        UnitSphericalArc(orient=0, azimuth=deg90, polar=deg45, arc_length=-deg22_5),
+    arcs = [
+        UnitSphericalArcType(orient=0, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg45, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg90, azimuth=0, polar=0, arc_length=deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=0, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg45, azimuth=0, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg45, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg45, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg90, azimuth=0, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg90, azimuth=deg45, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=deg90, azimuth=deg90, polar=deg45, arc_length=deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=0, polar=deg45, arc_length=-deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=deg45, polar=deg45, arc_length=-deg22_5),
+        UnitSphericalArcType(orient=0, azimuth=deg90, polar=deg45, arc_length=-deg22_5),
     ]
 
     quats: list[Quaternion] = [
@@ -879,8 +903,8 @@ def demo() -> None:
     ]
 
     _ = plot_unit_spherical_multiplot(
-        # circles=circles,
-        # arcs=arcs,
+        circles=circles,
+        arcs=arcs,
         quaternions=quats,
         show_plot=True,
     )

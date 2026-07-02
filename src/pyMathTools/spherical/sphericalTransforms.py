@@ -14,7 +14,7 @@ All functions use the ISO physics convention for spherical coordinates:
 See pyMathTools.generators.sphericalGenerators module docstring for complete details.
 """
 
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
+from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
 from numpy import (
     arccos,
     arctan2,
@@ -129,14 +129,14 @@ def cartesian_to_spherical(point: NDArray[float64]) -> tuple:
 
 
 def compute_spherical_arc_endpoint(
-    arc: UnitSphericalArc,
+    arc: UnitSphericalArcABC,
 ) -> tuple[float, float]:
     """
-    Compute the endpoint of a UnitSphericalArc on a unit sphere.
+    Compute the endpoint of a UnitSphericalArcABC on a unit sphere.
 
     Parameters
     ----------
-    arc : UnitSphericalArc
+    arc : UnitSphericalArcABC
         The spherical arc containing:
         - azimuth: Starting azimuth angle in radians (0 to 2π)
         - polar: Starting polar angle in radians (colatitude/zenith angle)
@@ -162,7 +162,7 @@ def compute_spherical_arc_endpoint(
 
     Examples
     --------
-    >>> arc = UnitSphericalArc(
+    >>> arc = UnitSphericalArcABC(
     ...     arc_length=deg2rad(45),
     ...     azimuth=0.0,
     ...     orient=0.0,

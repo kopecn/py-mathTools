@@ -806,7 +806,7 @@ class TestQuaternionSerialization(unittest.TestCase):
 
     def test_inheritance_from_quaternion_type(self):
         """Test that Quaternion properly inherits from QuaternionType."""
-        from foundationTypes.mathTypes.QuaternionType import QuaternionType
+        from foundationTypes.mathTypes.MathTypes import QuaternionType
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
         self.assertIsInstance(q, QuaternionType)

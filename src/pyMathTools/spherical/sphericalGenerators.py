@@ -36,8 +36,8 @@ Inverse Conversion:
   r = sqrt(x² + y² + z²)
 """
 
-from foundationTypes.mathTypes.UnitSphericalArc import UnitSphericalArc
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
+from foundationTypes.mathTypes.unitSphericalSmallCircleABC import UnitSphericalSmallCircleABC
 from numpy import (
     arccos,
     arctan2,
@@ -58,7 +58,7 @@ from pyMathTools.hints import FloatNDArray
 
 
 def generate_spherical_small_circle_points(
-    circle: UnitSphericalSmallCircle,
+    circle: UnitSphericalSmallCircleABC,
     num_points: int = 120,
 ) -> tuple[FloatNDArray, FloatNDArray]:
     """
@@ -71,7 +71,7 @@ def generate_spherical_small_circle_points(
 
     Parameters:
     -----------
-    circle : UnitSphericalSmallCircle
+    circle : UnitSphericalSmallCircleABC
         Small circle specification with:
           - azimuth (φ): angle in xy-plane from +x axis [0, 2π)
           - polar (θ): angle from +z axis (colatitude) [0, π]
@@ -155,7 +155,7 @@ def generate_spherical_small_circle_points(
 
 
 def generate_spherical_arc_points(
-    arc: UnitSphericalArc,
+    arc: UnitSphericalArcABC,
     num_points: int = 120,
 ) -> tuple[FloatNDArray, FloatNDArray]:
     """
@@ -172,7 +172,7 @@ def generate_spherical_arc_points(
 
     Parameters:
     -----------
-    arc : UnitSphericalArc
+    arc : UnitSphericalArcABC
         Arc specification with:
           - azimuth (φ): starting point angle in xy-plane from +x axis [0, 2π)
           - polar (θ): starting point angle from +z axis (colatitude) [0, π]

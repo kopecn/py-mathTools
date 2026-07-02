@@ -10,7 +10,7 @@ from typing import Any, TypeVar
 import numpy as np
 from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
 from foundationTypes.mathTypes.quaternionABC import QuaternionABC
-from quaternion import allclose as quat_allclose
+from quaternion import allclose as quat_allclose  # type: ignore[import-untyped]
 from quaternion import (
     as_euler_angles,
     as_float_array,
@@ -299,7 +299,9 @@ class Quaternion(QuaternionABC):
 
     @property
     def vector_spherical(self) -> tuple[float, float]:
-        """Return the quaternion's pointing direction in spherical coordinates (ISO physics convention).
+        """
+        Return the quaternion's pointing direction in spherical coordinates
+        (ISO physics convention).
 
         The quaternion is applied to a reference direction (+X axis) to get the
         pointing direction, which is then converted to spherical coordinates.
