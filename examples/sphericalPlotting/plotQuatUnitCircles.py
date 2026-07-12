@@ -30,9 +30,9 @@ from numpy import pi
 
 from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
 
-from pyMathTools.spatial.Quaternion import Quaternion
+from math_tools.spatial.quaternion import Quaternion
 
-from pyMathToolsPlotHelpers.plotUnitSpherical import (
+from math_plot_helpers.plot_unit_spherical import (
     plot_unit_spherical_multiplot,
 )
 

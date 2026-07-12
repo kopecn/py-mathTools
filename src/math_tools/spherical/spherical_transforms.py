@@ -11,10 +11,10 @@ All functions use the ISO physics convention for spherical coordinates:
 - θ (theta/polar): angle from +z axis (colatitude), range [0, π]
 - φ (phi/azimuth): angle in xy-plane from +x axis, range [0, 2π)
 
-See pyMathTools.generators.sphericalGenerators module docstring for complete details.
+See math_tools.spherical.spherical_generators module docstring for complete details.
 """
 
-from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
+from foundation_abc.math.sphericalABCs import UnitSphericalArcABC
 from numpy import (
     arccos,
     arctan2,
@@ -27,7 +27,7 @@ from numpy import (
 from numpy.linalg import norm
 from numpy.typing import NDArray
 
-from pyMathTools.hints import FloatOrNDArray
+from math_tools.hints import FloatOrNDArray
 
 
 def plate_carree_transform(

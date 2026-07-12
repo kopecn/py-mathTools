@@ -13,7 +13,7 @@ from quaternion import one as q_one  # type: ignore[import-untyped]
 from quaternion import quaternion as np_quaternion
 
 if TYPE_CHECKING:
-    from pyMathTools.spatial.Quaternion import Quaternion
+    from math_tools.spatial.quaternion import Quaternion
 
 # Basic numeric types
 FloatOrNDArray = float | NDArray[float64]

@@ -36,8 +36,10 @@ Inverse Conversion:
   r = sqrt(x² + y² + z²)
 """
 
-from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
-from foundationTypes.mathTypes.unitSphericalSmallCircleABC import UnitSphericalSmallCircleABC
+from foundation_abc.math.sphericalABCs import (
+    UnitSphericalArcABC,
+    UnitSphericalSmallCircleABC,
+)
 from numpy import (
     arccos,
     arctan2,
@@ -54,7 +56,7 @@ from numpy import (
 )
 from numpy.linalg import norm
 
-from pyMathTools.hints import FloatNDArray
+from math_tools.hints import FloatNDArray
 
 
 def generate_spherical_small_circle_points(

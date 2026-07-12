@@ -3,19 +3,21 @@ from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+from foundation_abc.math.sphericalABCs import (
+    UnitSphericalArcABC,
+    UnitSphericalSmallCircleABC,
+)
 from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType, UnitSphericalSmallCircleType
-from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
-from foundationTypes.mathTypes.unitSphericalSmallCircleABC import UnitSphericalSmallCircleABC
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import-untyped]
 
-from pyMathTools.spatial.Quaternion import Quaternion
-from pyMathTools.spherical.sphericalGenerators import (
+from math_tools.spatial.quaternion import Quaternion
+from math_tools.spherical.spherical_generators import (
     generate_spherical_arc_points,
     generate_spherical_small_circle_points,
 )
-from pyMathTools.spherical.sphericalTransforms import plate_carree_transform
+from math_tools.spherical.spherical_transforms import plate_carree_transform
 
 deg45 = np.deg2rad(45)
 deg90 = np.deg2rad(90)

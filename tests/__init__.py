@@ -1,1 +1,1 @@
-"""Unit test package for pyMathTools."""
+"""Unit test package for math_tools."""

@@ -6,8 +6,8 @@ from various representations, using ISO Physics Convention for spherical coordin
 """
 
 import numpy as np
+from foundation_abc.math.sphericalABCs import UnitSphericalArcABC
 from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType
-from foundationTypes.mathTypes.unitSphericalArcABC import UnitSphericalArcABC
 from numpy import atan2
 
 

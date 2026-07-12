@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import numpy as np
+from foundation_abc.math.spatialABCs import QuaternionABC
 from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
-from foundationTypes.mathTypes.quaternionABC import QuaternionABC
 from quaternion import allclose as quat_allclose  # type: ignore[import-untyped]
 from quaternion import (
     as_euler_angles,
@@ -32,7 +32,7 @@ from quaternion import quaternion as np_quaternion
 from quaternion.quaternion_time_series import slerp as quat_slerp  # type: ignore[import-untyped]
 
 # Import custom type hints
-from pyMathTools.hints import (
+from math_tools.hints import (
     FloatArray3,
     FloatArray4,
     FloatOrQuaternion,

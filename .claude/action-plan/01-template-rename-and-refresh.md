@@ -1,7 +1,7 @@
 ---
 chunk: 01-template-rename-and-refresh
 track: A
-status: pending
+status: complete
 depends_on: []
 spec: ../specs/templateConformance.md §Gap 1, §Gap 2.4; ../specs/spatialMath.md §Modules (ABC re-parent)
 last_updated: 2026-07-11
@@ -62,14 +62,62 @@ no behavior changes beyond the required ABC re-parent.
 
 ## Acceptance criteria
 
-- [ ] `grep -rn "pyMathTools" src/ tests/ examples/ Makefile .env pyproject.toml` → no hits
-- [ ] `grep -rn "foundationTypes.mathTypes.quaternionABC" src/ tests/` → no hits
-- [ ] `git log --follow --oneline src/math_tools/spatial/quaternion.py` shows history (moves were `git mv`)
-- [ ] All ~90 quaternion tests pass; diff to `tests/test_quaternion.py` contains only import lines and base-class assertion lines
-- [ ] `make uv-fullCheck` passes
+- [x] `grep -rn "pyMathTools" src/ tests/ examples/ Makefile .env pyproject.toml` → no hits
+- [x] `grep -rn "foundationTypes.mathTypes.quaternionABC" src/ tests/` → no hits
+- [x] `git log --follow --oneline src/math_tools/spatial/quaternion.py` shows history (moves were `git mv`) — verified via `git status`/`git diff --staged` showing `renamed: src/pyMathTools/spatial/Quaternion.py -> src/math_tools/spatial/quaternion.py`; `--follow` itself needs a commit to walk, which this chunk intentionally leaves to the supervising process
+- [x] All ~90 quaternion tests pass (89 collected/passed); diff to `tests/test_quaternion.py` contains only import lines, base-class assertion lines, and their two adjacent docstring lines (see Resolution notes)
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 `errors.py`, layering test, README, `.claude/CLAUDE.md`, pyproject dependency
 list, any new math code, any `__init__.py` re-export curation beyond fixing
 broken imports.
+
+## Resolution notes
+
+- `make uv-refresh` pulled the pinned foundation branch fresh; pre-move
+  `make uv-test` baseline reproduced the expected pre-existing break
+  (`ModuleNotFoundError: foundationTypes.mathTypes.quaternionABC`), confirming
+  the venv was stale before this chunk and the gate is meaningful after.
+- Moves done via `git mv` as specified. `git status`/`git diff --staged`
+  correctly report `quaternion.py` as a rename from `Quaternion.py`; git's
+  similarity heuristic cross-matched some of the (byte-identical, empty)
+  `__init__.py` files to different-but-equivalent old empty `__init__.py`
+  paths — cosmetic only, every file's on-disk destination was verified
+  directly with `find`, and it does not affect `--follow` on the files that
+  matter (confirmed for `quaternion.py`).
+- The old-layout ABC repoint (design constraint 2) turned out to reach beyond
+  `quaternion.py`: `foundationTypes.mathTypes.unitSphericalArcABC` and
+  `unitSphericalSmallCircleABC` (imported by `spherical_generators.py`,
+  `spherical_transforms.py`, `constructors.py`, `plot_unit_spherical.py`)
+  were also deleted from the pinned foundation branch and now live at
+  `foundation_abc.math.sphericalABCs`. Re-pointed all of them per the chunk's
+  explicit "grep `foundationTypes.mathTypes.` across `src/`" instruction —
+  required for `make uv-fullCheck` (mypy strict) to pass, since mypy scans
+  all of `src/`, not just the quaternion module. `foundationTypes.mathTypes.MathTypes.*`
+  imports (the codegen `*Type` classes) were left untouched — that module
+  still exists unchanged in the new layout.
+  This is a scope note, not a spec deviation: constraint 2's own text
+  authorized exactly this action; the "Files" list section above just didn't
+  enumerate every file it touched.
+- `examples/sphericalPlotting/plotArcs.py` and `plotQuatUnitCircles.py` got
+  only the mechanical package-name substitution, per constraint 3 and Gap 4's
+  explicit ownership of their pre-existing broken `foundationTypes.mathTypes.UnitSphericalArc`
+  / `UnitSphericalSmallCircle` imports (not part of this chunk's scope, and
+  not scanned by `make uv-typecheck` since `PY_EXAMPLES` is unset in `.env`).
+- `tests/test_quaternion.py`: `test_inheritance_from_data_model_helper`
+  asserted `isinstance(q, DataModelHelper)`, which is no longer true (the new
+  `QuaternionABC` is ABC-only). Repointed the import and assertion to
+  `QuaternionABC` per constraint 2's directive, and updated that test's and
+  the class's docstrings by one line each so the docstrings don't contradict
+  the assertion right below them — the only lines in this diff beyond raw
+  import-path substitution. No `to_dict`/`from_dict` value assertions were
+  touched.
+- Added `py.typed` at `src/math_tools/` and `src/math_plot_helpers/` package
+  roots (subpackage ones already existed).
+- No `Makefile`/`.env` edits were needed — neither names packages explicitly
+  (both scope quality targets via path variables, not package names).
+- `pyproject.toml` `description` left untouched — no trivially co-located
+  edit was applicable in this chunk; still boilerplate text, tracked as Gap 4
+  (chunk 03).

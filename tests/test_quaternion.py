@@ -17,7 +17,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal
 
-from pyMathTools.spatial.Quaternion import Quaternion
+from math_tools.spatial.quaternion import Quaternion
 
 
 class TestQuaternionConstruction(unittest.TestCase):
@@ -672,7 +672,7 @@ class TestEdgeCases(unittest.TestCase):
 
 
 class TestQuaternionSerialization(unittest.TestCase):
-    """Test serialization/deserialization methods and DataModelHelper inheritance."""
+    """Test serialization/deserialization methods and QuaternionABC inheritance."""
 
     def test_to_dict_identity(self) -> None:
         """Test to_dict for identity quaternion."""
@@ -806,17 +806,17 @@ class TestQuaternionSerialization(unittest.TestCase):
 
     def test_inheritance_from_quaternion_type(self) -> None:
         """Test that Quaternion properly inherits from the shared QuaternionABC."""
-        from foundationTypes.mathTypes.quaternionABC import QuaternionABC
+        from foundation_abc.math.spatialABCs import QuaternionABC
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
         self.assertIsInstance(q, QuaternionABC)
 
     def test_inheritance_from_data_model_helper(self) -> None:
-        """Test that Quaternion inherits from DataModelHelper."""
-        from foundationTypes.dataModelHelper import DataModelHelper
+        """Test that Quaternion inherits from QuaternionABC (ABC-only, not DataModelHelper)."""
+        from foundation_abc.math.spatialABCs import QuaternionABC
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
-        self.assertIsInstance(q, DataModelHelper)
+        self.assertIsInstance(q, QuaternionABC)
 
     def test_has_serialization_methods(self) -> None:
         """Test that Quaternion has the required serialization methods."""
