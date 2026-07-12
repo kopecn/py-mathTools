@@ -28,7 +28,7 @@ Expected Output:
 from typing import List
 from numpy import pi
 
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
+from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
 
 from math_tools.spatial.quaternion import Quaternion
 
@@ -57,7 +57,7 @@ def main():
     quat2 = Quaternion.from_components(0, 0, 1, 0)
     quat3 = Quaternion.from_components(0, 0, 0, 1)
 
-    circles: List[UnitSphericalSmallCircle] = [
+    circles: List[UnitSphericalSmallCircleType] = [
         quat1.to_unitSphericalSmallCircle(radius_angle=pi / 8),
         quat2.to_unitSphericalSmallCircle(radius_angle=pi / 8),
         quat3.to_unitSphericalSmallCircle(),

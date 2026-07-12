@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "py_math_tools"
 version = "0.0.1"
-description = "Python Boilerplate contains all the boilerplate you need to create a Python package."
+description = "Tier 3 numpy-backed math implementation layer for pyFoundationTools (quaternions, spatial/spherical math, waveforms, polynomials, trajectory generation)."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
 authors = [
@@ -34,8 +34,10 @@ license = {text = "MIT"}
 #   dependencies = ["requests"]
 dependencies = [
     "pyFoundationTools",
-    "matplotlib",
+    "numpy",
+    "scipy",
     "numpy-quaternion",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]

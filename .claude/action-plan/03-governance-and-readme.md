@@ -1,11 +1,11 @@
 ---
 chunk: 03-governance-and-readme
 track: A
-status: pending
+status: complete
 depends_on: [02]
 spec: ../specs/templateConformance.md §Gap 2, §Gap 3, §Gap 4
 last_updated: 2026-07-11
-semver: 0.0.1
+semver: 0.0.2
 author: Nicholas Bergantz
 ---
 
@@ -52,12 +52,55 @@ names, fixed examples.
 
 ## Acceptance criteria
 
-- [ ] `tests/test_governance.py` passes
-- [ ] `pyproject.toml` deps are exactly the five names, unpinned
-- [ ] Both example scripts import-run without error
-- [ ] `make uv-fullCheck` passes
+- [x] `tests/test_governance.py` passes
+- [x] `pyproject.toml` deps are exactly the five names, unpinned
+- [x] Both example scripts import-run without error
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Makefile/CI edits; requirements pin changes; any `src/` code beyond the
 example imports.
+
+## Resolution notes
+
+- `tests/test_governance.py` added: asserts `.claude/CLAUDE.md` exists and
+  its text contains the filename of every `.claude/specs/*.md` file, and
+  that `README.md` contains no `"Boilerplate"` text. Confirmed it failed
+  before the docs existed, passed after.
+- `.claude/CLAUDE.md` written to the shape of py-foundationTools'
+  `.claude/CLAUDE.md` (Project Overview → layering → Commands → Specs index
+  → Tests) but scoped to what exists in this repo today: Tier 3 role, the
+  two-package layering diagram, the gate command, a Makefile-is-source-of-
+  truth note, and a linked index of all 7 specs in `.claude/specs/`.
+- `README.md` rewritten per Gap 4's section shape (title → Features →
+  Installation → Quick Start → Development Workflows → Requirements),
+  describing only what exists at execution time: `Quaternion`, the
+  spherical arc/small-circle utilities, `errors.py`, and the
+  `math_plot_helpers` plotting package. Both Quick Start snippets
+  (quaternion arithmetic/conversion, spherical arc construction +
+  endpoint) were executed directly to confirm they run as written.
+- `pyproject.toml`: `dependencies` set to the five names
+  (`pyFoundationTools`, `numpy`, `scipy`, `numpy-quaternion`, `matplotlib`)
+  — the prior list was missing `numpy`/`scipy` and had an unrelated stray
+  order; `description` replaced with a one-line Tier-3 summary.
+- `examples/sphericalPlotting/plotArcs.py`: fixed the dead
+  `foundationTypes.mathTypes.UnitSphericalArc.UnitSphericalArc` import to
+  `foundationTypes.mathTypes.MathTypes.UnitSphericalArcType` (verified the
+  real class name by reading the installed `MathTypes.py`) and updated the
+  two local usages/type hints accordingly.
+- `examples/sphericalPlotting/plotQuatUnitCircles.py`: same dead-import
+  pattern existed for `UnitSphericalSmallCircle` (not called out by name in
+  the chunk's design constraint 4, but the file was listed for edit and the
+  acceptance criterion requires *both* scripts to import-run without
+  error) — fixed to `foundationTypes.mathTypes.MathTypes.UnitSphericalSmallCircleType`.
+- Both example scripts verified to run end-to-end with
+  `MPLBACKEND=Agg PYTHONPATH=src .venv/bin/python examples/sphericalPlotting/<script>.py`
+  — exit 0, only a benign "FigureCanvasAgg is non-interactive" UserWarning
+  from `show_plot=True` under a non-interactive backend. Examples are not
+  wired into `make uv-fullCheck` (`PY_EXAMPLES` is unset in `.env`), so
+  this was a manual verification step, not a gate addition (out of scope
+  per this chunk: "Makefile/CI edits").
+- Gate: `make uv-fullCheck` passes — ruff clean, `mypy src tests` strict
+  clean (16 source files), pytest 106 passed (includes the new
+  `tests/test_governance.py`).
