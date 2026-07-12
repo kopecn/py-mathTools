@@ -1,7 +1,7 @@
 ---
 chunk: 02-errors-and-layering
 track: A
-status: pending
+status: complete
 depends_on: [01]
 spec: ../specs/mathToolsArchitecture.md §Error semantics; ../specs/templateConformance.md §Gap 5
 last_updated: 2026-07-11
@@ -44,11 +44,31 @@ author: Nicholas Bergantz
 
 ## Acceptance criteria
 
-- [ ] All four exception classes exist and subclass as specified
-- [ ] Layering test fails on an injected `import matplotlib` in `math_tools` (verified then reverted)
-- [ ] `make uv-fullCheck` passes
+- [x] All four exception classes exist and subclass as specified
+- [x] Layering test fails on an injected `import matplotlib` in `math_tools` (verified then reverted)
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Any consumer of the exceptions; OTG's `OtgError` (lives in `otg/errors.py`,
 chunk 31); README/CLAUDE.md.
+
+## Resolution notes
+
+- `errors.py` implements exactly the four classes from the spec, each a
+  one-line docstring, no added behavior.
+- `test_package_layering.py` follows the py-foundationTools AST-scan pattern
+  (`tests/test_package_layering.py` there) rather than executing imports, so
+  it can't be defeated by import side effects. Four checks: `math_tools` ↛
+  `math_plot_helpers`, `math_tools` ↛ `matplotlib`, only `math_plot_helpers`
+  → `matplotlib` (scans all of `src/` excluding that package), and the
+  guarded `math_tools.otg` ↛ `numpy` rule (currently a no-op skip since
+  `otg/` doesn't exist yet — will activate automatically once chunk 31 lands).
+- Verification step 3 (inject `import matplotlib` into `math_tools/errors.py`,
+  confirm two layering assertions fail, revert) was done live against the
+  actual gate, not simulated; file diffed back to the original after.
+- One ruff fix needed: the injected-violation assertion message exceeded the
+  100-char line limit in `test_only_math_plot_helpers_imports_matplotlib`'s
+  sibling test; wrapped the f-string across two lines.
+- No spec changes were required — the chunk's design constraints matched the
+  umbrella spec's Error semantics section exactly.
