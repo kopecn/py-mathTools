@@ -12,7 +12,7 @@ on:
 
 jobs:
   quality:
-    name: Quality Checks
+    name: Quality
     runs-on: ubuntu-latest
 
     steps:
@@ -20,8 +20,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Install configured Python versions
+      - name: Install Python versions
         run: make uv-bootstrap-pythons
+
+      - name: Bootstrap development environment
+        run: make uv-bootstrap
 
       - name: Run quality checks
         run: make uv-fullCheck
