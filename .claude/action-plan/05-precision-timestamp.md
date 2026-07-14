@@ -1,10 +1,10 @@
 ---
 chunk: 05-precision-timestamp
 track: B
-status: pending
+status: complete
 depends_on: [04]
 spec: ../specs/precisionTimeMath.md §PrecisionTimestamp, §Compliance 1, 7–10
-last_updated: 2026-07-11
+last_updated: 2026-07-13
 semver: 0.0.1
 author: Nicholas Bergantz
 ---
@@ -49,12 +49,36 @@ metadata-validated comparison.
 
 ## Acceptance criteria
 
-- [ ] Spec compliance items 7, 8, 9 each have named tests and pass
-- [ ] Round-trip with `PrecisionTimestampType` wire dicts (camelCase optional keys)
-- [ ] `isinstance` of the ABC; `EPOCH.is_epoch` is True
-- [ ] `make uv-fullCheck` passes
+- [x] Spec compliance items 7, 8, 9 each have named tests and pass
+- [x] Round-trip with `PrecisionTimestampType` wire dicts (camelCase optional keys)
+- [x] `isinstance` of the ABC; `EPOCH.is_epoch` is True
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Waveform usage; timezone conversion beyond UTC; leap-second/timescale math
 (metadata is carried, never interpreted).
+
+## Resolution notes
+
+- Storage: `PrecisionTimestamp` composes a `PrecisionTimeInterval` (offset
+  from Unix epoch) plus the three optional metadata fields, mirroring the
+  Swift `PrecisionTimestamp` struct's delegation to its `interval` for all
+  comparison/arithmetic.
+- `from_datetime`/`as_datetime` use exact integer microsecond arithmetic
+  (`datetime` subtraction/addition, never `timestamp()`/float math) so the
+  round-trip is exact to the microsecond rather than merely "close" —
+  stricter than the spec's minimum bar but costs nothing and removes a
+  float-precision failure mode for far-future/far-past dates.
+- `compare_validated`/`can_compare` ported directly from
+  `PrecisionTimestamp+Comparable.swift`: timescale/frame checks first (both
+  sides must specify and differ to fail), then uncertainty overlap
+  (`delta <= combined`, so boundary equality raises), matching Swift's
+  `Result` semantics via a raised `TimestampComparisonError`.
+- Added a defensive `ValueError` on negative `uncertainty` in `__init__`
+  (not explicitly required by the spec text, but consistent with the
+  existing unsigned-magnitude validation pattern on `PrecisionTimeInterval`
+  and cheap to add); flagging here per stay-in-scope discipline rather than
+  silently expanding the contract.
+- No spec changes were needed; the implementation matched the spec as
+  written.
