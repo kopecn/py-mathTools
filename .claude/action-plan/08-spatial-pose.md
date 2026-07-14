@@ -1,10 +1,10 @@
 ---
 chunk: 08-spatial-pose
 track: B
-status: pending
+status: complete
 depends_on: [07]
 spec: ../specs/spatialMath.md §SpatialPose, §Compliance 4–8
-last_updated: 2026-07-11
+last_updated: 2026-07-13
 semver: 0.0.1
 author: Nicholas Bergantz
 ---
@@ -53,11 +53,46 @@ author: Nicholas Bergantz
 
 ## Acceptance criteria
 
-- [ ] Spec compliance items 4–8 each have named tests and pass
-- [ ] Round-trip with `foundationTypes` `SpatialTransformType` wire dicts
-- [ ] `pose * position` equals `transform(position)` exactly
-- [ ] `make uv-fullCheck` passes
+- [x] Spec compliance items 4–8 each have named tests and pass
+- [x] Round-trip with `foundationTypes` `SpatialTransformType` wire dicts
+- [x] `pose * position` equals `transform(position)` exactly
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Waveform containers; velocity/twist (se(3)) math; ROS/URDF interop.
+
+## Resolution notes
+
+- `SpatialPose` composes a copied `Position` (mutable, so copied on
+  construction to prevent aliasing) and an aliased `Quaternion` (immutable,
+  safe to alias) per the ABC's `position`/`orientation` accessor names.
+- `*` is deliberately the only operator ported from Swift's pose algebra:
+  `pose * pose` composes, `pose * position` applies the full transform
+  (identical to `transform()`). Swift's `pose ± position` were intentionally
+  not ported (silent rotation-dropping footgun); `translated()` is the named
+  replacement.
+- Composition recipe pinned exactly per the spec:
+  `(a * b).position == a.position + a.orientation.rotate_position(b.position)`,
+  `(a * b).orientation == a.orientation * b.orientation`.
+- `homogeneous` always normalizes the orientation on export (Swift parity),
+  even when the stored orientation isn't currently unit; verified live with
+  a non-normalized `Quaternion.from_components(2,0,0,0)` round-tripping
+  through `from_homogeneous` to a unit orientation.
+- `angular_distance` uses `|dot|` for double-cover safety; verified live
+  that `angular_distance(pose_with_q, pose_with_-q)` is ~0 (float noise,
+  not exactly 0, consistent with floating-point rotation composition).
+- DH: verified the two-link planar arm (`a1=a2=1, alpha=d=0`,
+  `theta=(90°, 0°)`) chains to end-effector `(0, 2, 0)` within float
+  tolerance; `to_dict`/`from_dict` round-trip verified against
+  `foundationTypes.mathTypes.MathTypes.SpatialTransformType`.
+- One lint fix during review: `from_homogeneous`'s `ValueError` message
+  exceeded the 100-char line limit; wrapped across two string literals with
+  no change in message content.
+- No spec changes were needed — the implementation matches
+  `spatialMath.md` §SpatialPose as written.
+- Note: this chunk's implementation/tests were originally drafted in an
+  earlier session pass that was interrupted before the gate was run to
+  green; this pass fixed the one outstanding lint error, independently
+  re-verified every acceptance criterion against the running code, and
+  confirmed no other chunk's files were touched.
