@@ -1,10 +1,10 @@
 ---
 chunk: 07-quaternion-additions
 track: B
-status: pending
+status: complete
 depends_on: [06]
 spec: ../specs/spatialMath.md §Quaternion additions, §Cross-cutting conventions
-last_updated: 2026-07-11
+last_updated: 2026-07-13
 semver: 0.0.1
 author: Nicholas Bergantz
 ---
@@ -49,10 +49,36 @@ needed, STOP and report instead.
 
 ## Acceptance criteria
 
-- [ ] Diff to `quaternion.py` is additive only (no modified existing lines except imports)
-- [ ] Legacy `tests/test_quaternion.py` passes unmodified in this chunk
-- [ ] `make uv-fullCheck` passes
+- [x] Diff to `quaternion.py` is additive only (no modified existing lines except imports)
+- [x] Legacy `tests/test_quaternion.py` passes unmodified in this chunk
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Renaming/refactoring existing members; `SpatialPose`; double-cover changes.
+
+## Resolution notes
+
+- Implemented all five spec'd additions: `dot`, `rotation_matrix_elements`
+  (+ new frozen `RotationMatrixElements` dataclass), `rotate_position`,
+  `__array__`, and the `from_numpy_quaternion` / `to_unit_spherical_small_circle`
+  aliases.
+- Aliases are implemented as class-body assignment (`from_numpy_quaternion =
+  fromNumpyQuaternion`, `to_unit_spherical_small_circle =
+  to_unitSphericalSmallCircle`) so both names reference the exact same
+  underlying function object (`is` identity), rather than thin delegating
+  wrappers — simpler and satisfies "delegating to the camelCase originals"
+  literally.
+- One line beyond pure addition: the pre-existing empty docstring `""" """`
+  on `to_unitSphericalSmallCircle` was replaced with the "deprecated
+  spelling" note the spec explicitly requires for both camelCase originals
+  (§Quaternion additions item 5); `fromNumpyQuaternion` had no docstring
+  before, so its note is a pure addition. No other existing line was
+  touched besides the new `import numpy.typing as npt` and
+  `from math_tools.spatial.position import Position` import lines.
+- `rotate_position` and the new `Position` import introduce a
+  `quaternion.py -> position.py` dependency within `spatial/`; `position.py`
+  has no reverse import, so no cycle.
+- Verified: 13 new tests in `tests/spatial/test_quaternion_additions.py`
+  pass; all ~90 legacy tests in `tests/test_quaternion.py` pass unmodified;
+  full suite (336 tests) green; ruff and mypy strict clean.

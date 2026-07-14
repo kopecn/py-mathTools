@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import numpy as np
+import numpy.typing as npt
 from foundation_abc.math.spatialABCs import QuaternionABC
 from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
 from quaternion import allclose as quat_allclose  # type: ignore[import-untyped]
@@ -38,6 +39,7 @@ from math_tools.hints import (
     FloatOrQuaternion,
     RotationMatrix,
 )
+from math_tools.spatial.position import Position
 
 T = TypeVar("T", bound="Quaternion")
 
@@ -45,6 +47,25 @@ T = TypeVar("T", bound="Quaternion")
 def from_float(x: Any) -> float:
     assert isinstance(x, (float, int)) and not isinstance(x, bool)
     return float(x)
+
+
+@dataclass(frozen=True)
+class RotationMatrixElements:
+    """The nine elements of a 3x3 rotation matrix, named by row/column.
+
+    Derived from :meth:`Quaternion.to_rotation_matrix` (single source of
+    truth: this dataclass never re-derives the matrix from components).
+    """
+
+    xx: float
+    xy: float
+    xz: float
+    yx: float
+    yy: float
+    yz: float
+    zx: float
+    zy: float
+    zz: float
 
 
 @dataclass
@@ -59,7 +80,10 @@ class Quaternion(QuaternionABC):
 
     @staticmethod
     def fromNumpyQuaternion(q: np_quaternion) -> Quaternion:
+        """Deprecated spelling: use :meth:`from_numpy_quaternion` instead."""
         return Quaternion(q)
+
+    from_numpy_quaternion = fromNumpyQuaternion
 
     @classmethod
     def from_components(cls: type[T], w: float = 1, x: float = 0, y: float = 0, z: float = 0) -> T:
@@ -275,6 +299,14 @@ class Quaternion(QuaternionABC):
         """Return the norm (magnitude) of the quaternion."""
         return float(abs(self.__q))
 
+    def dot(self, other: Quaternion) -> float:
+        """Return the 4-component dot product with another quaternion.
+
+        ``q.dot(q) == q.norm ** 2``; orthogonal (perpendicular) quaternions
+        dot to zero.
+        """
+        return float(self.w * other.w + self.x * other.x + self.y * other.y + self.z * other.z)
+
     @property
     def is_unit(self) -> bool:
         """Check if this is a unit quaternion (norm approximately 1)."""
@@ -375,6 +407,10 @@ class Quaternion(QuaternionABC):
         """Return quaternion components as a tuple (w, x, y, z)."""
         return (self.w, self.x, self.y, self.z)
 
+    def __array__(self, dtype: npt.DTypeLike | None = None) -> FloatArray4:
+        """Return the ``[w, x, y, z]`` array for ``np.asarray(quaternion)`` interop."""
+        return np.array([self.w, self.x, self.y, self.z], dtype=dtype or np.float64)
+
     # MARK: - Rotation Matrix Conversions
 
     def to_rotation_matrix(self) -> RotationMatrix:
@@ -391,6 +427,26 @@ class Quaternion(QuaternionABC):
             ZeroDivisionError: If this quaternion has zero norm
         """
         return np.asarray(as_rotation_matrix(self.__q), dtype=np.float64)
+
+    @property
+    def rotation_matrix_elements(self) -> RotationMatrixElements:
+        """The rotation matrix's nine elements, named by row/column.
+
+        Delegates to :meth:`to_rotation_matrix` (single source of truth) and
+        repackages its entries into a :class:`RotationMatrixElements`.
+        """
+        matrix = self.to_rotation_matrix()
+        return RotationMatrixElements(
+            xx=float(matrix[0, 0]),
+            xy=float(matrix[0, 1]),
+            xz=float(matrix[0, 2]),
+            yx=float(matrix[1, 0]),
+            yy=float(matrix[1, 1]),
+            yz=float(matrix[1, 2]),
+            zx=float(matrix[2, 0]),
+            zy=float(matrix[2, 1]),
+            zz=float(matrix[2, 2]),
+        )
 
     @classmethod
     def from_rotation_matrix(cls: type[T], matrix: RotationMatrix) -> T:
@@ -518,6 +574,15 @@ class Quaternion(QuaternionABC):
             Rotated 3-element vector
         """
         return np.asarray(rotate_vectors(self.__q, vector), dtype=np.float64)
+
+    def rotate_position(self, p: Position) -> Position:
+        """Rotate a :class:`Position` by this quaternion.
+
+        Thin wrapper over :meth:`rotate_vector`, typed for ``Position``.
+        Not exposed as ``q * p`` (the existing ``*`` operator is reserved
+        for quaternion-quaternion/scalar multiplication).
+        """
+        return Position.from_vector(self.rotate_vector(p.vector))
 
     # MARK: - Interpolation Methods
 
@@ -779,6 +844,8 @@ class Quaternion(QuaternionABC):
     def to_unitSphericalSmallCircle(
         q: Quaternion, radius_angle: float = np.pi / 4
     ) -> UnitSphericalSmallCircleType:
-        """ """
+        """Deprecated spelling: use :meth:`to_unit_spherical_small_circle` instead."""
         a, p = q.vector_spherical
         return UnitSphericalSmallCircleType(azimuth=a, polar=p, radius_angle=radius_angle)
+
+    to_unit_spherical_small_circle = to_unitSphericalSmallCircle
