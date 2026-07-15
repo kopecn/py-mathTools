@@ -25,15 +25,13 @@ import numpy.polynomial.polynomial as npoly
 import numpy.typing as npt
 
 from math_tools.errors import PolynomialSolveError
+from math_tools.functional.roots import POLYNOMIAL_ZERO_THRESHOLD as POLYNOMIAL_ZERO_THRESHOLD
 
 #: Imaginary-part tolerance for treating a companion-matrix root as real; also
 #: the default ``tolerance`` for :meth:`UnivariatePolynomial.real_roots`.
 #:
-#: Defined here because chunk 10 (the OTG analytic root kernel,
-#: ``math_tools.functional.roots``) has not landed yet. Per polynomials.md
-#: design constraint 3, that module will re-home this constant when it lands;
-#: this module will then import it from there instead of defining it.
-POLYNOMIAL_ZERO_THRESHOLD: float = 1e-9
+#: Re-exported from ``math_tools.functional.roots`` (the OTG analytic root
+#: kernel), its authoritative home per polynomials.md design constraint 3.
 
 _SUPERSCRIPT_DIGITS = str.maketrans(
     "0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"
