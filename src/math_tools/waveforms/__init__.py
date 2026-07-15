@@ -35,9 +35,12 @@ from math_tools.waveforms.support import (
     WaveformZeroCrossingDirection,
 )
 from math_tools.waveforms.waveform1d import Waveform1D
+from math_tools.waveforms.waveform_position import PositionComponentWaveforms, WaveformPosition
 
 __all__ = [
+    "PositionComponentWaveforms",
     "Waveform1D",
+    "WaveformPosition",
     "WaveformAlignmentMethod",
     "WaveformEdgeType",
     "WaveformEventMarker",
