@@ -14,19 +14,22 @@ Swift ``Waveform1D``: the Swift generator API is duration/samplingRate
 based, this one is sample-count (``n``) based, matching this repo's other
 constructors.
 
-Arithmetic/comparison operators (``+ - * /``, ``isclose``, ``elements_equal``,
-etc.) are explicitly out of scope here -- see chunk 12.
+Arithmetic/bitwise/comparison operators (``+ - * / // %``, ``& | ^ << >> ~``,
+``isclose``, ``elements_equal``, etc.) are chunk 12 -- see §Waveform1D
+Operators.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+import operator
+from collections.abc import Callable, Iterator, Sequence
 from typing import Any, overload
 
 import numpy as np
 import numpy.typing as npt
 from foundation_abc.math.waveformABCs import Waveform1dABC
 
+from math_tools.errors import WaveformCompatibilityError
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
 from math_tools.precision_time.precision_timestamp import PrecisionTimestamp
 
@@ -45,8 +48,26 @@ def _resolve_dt_seconds(dt: PrecisionTimeInterval | None, dt_seconds: float | No
     return dt_seconds if dt_seconds is not None else 1.0
 
 
+_SCALAR_TYPES: tuple[type, ...] = (int, float, np.integer, np.floating, np.bool_)
+
+
+def _is_valid_operand(other: object) -> bool:
+    """True if ``other`` is a ``Waveform1D`` or a plain/numpy scalar -- the only operand
+    kinds the elementwise operators accept. Anything else must yield ``NotImplemented``
+    so Python's operator protocol (reflected methods, ``np.float64 + w``, etc.) behaves
+    correctly instead of us raising (waveformCore.md §Waveform1D Operators)."""
+    return isinstance(other, Waveform1D) or isinstance(other, _SCALAR_TYPES)
+
+
 class Waveform1D(Waveform1dABC):
     """A mutable, uniformly-sampled scalar time series backed by a 1-D ndarray."""
+
+    # Opt out of numpy's ufunc protocol: without this, `np.float64(2.0) + w` or
+    # `np.array([...]) * w` silently unwraps `w` via `__array__` and returns a bare
+    # ndarray (dropping dt/t0) instead of calling `w.__radd__`/`w.__rmul__`. Setting
+    # this to None forces numpy to return NotImplemented, so Python's normal operator
+    # protocol (and this class's reflected dunders) takes over.
+    __array_ufunc__ = None
 
     # MARK: - Construction
 
@@ -757,6 +778,236 @@ class Waveform1D(Waveform1dABC):
     def clear(self) -> None:
         self._values = np.array([], dtype=self._values.dtype)
 
+    # MARK: - Arithmetic / bitwise operators
+
+    def _check_compatible(self, other: Waveform1D, op_name: str) -> None:
+        """Raise ``WaveformCompatibilityError`` unless ``other`` shares this waveform's
+        ``dt`` and length (waveformCore.md §Compliance 2)."""
+        if self._dt != other._dt:
+            raise WaveformCompatibilityError(
+                f"Waveform1D.{op_name}: dt mismatch ({self._dt!r} vs {other._dt!r})"
+            )
+        if len(self._values) != len(other._values):
+            raise WaveformCompatibilityError(
+                f"Waveform1D.{op_name}: length mismatch "
+                f"({len(self._values)} vs {len(other._values)})"
+            )
+
+    def _elementwise(
+        self, other: object, op: Callable[[Any, Any], Any], op_name: str
+    ) -> Waveform1D:
+        """``op(self, other)``; ``dt``/``t0`` carried from ``self`` (the left operand)."""
+        if isinstance(other, Waveform1D):
+            self._check_compatible(other, op_name)
+            result = op(self._values, other._values)
+        else:
+            result = op(self._values, other)
+        return Waveform1D(result, dt=self._dt, t0=self._t0)
+
+    def _elementwise_reflected(
+        self, other: object, op: Callable[[Any, Any], Any], op_name: str
+    ) -> Waveform1D:
+        """``op(other, self)`` for reflected operators; ``dt``/``t0`` still carried from
+        ``self`` -- the only ``Waveform1D`` operand present when this is invoked."""
+        if isinstance(other, Waveform1D):
+            self._check_compatible(other, op_name)
+            result = op(other._values, self._values)
+        else:
+            result = op(other, self._values)
+        return Waveform1D(result, dt=self._dt, t0=self._t0)
+
+    def __add__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.add, "__add__")
+
+    def __radd__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.add, "__radd__")
+
+    def __iadd__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.add, "__iadd__")._values
+        return self
+
+    def __sub__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.sub, "__sub__")
+
+    def __rsub__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.sub, "__rsub__")
+
+    def __isub__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.sub, "__isub__")._values
+        return self
+
+    def __mul__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.mul, "__mul__")
+
+    def __rmul__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.mul, "__rmul__")
+
+    def __imul__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.mul, "__imul__")._values
+        return self
+
+    def __truediv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.truediv, "__truediv__")
+
+    def __rtruediv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.truediv, "__rtruediv__")
+
+    def __itruediv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.truediv, "__itruediv__")._values
+        return self
+
+    def __floordiv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.floordiv, "__floordiv__")
+
+    def __rfloordiv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.floordiv, "__rfloordiv__")
+
+    def __ifloordiv__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.floordiv, "__ifloordiv__")._values
+        return self
+
+    def __mod__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.mod, "__mod__")
+
+    def __rmod__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.mod, "__rmod__")
+
+    def __imod__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.mod, "__imod__")._values
+        return self
+
+    # MARK: - Bitwise operators (integer dtype only; numpy raises TypeError otherwise)
+
+    def __and__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.and_, "__and__")
+
+    def __rand__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.and_, "__rand__")
+
+    def __iand__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.and_, "__iand__")._values
+        return self
+
+    def __or__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.or_, "__or__")
+
+    def __ror__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.or_, "__ror__")
+
+    def __ior__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.or_, "__ior__")._values
+        return self
+
+    def __xor__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.xor, "__xor__")
+
+    def __rxor__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.xor, "__rxor__")
+
+    def __ixor__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.xor, "__ixor__")._values
+        return self
+
+    def __lshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.lshift, "__lshift__")
+
+    def __rlshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.lshift, "__rlshift__")
+
+    def __ilshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.lshift, "__ilshift__")._values
+        return self
+
+    def __rshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise(other, operator.rshift, "__rshift__")
+
+    def __rrshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        return self._elementwise_reflected(other, operator.rshift, "__rrshift__")
+
+    def __irshift__(self, other: object) -> Waveform1D:
+        if not _is_valid_operand(other):
+            return NotImplemented
+        self._values = self._elementwise(other, operator.rshift, "__irshift__")._values
+        return self
+
+    def __invert__(self) -> Waveform1D:
+        return Waveform1D(~self._values, dt=self._dt, t0=self._t0)
+
+    # MARK: - Unary operators
+
+    def __neg__(self) -> Waveform1D:
+        return Waveform1D(-self._values, dt=self._dt, t0=self._t0)
+
+    def __pos__(self) -> Waveform1D:
+        return Waveform1D(+self._values, dt=self._dt, t0=self._t0)
+
+    def __abs__(self) -> Waveform1D:
+        return Waveform1D(np.abs(self._values), dt=self._dt, t0=self._t0)
+
     # MARK: - Comparison
 
     def __eq__(self, other: object) -> bool:
@@ -770,6 +1021,56 @@ class Waveform1D(Waveform1dABC):
         )
 
     __hash__ = None  # type: ignore[assignment]
+
+    def _comparable_values(
+        self, other: Waveform1D | npt.ArrayLike, op_name: str
+    ) -> npt.NDArray[Any]:
+        """Resolve ``other`` to a bare ndarray for elementwise comparison producers,
+        enforcing the same dt/length compatibility as the arithmetic operators when
+        ``other`` is a ``Waveform1D``."""
+        if isinstance(other, Waveform1D):
+            self._check_compatible(other, op_name)
+            return other._values
+        return np.asarray(other)
+
+    def elements_equal(self, other: Waveform1D | npt.ArrayLike) -> npt.NDArray[np.bool_]:
+        """Elementwise equality (see :meth:`isclose_elementwise` for tolerance)."""
+        result: npt.NDArray[np.bool_] = np.equal(
+            self._values, self._comparable_values(other, "elements_equal")
+        )
+        return result
+
+    def elements_less_than(self, other: Waveform1D | npt.ArrayLike) -> npt.NDArray[np.bool_]:
+        """Elementwise ``<``."""
+        result: npt.NDArray[np.bool_] = np.less(
+            self._values, self._comparable_values(other, "elements_less_than")
+        )
+        return result
+
+    def elements_greater_than(self, other: Waveform1D | npt.ArrayLike) -> npt.NDArray[np.bool_]:
+        """Elementwise ``>``."""
+        result: npt.NDArray[np.bool_] = np.greater(
+            self._values, self._comparable_values(other, "elements_greater_than")
+        )
+        return result
+
+    def isclose_elementwise(
+        self, other: Waveform1D | npt.ArrayLike, rtol: float = 1e-9, atol: float = 0.0
+    ) -> npt.NDArray[np.bool_]:
+        """Elementwise ``np.isclose`` (numpy ``rtol``/``atol`` vocabulary)."""
+        other_values = self._comparable_values(other, "isclose_elementwise")
+        result: npt.NDArray[np.bool_] = np.isclose(
+            self._values, other_values, rtol=rtol, atol=atol
+        )
+        return result
+
+    def isclose(self, other: Waveform1D, rtol: float = 1e-9, atol: float = 0.0) -> bool:
+        """Whole-waveform approximate equality: same ``dt``, same ``t0``, all samples close."""
+        if self._dt != other._dt or self._t0 != other._t0:
+            return False
+        if len(self._values) != len(other._values):
+            return False
+        return bool(np.all(np.isclose(self._values, other._values, rtol=rtol, atol=atol)))
 
     # MARK: - Iteration / array interop
 
