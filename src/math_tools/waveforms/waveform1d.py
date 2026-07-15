@@ -138,7 +138,7 @@ class Waveform1D(Waveform1dABC):
     def sine(
         cls,
         n: int,
-        frequency: float,
+        frequency: float = 1.0,
         amplitude: float = 1.0,
         phase: float = 0.0,
         dt: PrecisionTimeInterval | None = None,
@@ -146,7 +146,12 @@ class Waveform1D(Waveform1dABC):
         t0: PrecisionTimestamp | None = None,
         t0_seconds: float | None = None,
     ) -> Waveform1D:
-        """Generate a sine wave: ``amplitude * sin(2*pi*frequency*t + phase)``."""
+        """Generate a sine wave: ``amplitude * sin(2*pi*frequency*t + phase)``.
+
+        ``frequency`` defaults to ``1.0`` Hz so that ``Waveform1D.sine(n=1000)``
+        is legal on its own (waveformCore.md's pinned example, §Time axis /
+        Compliance 4).
+        """
         dt_s = _resolve_dt_seconds(dt, dt_seconds)
         t = np.arange(n, dtype=np.float64) * dt_s
         values = amplitude * np.sin(2.0 * np.pi * frequency * t + phase)
