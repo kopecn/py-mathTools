@@ -36,11 +36,17 @@ from math_tools.waveforms.support import (
 )
 from math_tools.waveforms.waveform1d import Waveform1D
 from math_tools.waveforms.waveform_position import PositionComponentWaveforms, WaveformPosition
+from math_tools.waveforms.waveform_quaternion import (
+    QuaternionComponentWaveforms,
+    WaveformQuaternion,
+)
 
 __all__ = [
     "PositionComponentWaveforms",
+    "QuaternionComponentWaveforms",
     "Waveform1D",
     "WaveformPosition",
+    "WaveformQuaternion",
     "WaveformAlignmentMethod",
     "WaveformEdgeType",
     "WaveformEventMarker",
