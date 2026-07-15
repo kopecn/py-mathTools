@@ -1092,3 +1092,13 @@ class Waveform1D(Waveform1dABC):
             f"{type(self).__name__}(sample_count={len(self._values)}, dt={self._dt!r}, "
             f"t0={self._t0!r})"
         )
+
+    # MARK: - DSP substrate (waveformDsp.md §Organization)
+
+    def _with_values(self, values: npt.NDArray[Any]) -> Waveform1D:
+        """A new ``Waveform1D`` with ``values`` as samples, same ``dt``/``t0`` as ``self``.
+
+        The replace-values factory every DSP mixin (waveformDsp.md) uses to
+        build its results; satisfies ``dsp/_protocol.py``'s ``WaveformProtocol``.
+        """
+        return Waveform1D(values, dt=self._dt, t0=self._t0)
