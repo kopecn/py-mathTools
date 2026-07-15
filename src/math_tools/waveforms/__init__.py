@@ -40,13 +40,19 @@ from math_tools.waveforms.waveform_quaternion import (
     QuaternionComponentWaveforms,
     WaveformQuaternion,
 )
+from math_tools.waveforms.waveform_spatial_pose import (
+    SpatialPoseComponentWaveforms,
+    WaveformSpatialPose,
+)
 
 __all__ = [
     "PositionComponentWaveforms",
     "QuaternionComponentWaveforms",
+    "SpatialPoseComponentWaveforms",
     "Waveform1D",
     "WaveformPosition",
     "WaveformQuaternion",
+    "WaveformSpatialPose",
     "WaveformAlignmentMethod",
     "WaveformEdgeType",
     "WaveformEventMarker",
