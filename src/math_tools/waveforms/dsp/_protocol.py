@@ -34,6 +34,18 @@ protocol itself is structurally equivalent for every caller (a mixin only
 ever needs the result to satisfy ``WaveformProtocol`` again) and
 ``Waveform1D._with_values -> Waveform1D`` remains a valid (covariant)
 implementation of this method.
+
+**Added in chunk 25 (semver 0.0.4): ``_with_axis``.** Every mixin through
+chunk 24 only ever produces results that share ``self``'s ``dt`` -- so
+``_with_values`` (same ``dt``/``t0``, new samples) was a sufficient factory.
+``ResamplingMixin`` (``dsp/_resampling.py``) is the first family whose
+results have a genuinely different sample spacing (``decimated``/
+``interpolated``/``resampled``/``polyphase_resampled`` all compute a new
+``dt``), so the structural contract needs a second factory that also takes
+the new ``dt``. ``t0`` is deliberately not a parameter -- every
+``ResamplingMixin`` method keeps ``t0`` unchanged (waveformDsp.md §Family
+contracts (``ResamplingMixin``): "New ``t0`` is unchanged") -- so there is
+no caller yet that needs to vary it too; add that only when one does.
 """
 
 from __future__ import annotations
@@ -63,6 +75,10 @@ class WaveformProtocol(Protocol):
     def sampling_frequency_hz(self) -> float: ...
 
     def _with_values(self, values: npt.NDArray[Any]) -> WaveformProtocol: ...
+
+    def _with_axis(
+        self, values: npt.NDArray[Any], dt: PrecisionTimeInterval
+    ) -> WaveformProtocol: ...
 
 
 __all__ = ["WaveformProtocol"]

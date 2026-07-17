@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
 last_updated: 2026-07-17
-semver: 0.0.3
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 
@@ -64,6 +64,19 @@ inspection. Self-typing `self` avoids this: the mixin class carries no
 runtime base beyond `object`, so composing it with `Waveform1D` never pulls
 `WaveformProtocol` into the MRO, while mypy still resolves every `self.*`
 access structurally through the `self: WaveformProtocol` annotation.
+
+**Two result factories.** Every mixin through chunk 24 only ever produces
+results that share `self`'s `dt`/`t0` (built via `_with_values(values)`, same
+`dt`/`t0`, new samples). `ResamplingMixin` (chunk 25, `dsp/_resampling.py`)
+is the first family whose results have a genuinely different sample
+spacing (`decimated`/`interpolated`/`resampled`/`polyphase_resampled` all
+compute a new `dt`), so `WaveformProtocol` gained a second factory,
+`_with_axis(values, dt) -> WaveformProtocol` (new samples, a caller-supplied
+`dt`, `t0` unchanged from `self`) — implemented alongside `_with_values` on
+`Waveform1D`. `t0` is deliberately not a parameter of `_with_axis`: every
+`ResamplingMixin` method keeps `t0` unchanged (see its family-contract row
+below), so add a `t0` parameter only when a future mixin needs to vary it
+too.
 
 **Composition phasing** (mirrors waveformCore's "Instantiability" section):
 the core `Waveform1D` ships with base `Waveform1dABC` only. Each mixin chunk

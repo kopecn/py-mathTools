@@ -1102,3 +1102,15 @@ class Waveform1D(Waveform1dABC):
         build its results; satisfies ``dsp/_protocol.py``'s ``WaveformProtocol``.
         """
         return Waveform1D(values, dt=self._dt, t0=self._t0)
+
+    def _with_axis(self, values: npt.NDArray[Any], dt: PrecisionTimeInterval) -> Waveform1D:
+        """A new ``Waveform1D`` with ``values`` as samples, a new ``dt`` spacing, and
+        ``t0`` unchanged from ``self``.
+
+        The dt-changing sibling of ``_with_values`` -- added in chunk 25 for
+        ``dsp/_resampling.py``'s ``ResamplingMixin``, the first DSP family
+        whose results have a genuinely different sample spacing than their
+        source (see ``dsp/_protocol.py``'s docstring and waveformDsp.md
+        §Organization).
+        """
+        return Waveform1D(values, dt=dt, t0=self._t0)
