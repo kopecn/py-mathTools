@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
 last_updated: 2026-07-17
-semver: 0.0.5
+semver: 0.0.6
 author: Nicholas Bergantz
 ---
 
@@ -155,13 +155,47 @@ methods above** (YAGNI on the rest; add with the method that needs them).
   `WaveformPeak(index, time_seconds, value)`,
   `WaveformPeakWithProminence(peak, prominence)`,
   `WaveformTimeLag(lag_samples, lag_seconds, correlation)`,
-  `WaveformTrigger(kind: WaveformTriggerType, level, ...)`,
+  `WaveformTrigger(kind: WaveformTriggerType, level, lower, upper, pattern,
+  tolerance, minimum_interval, edge, window_kind)`,
   `WaveformTriggerEvent(index, time_seconds, value, kind)`,
-  `WaveformEventMarker(index, label)`, `WaveformWithEvents(waveform,
-  events)`, `WaveformZeroCrossing(index, time_seconds, direction)`,
-  `WaveformInstantaneousFrequency(frequencies_hz, times_seconds)`,
-  `WaveformFrequencyRange(low_hz, high_hz)`,
+  `WaveformEventMarker(index, label)`, `WaveformWithEvents(waveform:
+  WaveformProtocol, events)`, `WaveformZeroCrossing(index, time_seconds,
+  direction)`, `WaveformInstantaneousFrequency(frequencies_hz,
+  times_seconds)`, `WaveformFrequencyRange(low_hz, high_hz)`,
   `WaveformFilterCoefficients(numerator, denominator)`.
+
+  **`WaveformTrigger`'s `edge`/`window_kind` fields (chunk 27, semver
+  0.0.6):** `edge: WaveformEdgeType | None = None` and `window_kind:
+  WaveformWindowTriggerType | None = None`, both optional and defaulting to
+  `None`. `TriggerMixin.detect_triggers` (the generic `WaveformTrigger`-
+  driven dispatcher) needs a direction/enter-exit selector for `EDGE`/
+  `LEVEL`/`WINDOW` kinds — the direct `detect_edge_triggers`/
+  `detect_level_triggers`/`detect_window_triggers` methods take it as an
+  explicit argument, but the dataclass had no field to carry it until this
+  change. Dispatch falls back to `WaveformEdgeType.BOTH` (`EDGE`),
+  `WaveformEdgeType.RISING` (`LEVEL`), and `WaveformWindowTriggerType.ENTER`
+  (`WINDOW`) when the caller leaves the field unset — matching each direct
+  method's own default — so this is backward-compatible with every
+  pre-chunk-27 `WaveformTrigger(...)` call site.
+
+  **`WaveformWithEvents.waveform`'s type (chunk 27, semver 0.0.6):** typed
+  `WaveformProtocol` (`dsp/_protocol.py`), not the concrete `Waveform1D` it
+  held through chunk 26. `TriggerMixin.with_event_markers` is the first
+  mixin method that embeds `self` itself into a returned descriptor —
+  every earlier descriptor holds only derived values (arrays, scalars,
+  other descriptors). Mixins type `self` as `WaveformProtocol` and must
+  never import `Waveform1D` (§Organization; not even under
+  `TYPE_CHECKING` — see `dsp/_protocol.py`'s docstring), so a field typed
+  concrete `Waveform1D` was unsatisfiable from a mixin method without that
+  forbidden import. `Waveform1D` already satisfies `WaveformProtocol`
+  structurally (both at runtime via `@runtime_checkable` and under mypy
+  strict), so retyping the field is behavior-preserving for every caller —
+  a real `Waveform1D` is still exactly what gets passed in and read back
+  out — and removes `support.py`'s only import of `waveforms/waveform1d.py`,
+  closing off what would otherwise become a circular import once the
+  chunk-30 compose step makes `waveform1d.py` import every mixin (mixins
+  already import `support.py`; `support.py` importing back into
+  `waveform1d.py` would have completed the cycle).
 
 ## Numerical conventions
 

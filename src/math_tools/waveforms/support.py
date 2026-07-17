@@ -20,6 +20,39 @@ plain string-valued discriminator enum (its four case names) and moves the
 associated payload onto :class:`WaveformTrigger`'s optional fields --
 consistent with every other "kind" enum here and with
 ``WaveformTrigger(kind: WaveformTriggerType, level, ...)`` in the spec text.
+
+**Forced contract change (chunk 27, semver 0.0.6):** :class:`WaveformTrigger`
+gained two optional fields, ``edge: WaveformEdgeType | None`` and
+``window_kind: WaveformWindowTriggerType | None`` -- needed for
+``TriggerMixin.detect_triggers`` (the generic ``WaveformTrigger``-driven
+dispatcher) to forward the same direction/enter-exit selector its direct
+``detect_edge_triggers``/``detect_level_triggers``/``detect_window_triggers``
+siblings take as an explicit argument; without a field to read, the generic
+path had no way to know which direction/selector the caller wanted. Both
+default to ``None`` (dispatch falls back to ``WaveformEdgeType.BOTH`` for
+``EDGE``, ``WaveformEdgeType.RISING`` for ``LEVEL``, and
+``WaveformWindowTriggerType.ENTER`` for ``WINDOW`` -- see
+``dsp/_triggers.py``), so this is backward-compatible with every existing
+``WaveformTrigger(...)`` call site.
+
+**Forced contract change (chunk 27, semver 0.0.6):**
+:class:`WaveformWithEvents`'s ``waveform`` field is typed
+``WaveformProtocol`` (``dsp/_protocol.py``), not the concrete ``Waveform1D``
+the field held through chunk 26. ``TriggerMixin.with_event_markers``
+(``dsp/_triggers.py``) is the first mixin method that has to embed ``self``
+itself into a descriptor -- every earlier descriptor holds only *derived*
+values (arrays, scalars, other descriptors), never the host waveform. Mixins
+type ``self`` as ``WaveformProtocol`` and must not import ``Waveform1D``
+(waveformDsp.md §Organization; see ``dsp/_protocol.py``'s docstring for why
+even a ``TYPE_CHECKING``-only import is disallowed), so a field typed
+concrete ``Waveform1D`` was never satisfiable from a mixin method without
+that forbidden import. Retyping the field as the structural
+``WaveformProtocol`` -- which ``Waveform1D`` already satisfies, both at
+runtime (``@runtime_checkable``) and under mypy strict, per
+``tests/waveforms/test_support.py::TestWaveformProtocol`` -- resolves this
+without touching the import-direction rule, and as a side effect removes
+this module's only import of ``waveforms/waveform1d.py`` (a real ``Waveform1D``
+instance is still exactly what every caller passes in and reads back out).
 """
 
 from __future__ import annotations
@@ -31,7 +64,7 @@ import numpy as np
 import numpy.typing as npt
 
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
-from math_tools.waveforms.waveform1d import Waveform1D
+from math_tools.waveforms.dsp._protocol import WaveformProtocol
 
 # MARK: - Enums
 
@@ -233,9 +266,16 @@ class WaveformTrigger:
     """Trigger configuration passed to ``TriggerMixin.detect_triggers``.
 
     Only the fields relevant to ``kind`` are meaningful: ``level`` for
-    ``EDGE``/``LEVEL``, ``lower``/``upper`` for ``WINDOW``, ``pattern``/
-    ``tolerance`` for ``PATTERN`` -- mirroring the Swift associated-value
-    cases collapsed into ``WaveformTriggerType`` (see module docstring).
+    ``EDGE``/``LEVEL`` (direction via ``edge``, defaulting to ``BOTH``/
+    ``RISING`` respectively when unset), ``lower``/``upper`` for ``WINDOW``
+    (enter/exit via ``window_kind``, defaulting to ``ENTER`` when unset),
+    ``pattern``/``tolerance`` for ``PATTERN`` -- mirroring the Swift
+    associated-value cases collapsed into ``WaveformTriggerType`` (see
+    module docstring). ``edge``/``window_kind`` were added in chunk 27 (see
+    module docstring "Forced contract change") so the generic
+    ``detect_triggers`` dispatcher can forward the same direction/selector
+    its direct ``detect_edge_triggers``/``detect_level_triggers``/
+    ``detect_window_triggers`` siblings take explicitly.
     """
 
     kind: WaveformTriggerType
@@ -245,6 +285,8 @@ class WaveformTrigger:
     pattern: tuple[float, ...] | None = None
     tolerance: float | None = None
     minimum_interval: PrecisionTimeInterval | None = None
+    edge: WaveformEdgeType | None = None
+    window_kind: WaveformWindowTriggerType | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -267,9 +309,15 @@ class WaveformEventMarker:
 
 @dataclass(frozen=True, slots=True)
 class WaveformWithEvents:
-    """A waveform paired with its event markers (``TriggerMixin.with_event_markers``)."""
+    """A waveform paired with its event markers (``TriggerMixin.with_event_markers``).
 
-    waveform: Waveform1D
+    ``waveform`` is typed ``WaveformProtocol`` rather than the concrete
+    ``Waveform1D`` (see module docstring "Forced contract change", chunk 27)
+    -- callers always pass and read back an actual ``Waveform1D``, since it
+    is the only type that ever composes ``TriggerMixin``.
+    """
+
+    waveform: WaveformProtocol
     events: tuple[WaveformEventMarker, ...]
 
 
