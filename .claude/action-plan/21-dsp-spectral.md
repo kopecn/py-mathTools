@@ -1,10 +1,10 @@
 ---
 chunk: 21-dsp-spectral
 track: D
-status: pending
+status: complete
 depends_on: [14]
 spec: ../specs/waveformDsp.md §Family contracts (SpectralMixin), §Compliance 1–2
-last_updated: 2026-07-11
+last_updated: 2026-07-17
 semver: 0.0.1
 author: Nicholas Bergantz
 ---
@@ -47,12 +47,53 @@ Create `src/math_tools/waveforms/dsp/_spectral.py`,
 
 ## Acceptance criteria
 
-- [ ] Peak-bin, chirp-monotone, and centroid tests pass
-- [ ] All four descriptor types round out of the methods without eq/hash errors
-- [ ] `make uv-fullCheck` passes
+- [x] Peak-bin, chirp-monotone, and centroid tests pass
+- [x] All four descriptor types round out of the methods without eq/hash errors
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Filtering (22), phase (24), windows themselves (28 — take `window`
 parameters as `WaveformWindowType` and map via `scipy.signal.get_window`
 directly here; chunk 28's helpers are for user-facing window utilities).
+
+## Resolution notes
+
+- **`spectral_features` field-set decision.** This chunk's own bullet said
+  to "mirror the Swift `extractSpectralFeatures` struct's fields exactly,"
+  but that Swift struct (`Waveform1D/Support/WaveformSpectralFeatures.swift`)
+  is a *per-time-frame* result derived from a spectrogram
+  (`spectralCentroids`/`spectralRolloffs`/`spectralFluxes`/`timeFrames`,
+  all arrays) — not the four scalars (`centroid`, `spread`, `rolloff`,
+  `flatness`) the same bullet names. The Python `WaveformSpectralFeatures`
+  dataclass already shipped in `waveforms/support.py` from chunk 14 (merged
+  before this chunk) uses that scalar shape, and waveformDsp.md §Support
+  descriptor types already documents it that way — both predate this chunk
+  and already agree with each other, so no spec or `support.py` change was
+  needed. Implemented `spectral_features()` against the existing scalar
+  shape (whole-spectrum summary over the FFT magnitude spectrum) rather than
+  reopening `support.py` for a per-frame shape; documented the reasoning in
+  `_spectral.py`'s module docstring. Only the chunk doc's own bullet was
+  stale/self-contradictory — no other spec drift found.
+- `WaveformSpectrogramScaling` (LINEAR/DB/MEL, defined in `support.py` from
+  chunk 14) is not consumed by this chunk: the design-constraints bullet for
+  `spectrogram()` lists only `window`/`nperseg`/`overlap`, no `scaling`
+  parameter, and `MEL` isn't a coherent magnitude-scaling option anyway
+  (it's a frequency-axis warp). Left unconsumed per YAGNI; a later chunk can
+  wire it up if a caller needs it.
+- `KAISER` window support needed a shape parameter (`beta`) that the family
+  contract doesn't expose; fixed a default (`beta=14.0`) documented inline
+  in `_spectral.py` rather than adding a beta parameter no other window
+  needs.
+- Window arguments are mapped to concrete arrays via `scipy.signal.get_window`
+  directly in `_spectral.py` (not through a shared `dsp/_common.py` helper),
+  per this chunk's own design-constraint text ("map ... directly here").
+- Mel filterbank rows are normalized to sum to ~1 by construction (each row
+  divided by its own weight sum) rather than the usual peak-height-1
+  triangle — satisfies the TDD step's "rows sum ≈ 1" requirement directly;
+  documented as a deliberate choice, not a Slaney-style bandwidth
+  normalization.
+- No deviation from the chunk 18 mixin-typing pattern was needed: this
+  chunk's own code was written fresh following `_calc.py`/`_correlation.py`/
+  `_envelope.py` (self-typed `self: WaveformProtocol`, no nominal Protocol
+  inheritance).
