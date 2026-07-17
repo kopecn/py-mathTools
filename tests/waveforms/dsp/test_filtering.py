@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_filtering.py`` (``FilteringMixin``).
 
 Covers waveformDsp.md §Family contracts (``FilteringMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(FilteringMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -11,24 +10,19 @@ import unittest
 import numpy as np
 import numpy.typing as npt
 
-from math_tools.waveforms.dsp._filtering import FilteringMixin
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.support import WaveformFilterType
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(FilteringMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``).
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``).
 
     Needed after any call that returns via ``_with_values`` (a bare ``Waveform1D``,
-    which does not carry ``FilteringMixin``'s methods) -- construct a fresh ``_W``
+    which does not carry ``FilteringMixin``'s methods) -- construct a fresh ``Waveform1D``
     directly instead when building test fixtures from raw arrays.
     """
-    return _W(base.values, dt=base.dt, t0=base.t0)
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 def _rfft_magnitude_at(
@@ -52,7 +46,7 @@ class TestLowPassFilterAttenuatesHighFrequency(unittest.TestCase):
         dt_seconds = 1.0 / fs
         low = Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=dt_seconds)
         high = Waveform1D.sine(n, frequency=200.0, amplitude=1.0, dt_seconds=dt_seconds)
-        mixed = _W(low.values + high.values, dt_seconds=dt_seconds)
+        mixed = Waveform1D(low.values + high.values, dt_seconds=dt_seconds)
 
         filtered = mixed.low_pass_filter(cutoff_hz=50.0, order=4)
 
@@ -75,7 +69,7 @@ class TestHighPassFilterAttenuatesLowFrequency(unittest.TestCase):
         dt_seconds = 1.0 / fs
         low = Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=dt_seconds)
         high = Waveform1D.sine(n, frequency=200.0, amplitude=1.0, dt_seconds=dt_seconds)
-        mixed = _W(low.values + high.values, dt_seconds=dt_seconds)
+        mixed = Waveform1D(low.values + high.values, dt_seconds=dt_seconds)
 
         filtered = mixed.high_pass_filter(cutoff_hz=50.0, order=4)
 
@@ -99,7 +93,7 @@ class TestBandPassFilterKeepsOnlyInBandTone(unittest.TestCase):
         below = Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=dt_seconds)
         in_band = Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=dt_seconds)
         above = Waveform1D.sine(n, frequency=200.0, amplitude=1.0, dt_seconds=dt_seconds)
-        mixed = _W(below.values + in_band.values + above.values, dt_seconds=dt_seconds)
+        mixed = Waveform1D(below.values + in_band.values + above.values, dt_seconds=dt_seconds)
 
         filtered = mixed.band_pass_filter(low_hz=20.0, high_hz=100.0, order=4)
 
@@ -129,7 +123,7 @@ class TestFilteredDispatcher(unittest.TestCase):
         dt_seconds = 1.0 / fs
         in_band = Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=dt_seconds)
         out_of_band = Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=dt_seconds)
-        mixed = _W(in_band.values + out_of_band.values, dt_seconds=dt_seconds)
+        mixed = Waveform1D(in_band.values + out_of_band.values, dt_seconds=dt_seconds)
 
         filtered = mixed.filtered(WaveformFilterType.BAND_STOP, low_hz=20.0, high_hz=100.0, order=4)
 
@@ -197,7 +191,7 @@ class TestMovingAverageFilter(unittest.TestCase):
     def test_smooths_a_noisy_signal_at_interior_points(self) -> None:
         rng = np.random.default_rng(3)
         n = 500
-        noisy = _W(np.full(n, 1.0) + rng.normal(scale=0.5, size=n), dt_seconds=0.01)
+        noisy = Waveform1D(np.full(n, 1.0) + rng.normal(scale=0.5, size=n), dt_seconds=0.01)
 
         filtered = noisy.moving_average_filter(window_size=25)
 
@@ -227,7 +221,7 @@ class TestExponentialFilter(unittest.TestCase):
 
     def test_smooths_a_step(self) -> None:
         values = np.concatenate([np.zeros(20), np.ones(20)])
-        w = _W(values, dt_seconds=0.01)
+        w = Waveform1D(values, dt_seconds=0.01)
         filtered = w.exponential_filter(alpha=0.3)
         # The step response should not jump immediately to 1.0 the sample after the step.
         self.assertLess(float(filtered.values[20]), 1.0)
@@ -240,7 +234,7 @@ class TestExponentialFilter(unittest.TestCase):
             w.exponential_filter(alpha=1.5)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.exponential_filter(alpha=0.5)
 
@@ -252,7 +246,7 @@ class TestSavitzkyGolayFilter(unittest.TestCase):
         n = 101
         x = np.linspace(-1.0, 1.0, n)
         cubic = 2.0 * x**3 - 3.0 * x**2 + 0.5 * x + 1.0
-        w = _W(cubic, dt_seconds=0.01)
+        w = Waveform1D(cubic, dt_seconds=0.01)
 
         filtered = w.savitzky_golay_filter(window_length=11, polyorder=3, deriv=0)
 
@@ -280,7 +274,7 @@ class TestWhittakerHendersonFilter(unittest.TestCase):
     def test_small_lambda_approximates_identity(self) -> None:
         rng = np.random.default_rng(11)
         n = 200
-        noisy = _W(np.full(n, 2.0) + rng.normal(scale=0.1, size=n), dt_seconds=0.05)
+        noisy = Waveform1D(np.full(n, 2.0) + rng.normal(scale=0.1, size=n), dt_seconds=0.05)
 
         smoothed = noisy.whittaker_henderson_filter(lam=1e-9, order=2)
 
@@ -291,7 +285,7 @@ class TestWhittakerHendersonFilter(unittest.TestCase):
         dt_seconds = 0.05
         rng = np.random.default_rng(13)
         ramp = Waveform1D.linear_ramp(n, start_value=0.0, end_value=10.0, dt_seconds=dt_seconds)
-        noisy = _W(ramp.values + rng.normal(scale=0.2, size=n), dt_seconds=dt_seconds)
+        noisy = Waveform1D(ramp.values + rng.normal(scale=0.2, size=n), dt_seconds=dt_seconds)
 
         smoothed = noisy.whittaker_henderson_filter(lam=1e8, order=2)
 
@@ -311,7 +305,7 @@ class TestWhittakerHendersonFilter(unittest.TestCase):
             w.whittaker_henderson_filter(lam=1.0, order=0)
 
     def test_too_few_samples_raises(self) -> None:
-        w = _W([1.0, 2.0])
+        w = Waveform1D([1.0, 2.0])
         with self.assertRaises(ValueError):
             w.whittaker_henderson_filter(lam=1.0, order=2)
 

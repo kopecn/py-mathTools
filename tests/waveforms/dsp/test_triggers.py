@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_triggers.py`` (``TriggerMixin``).
 
 Covers waveformDsp.md §Family contracts (``TriggerMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(TriggerMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -11,7 +10,6 @@ import unittest
 import numpy as np
 
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
-from math_tools.waveforms.dsp._triggers import TriggerMixin
 from math_tools.waveforms.support import (
     WaveformEdgeType,
     WaveformTrigger,
@@ -19,10 +17,6 @@ from math_tools.waveforms.support import (
     WaveformWindowTriggerType,
 )
 from math_tools.waveforms.waveform1d import Waveform1D
-
-
-class _W(TriggerMixin, Waveform1D):
-    pass
 
 
 def _square_pulses(cycles: int, samples_per_phase: int, low: float, high: float) -> np.ndarray:
@@ -47,7 +41,7 @@ class TestDetectEdgeTriggersOnSquareWave(unittest.TestCase):
     def setUp(self) -> None:
         self.cycles = 5
         values = _square_pulses(self.cycles, samples_per_phase=20, low=-1.0, high=1.0)
-        self.w = _W(values, dt_seconds=0.01)
+        self.w = Waveform1D(values, dt_seconds=0.01)
 
     def test_rising_edge_count_equals_cycle_count(self) -> None:
         events = self.w.detect_edge_triggers(level=0.0, edge=WaveformEdgeType.RISING)
@@ -83,15 +77,15 @@ class TestDetectEdgeTriggersOnSquareWave(unittest.TestCase):
 
 class TestDetectEdgeTriggersNoHit(unittest.TestCase):
     def test_level_outside_range_returns_empty(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 2.0, 1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 2.0, 1.0], dt_seconds=0.1)
         self.assertEqual(w.detect_edge_triggers(level=100.0), [])
 
     def test_too_short_returns_empty(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         self.assertEqual(w.detect_edge_triggers(level=0.0), [])
 
     def test_empty_waveform_returns_empty(self) -> None:
-        w = _W([], dt_seconds=0.1)
+        w = Waveform1D([], dt_seconds=0.1)
         self.assertEqual(w.detect_edge_triggers(level=0.0), [])
 
 
@@ -101,7 +95,7 @@ class TestDetectEdgeTriggersMinimumInterval(unittest.TestCase):
     def test_second_close_rising_edge_is_dropped(self) -> None:
         # Rising at index 1, falling at 2, rising again at 3 (too close), falling at 4.
         values = [-1.0, 1.0, -1.0, 1.0, -1.0]
-        w = _W(values, dt_seconds=1.0)
+        w = Waveform1D(values, dt_seconds=1.0)
         events = w.detect_edge_triggers(
             level=0.0,
             edge=WaveformEdgeType.RISING,
@@ -111,7 +105,7 @@ class TestDetectEdgeTriggersMinimumInterval(unittest.TestCase):
 
     def test_far_apart_rising_edges_both_kept(self) -> None:
         values = [-1.0, 1.0, -1.0, 1.0, -1.0]
-        w = _W(values, dt_seconds=1.0)
+        w = Waveform1D(values, dt_seconds=1.0)
         events = w.detect_edge_triggers(
             level=0.0,
             edge=WaveformEdgeType.RISING,
@@ -123,7 +117,7 @@ class TestDetectEdgeTriggersMinimumInterval(unittest.TestCase):
 class TestDetectLevelTriggers(unittest.TestCase):
     def test_default_rising_matches_edge_rising(self) -> None:
         values = _square_pulses(3, samples_per_phase=10, low=-1.0, high=1.0)
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
         level_events = w.detect_level_triggers(level=0.0)
         edge_events = w.detect_edge_triggers(level=0.0, edge=WaveformEdgeType.RISING)
         self.assertEqual([e.index for e in level_events], [e.index for e in edge_events])
@@ -132,13 +126,13 @@ class TestDetectLevelTriggers(unittest.TestCase):
 
     def test_falling_direction(self) -> None:
         values = _square_pulses(3, samples_per_phase=10, low=-1.0, high=1.0)
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
         level_events = w.detect_level_triggers(level=0.0, edge=WaveformEdgeType.FALLING)
         edge_events = w.detect_edge_triggers(level=0.0, edge=WaveformEdgeType.FALLING)
         self.assertEqual([e.index for e in level_events], [e.index for e in edge_events])
 
     def test_no_hit_returns_empty(self) -> None:
-        w = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
         self.assertEqual(w.detect_level_triggers(level=100.0), [])
 
 
@@ -151,7 +145,7 @@ class TestDetectWindowTriggersPairUp(unittest.TestCase):
         n = self.cycles * samples_per_cycle
         # sin(0) == 0 at both the first and last sample, safely below `low` -- no
         # boundary ambiguity at either end of the array.
-        self.w = _W(
+        self.w = Waveform1D(
             Waveform1D.sine(n, frequency=1.0, dt_seconds=1.0 / samples_per_cycle).values,
             dt_seconds=1.0 / samples_per_cycle,
         )
@@ -196,7 +190,7 @@ class TestDetectPatternTriggersFindsPlantedIndices(unittest.TestCase):
         values = np.zeros(90, dtype=np.float64)
         for index in self.planted_indices:
             values[index : index + len(self.motif)] = self.motif
-        self.w = _W(values, dt_seconds=0.1)
+        self.w = Waveform1D(values, dt_seconds=0.1)
 
     def test_exact_match_finds_planted_indices(self) -> None:
         events = self.w.detect_pattern_triggers(self.motif, tolerance=1e-9)
@@ -225,7 +219,7 @@ class TestDetectPatternTriggersFindsPlantedIndices(unittest.TestCase):
 
 class TestDetectTriggersGenericDispatch(unittest.TestCase):
     def setUp(self) -> None:
-        self.square = _W(
+        self.square = Waveform1D(
             _square_pulses(4, samples_per_phase=10, low=-1.0, high=1.0), dt_seconds=0.1
         )
 
@@ -284,7 +278,7 @@ class TestDetectTriggersGenericDispatch(unittest.TestCase):
 
 class TestWithEventMarkers(unittest.TestCase):
     def test_markers_built_from_events(self) -> None:
-        w = _W(_square_pulses(2, samples_per_phase=10, low=-1.0, high=1.0), dt_seconds=0.1)
+        w = Waveform1D(_square_pulses(2, samples_per_phase=10, low=-1.0, high=1.0), dt_seconds=0.1)
         events = w.detect_edge_triggers(level=0.0, edge=WaveformEdgeType.RISING)
 
         result = w.with_event_markers(events)
@@ -296,7 +290,7 @@ class TestWithEventMarkers(unittest.TestCase):
             self.assertEqual(marker.label, event.kind.value)
 
     def test_empty_events_yields_no_markers(self) -> None:
-        w = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
         result = w.with_event_markers([])
         self.assertEqual(result.events, ())
 

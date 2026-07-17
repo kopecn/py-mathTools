@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_phase.py`` (``PhaseMixin``).
 
 Covers waveformDsp.md §Family contracts (``PhaseMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(PhaseMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -17,13 +16,9 @@ from math_tools.waveforms.support import WaveformInstantaneousFrequency
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(PhaseMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestInstantaneousPhaseOfChirpIsMonotoneIncreasingWhenUnwrapped(unittest.TestCase):
@@ -50,7 +45,7 @@ class TestInstantaneousPhaseOfChirpIsMonotoneIncreasingWhenUnwrapped(unittest.Te
         self.assertTrue(np.all(phase.values <= np.pi + 1e-9))
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.instantaneous_phase()
 
@@ -62,7 +57,7 @@ class TestUnwrapPhase(unittest.TestCase):
         n = 500
         true_phase = np.linspace(0.0, 40.0 * np.pi, n)
         wrapped = np.angle(np.exp(1j * true_phase))
-        w = _W(wrapped, dt_seconds=0.01)
+        w = Waveform1D(wrapped, dt_seconds=0.01)
 
         unwrapped = w.unwrap_phase()
 
@@ -72,7 +67,7 @@ class TestUnwrapPhase(unittest.TestCase):
         np.testing.assert_allclose(unwrapped.values, true_phase + offset, atol=1e-6)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.unwrap_phase()
 
@@ -102,12 +97,12 @@ class TestInstantaneousFrequencyOfPureSineApproximatesFrequency(unittest.TestCas
         np.testing.assert_allclose(result.times_seconds, expected_times)
 
     def test_single_sample_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.instantaneous_frequency()
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.instantaneous_frequency()
 
@@ -127,20 +122,20 @@ class TestPhaseDifferenceOfSinVsCosApproximatesHalfPi(unittest.TestCase):
         np.testing.assert_allclose(np.abs(interior), np.pi / 2.0, atol=0.05)
 
     def test_dt_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         with self.assertRaises(WaveformCompatibilityError):
             w1.phase_difference(w2)
 
     def test_sample_count_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0], dt_seconds=0.1)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0], dt_seconds=0.1)
         with self.assertRaises(WaveformCompatibilityError):
             w1.phase_difference(w2)
 
     def test_empty_waveform_raises(self) -> None:
-        w1 = _W([], dt_seconds=0.1)
-        w2 = _W([], dt_seconds=0.1)
+        w1 = Waveform1D([], dt_seconds=0.1)
+        w2 = Waveform1D([], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w1.phase_difference(w2)
 
@@ -163,14 +158,14 @@ class TestPhaseSynchronizationIndex(unittest.TestCase):
         self.assertLess(plv, 0.3)
 
     def test_dt_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         with self.assertRaises(WaveformCompatibilityError):
             w1.phase_synchronization_index(w2)
 
     def test_empty_waveform_raises(self) -> None:
-        w1 = _W([], dt_seconds=0.1)
-        w2 = _W([], dt_seconds=0.1)
+        w1 = Waveform1D([], dt_seconds=0.1)
+        w2 = Waveform1D([], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w1.phase_synchronization_index(w2)
 
@@ -190,25 +185,25 @@ class TestPhaseCoherence(unittest.TestCase):
         self.assertTrue(np.all(coherence.values < 0.6))
 
     def test_output_length_matches_number_of_windows(self) -> None:
-        w = _W(np.zeros(1000), dt_seconds=0.001)
+        w = Waveform1D(np.zeros(1000), dt_seconds=0.001)
         coherence = w.phase_coherence(w, window=100)
         self.assertEqual(len(coherence.values), 10)
 
     def test_window_out_of_range_raises(self) -> None:
-        w = _W(np.zeros(10), dt_seconds=0.1)
+        w = Waveform1D(np.zeros(10), dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.phase_coherence(w, window=0)
         with self.assertRaises(ValueError):
             w.phase_coherence(w, window=11)
 
     def test_dt_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         with self.assertRaises(WaveformCompatibilityError):
             w1.phase_coherence(w2)
 
     def test_single_sample_raises(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.phase_coherence(w)
 
@@ -226,7 +221,7 @@ class TestGroupDelay(unittest.TestCase):
         np.testing.assert_allclose(result, delay_seconds, atol=1e-9)
 
     def test_callable_on_an_instance_too(self) -> None:
-        w = _W([1.0, 2.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0], dt_seconds=0.1)
         frequencies = np.array([1.0, 2.0, 3.0])
         phases = np.array([0.0, -0.1, -0.2])
         result = w.group_delay(frequencies, phases)

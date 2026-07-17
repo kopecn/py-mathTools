@@ -6,17 +6,24 @@ preserved on construction; float64 default for non-integer input); ``dt``/
 ``t0`` are the Tier-3 ``PrecisionTimeInterval``/``PrecisionTimestamp`` types
 so the time axis is attosecond-exact rather than float-accumulated.
 
-This core chunk ships ``class Waveform1D(Waveform1dABC)`` with **no DSP
-mixin bases** (those compose in a much later chunk, see
-``waveformDsp.md``). Constructors, statistics, indexing, and mutation below
-are a fresh numpy-idiomatic implementation, NOT a faithful port of the
-Swift ``Waveform1D``: the Swift generator API is duration/samplingRate
-based, this one is sample-count (``n``) based, matching this repo's other
+Constructors, statistics, indexing, and mutation below are a fresh
+numpy-idiomatic implementation, NOT a faithful port of the Swift
+``Waveform1D``: the Swift generator API is duration/samplingRate based,
+this one is sample-count (``n``) based, matching this repo's other
 constructors.
 
 Arithmetic/bitwise/comparison operators (``+ - * / // %``, ``& | ^ << >> ~``,
 ``isclose``, ``elements_equal``, etc.) are chunk 12 -- see §Waveform1D
 Operators.
+
+**DSP mixin composition (waveformDsp.md §Organization "Composition
+phasing").** ``Waveform1D`` composes all twelve ``dsp/_*.py`` mixins ahead
+of ``Waveform1dABC`` in its base list, per the spec's pinned base-list
+order. Each mixin types its own ``self`` as ``dsp._protocol.WaveformProtocol``
+rather than nominally inheriting it (see ``dsp/_protocol.py`` /
+``dsp/_calc.py`` for why nominal inheritance is broken at runtime), so this
+module never imports ``dsp._protocol`` itself -- only the twelve concrete
+mixin classes, which is exactly what §Organization's code block shows.
 """
 
 from __future__ import annotations
@@ -32,6 +39,18 @@ from foundation_abc.math.waveformABCs import Waveform1dABC
 from math_tools.errors import WaveformCompatibilityError
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
 from math_tools.precision_time.precision_timestamp import PrecisionTimestamp
+from math_tools.waveforms.dsp._calc import CalcMixin
+from math_tools.waveforms.dsp._correlation import CorrelationMixin
+from math_tools.waveforms.dsp._envelope import EnvelopeMixin
+from math_tools.waveforms.dsp._filtering import FilteringMixin
+from math_tools.waveforms.dsp._peaks import PeakMixin
+from math_tools.waveforms.dsp._phase import PhaseMixin
+from math_tools.waveforms.dsp._resampling import ResamplingMixin
+from math_tools.waveforms.dsp._spectral import SpectralMixin
+from math_tools.waveforms.dsp._time_alignment import TimeAlignmentMixin
+from math_tools.waveforms.dsp._triggers import TriggerMixin
+from math_tools.waveforms.dsp._windowing import WindowingMixin
+from math_tools.waveforms.dsp._zero_crossings import ZeroCrossingMixin
 
 
 def _resolve_dt_seconds(dt: PrecisionTimeInterval | None, dt_seconds: float | None) -> float:
@@ -59,7 +78,21 @@ def _is_valid_operand(other: object) -> bool:
     return isinstance(other, Waveform1D) or isinstance(other, _SCALAR_TYPES)
 
 
-class Waveform1D(Waveform1dABC):
+class Waveform1D(
+    CalcMixin,
+    CorrelationMixin,
+    EnvelopeMixin,
+    SpectralMixin,
+    FilteringMixin,
+    PeakMixin,
+    PhaseMixin,
+    ResamplingMixin,
+    TimeAlignmentMixin,
+    TriggerMixin,
+    WindowingMixin,
+    ZeroCrossingMixin,
+    Waveform1dABC,
+):
     """A mutable, uniformly-sampled scalar time series backed by a 1-D ndarray."""
 
     # Opt out of numpy's ufunc protocol: without this, `np.float64(2.0) + w` or

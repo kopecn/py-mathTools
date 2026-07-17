@@ -134,6 +134,13 @@ def test_dsp_mixins_do_not_import_sibling_mixins() -> None:
 
     violations: dict[str, set[str]] = {}
     for module_path in DSP_ROOT.glob("_*.py"):
+        # `_*.py` also matches `__init__.py` (leading `__` starts with `_`), but the
+        # package `__init__` is not a mixin module -- from chunk 30 onward it is
+        # expected to import every mixin to re-export them (waveformDsp.md
+        # §Organization), which is exactly the pattern this test forbids for the
+        # mixin modules themselves.
+        if module_path.name == "__init__.py":
+            continue
         if module_path.stem in _DSP_ALLOWED_SIBLING_MODULES:
             continue
         sibling_imports = _dsp_sibling_imports(module_path)

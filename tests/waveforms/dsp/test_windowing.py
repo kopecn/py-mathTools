@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_windowing.py`` (``WindowingMixin``).
 
 Covers waveformDsp.md §Family contracts (``WindowingMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(WindowingMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -16,13 +15,9 @@ from math_tools.waveforms.support import WaveformWindowType
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(WindowingMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestGenerateWindowEveryMember(unittest.TestCase):
@@ -73,7 +68,7 @@ class TestWindowCoherentGain(unittest.TestCase):
         self.assertEqual(gain, 1.0)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.window_coherent_gain(WaveformWindowType.HANN)
 
@@ -91,7 +86,7 @@ class TestWindowProcessingGain(unittest.TestCase):
         self.assertGreater(gain, 0.0)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.window_processing_gain(WaveformWindowType.HANN)
 
@@ -120,7 +115,7 @@ class TestWindowed(unittest.TestCase):
         self.assertEqual(windowed.t0, w.t0)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.windowed(WaveformWindowType.HANN)
 

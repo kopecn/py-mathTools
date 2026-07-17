@@ -1,28 +1,22 @@
 """Unit tests for ``dsp/_envelope.py`` (``EnvelopeMixin``).
 
 Covers waveformDsp.md §Family contracts (``EnvelopeMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(EnvelopeMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
 
 import numpy as np
 
-from math_tools.waveforms.dsp._envelope import EnvelopeMixin
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.support import WaveformInstantaneousMethod
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(EnvelopeMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestAmplitudeEnvelopeOfSineIsApproximatelyConstant(unittest.TestCase):
@@ -88,7 +82,7 @@ class TestAmplitudeEnvelopeOfDampedSinusoidTracksDecay(unittest.TestCase):
 
 class TestAmplitudeEnvelopeMinimumLengthRaises(unittest.TestCase):
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.amplitude_envelope()
 
@@ -131,7 +125,7 @@ class TestUpperLowerEnvelopes(unittest.TestCase):
         self.assertAlmostEqual(float(lower.values[-1]), 10.0, places=9)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.upper_lower_envelopes()
 
@@ -176,7 +170,7 @@ class TestInstantaneousAmplitudeMethods(unittest.TestCase):
         self.assertTrue(np.all(result.values >= -1e-9))
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.instantaneous_amplitude()
 

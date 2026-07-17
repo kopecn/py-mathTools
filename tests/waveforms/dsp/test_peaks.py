@@ -1,26 +1,20 @@
 """Unit tests for ``dsp/_peaks.py`` (``PeakMixin``).
 
 Covers waveformDsp.md §Family contracts (``PeakMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(PeakMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import math
 import unittest
 
-from math_tools.waveforms.dsp._peaks import PeakMixin
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(PeakMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestDetectPeaksOnSineHasExactCount(unittest.TestCase):
@@ -65,8 +59,8 @@ class TestDetectValleysMirrorPeaksUnderNegation(unittest.TestCase):
 
     def test_matches_negated_detect_peaks(self) -> None:
         values = [1.0, 3.0, 0.5, 4.0, -2.0, 5.0, -3.0, 2.0, 6.0, 0.0]
-        w = _W(values, dt_seconds=0.1)
-        negated_w = _W([-v for v in values], dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
+        negated_w = Waveform1D([-v for v in values], dt_seconds=0.1)
 
         valleys = w.detect_valleys()
         negated_peaks = negated_w.detect_peaks()
@@ -88,7 +82,7 @@ class TestDetectValleysMirrorPeaksUnderNegation(unittest.TestCase):
 
     def test_min_height_bounds_value_from_above(self) -> None:
         values = [5.0, 1.0, 4.0, -3.0, 4.0, 0.5, 5.0]
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
 
         valleys = w.detect_valleys(min_height=2.0)
 
@@ -100,9 +94,9 @@ class TestDetectValleysMirrorPeaksUnderNegation(unittest.TestCase):
 class TestFindMostProminentPeaksOrdering(unittest.TestCase):
     """§TDD step 1: prominence ordering on a two-tone signal returns the big ones first."""
 
-    def _two_tone_waveform(self) -> _W:
+    def _two_tone_waveform(self) -> Waveform1D:
         values = [0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
-        return _W(values, dt_seconds=0.1)
+        return Waveform1D(values, dt_seconds=0.1)
 
     def test_big_peak_returned_before_small_peak(self) -> None:
         w = self._two_tone_waveform()
@@ -158,22 +152,22 @@ class TestEmptyWaveformNeverRaises(unittest.TestCase):
     """waveformDsp.md §Numerical conventions: detectors return [] on no-hit, never raise."""
 
     def test_detect_peaks_on_empty_waveform(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         self.assertEqual(w.detect_peaks(), [])
 
     def test_detect_valleys_on_empty_waveform(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         self.assertEqual(w.detect_valleys(), [])
 
     def test_find_most_prominent_peaks_on_empty_waveform(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         self.assertEqual(w.find_most_prominent_peaks(count=3), [])
 
 
 class TestDetectPeaksFilters(unittest.TestCase):
     def test_min_height_filters_low_peaks(self) -> None:
         values = [0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
 
         peaks = w.detect_peaks(min_height=5.0)
 
@@ -182,7 +176,7 @@ class TestDetectPeaksFilters(unittest.TestCase):
 
     def test_min_prominence_filters_low_prominence_peaks(self) -> None:
         values = [0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
 
         peaks = w.detect_peaks(min_prominence=5.0)
 
@@ -191,7 +185,7 @@ class TestDetectPeaksFilters(unittest.TestCase):
 
     def test_min_distance_suppresses_close_secondary_peaks(self) -> None:
         values = [0.0, 5.0, 0.0, 6.0, 0.0, 4.0, 0.0]
-        w = _W(values, dt_seconds=0.1)
+        w = Waveform1D(values, dt_seconds=0.1)
 
         unfiltered = w.detect_peaks()
         filtered = w.detect_peaks(min_distance=5)

@@ -1,31 +1,25 @@
 """Unit tests for ``dsp/_calc.py`` (``CalcMixin``: ``integrate``/``derivative``).
 
 Covers waveformDsp.md §Family contracts (``CalcMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(CalcMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
 
 import numpy as np
 
-from math_tools.waveforms.dsp._calc import CalcMixin
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(CalcMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
+def _wrap(base: WaveformProtocol) -> Waveform1D:
     """Rewrap a ``WaveformProtocol``-satisfying result (a bare ``Waveform1D``, whether
     from a generator classmethod's static ``-> Waveform1D`` return type -- even when
-    called as ``_W.sine(...)`` -- or from ``CalcMixin``'s own ``-> WaveformProtocol``
-    results) as ``_W`` so ``CalcMixin`` methods are statically visible under mypy
+    called as ``Waveform1D.sine(...)`` -- or from ``CalcMixin``'s own ``-> WaveformProtocol``
+    results) as ``Waveform1D`` so ``CalcMixin`` methods are statically visible under mypy
     strict."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestDerivativeOfLinearRampIsConstant(unittest.TestCase):
@@ -99,7 +93,7 @@ class TestIntegrateThenDerivativeRecoversInterior(unittest.TestCase):
         integrated = original.integrate()
         # `integrate()` builds its result via `_with_values`, which (per
         # `Waveform1D._with_values`) always yields a bare `Waveform1D` --
-        # rewrap in `_W` to exercise `CalcMixin.derivative` again.
+        # rewrap in `Waveform1D` to exercise `CalcMixin.derivative` again.
         recovered = _wrap(integrated).derivative()
 
         interior = slice(10, -10)
@@ -133,23 +127,23 @@ class TestMinimumLengthRaises(unittest.TestCase):
     naming the requirement (this is not a detector method)."""
 
     def test_integrate_on_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.integrate()
 
     def test_derivative_on_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.derivative()
 
     def test_derivative_on_single_sample_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.derivative()
 
     def test_integrate_on_single_sample_succeeds(self) -> None:
         # integrate only needs >= 1 sample (unlike derivative's >= 2).
-        w = _W([7.0])
+        w = Waveform1D([7.0])
         integrated = w.integrate(initial_value=2.0)
         self.assertEqual(list(integrated.values), [2.0])
 

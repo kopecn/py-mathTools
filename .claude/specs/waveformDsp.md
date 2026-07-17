@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
 last_updated: 2026-07-17
-semver: 0.0.6
+semver: 0.0.7
 author: Nicholas Bergantz
 ---
 
@@ -98,6 +98,46 @@ chunk** edits the base list to the form above, adds the MRO test, and pins
 that the composed class is still concrete (empty `__abstractmethods__`,
 bare construction succeeds). Compliance item 4 applies only from that chunk
 onward.
+
+**Done as of chunk 30 (semver 0.0.7).** `waveform1d.py` now imports all
+twelve `dsp/_*.py` mixin modules directly (not via `dsp/__init__.py`) and
+composes them in the base-list order above; `tests/waveforms/dsp/test_compose.py`
+pins the MRO, concreteness, and one live smoke call per family.
+`dsp/__init__.py` also re-exports all twelve mixins (`__all__`) for direct
+import convenience, per this chunk's own file list.
+
+**Circular import found and resolved (chunk 30).** Composing every mixin
+into `waveform1d.py` is not the only place a cycle could appear: populating
+`dsp/__init__.py`'s exports means importing *any* `dsp/_*` submodule now
+also executes `dsp/__init__.py` (Python always initializes a package before
+one of its submodules), which in turn imports every mixin -- several of
+which (`dsp/_correlation.py`, etc.) import descriptor types back out of
+`waveforms/support.py`. `support.py` itself imports `dsp._protocol.
+WaveformProtocol` at module scope (only for the `WaveformWithEvents.waveform`
+field annotation, chunk 27) -- so `import support.py` -> triggers
+`dsp/__init__.py` -> imports `dsp/_correlation.py` -> imports back into
+`support.py`, which is still mid-import (`WaveformTimeLag` not yet defined),
+raising `ImportError: cannot import name 'WaveformTimeLag' from partially
+initialized module`. Fix: `support.py`'s `WaveformProtocol` import moved
+under `if TYPE_CHECKING:` -- safe because `from __future__ import
+annotations` (already present in `support.py`) defers every annotation to a
+string, so the import was never needed at runtime, only for mypy, which
+resolves `TYPE_CHECKING` imports without executing them. This is the
+opposite direction from the forbidden case in `dsp/_protocol.py`'s
+docstring (a DSP mixin importing `Waveform1D`, forbidden even under
+`TYPE_CHECKING`, because a mixin must stay import-cycle-free with the class
+it composes onto) -- `support.py` importing the mixins' shared protocol
+under `TYPE_CHECKING` carries no such restriction and does not reopen that
+door.
+
+**Layering test scope correction (chunk 30).** `tests/test_package_layering.py
+::test_dsp_mixins_do_not_import_sibling_mixins` globs `dsp/_*.py`, which
+also matches `dsp/__init__.py` (a leading `__` starts with `_`). That test
+enforces §Compliance 2 ("each mixin module imports scipy/numpy plus
+_protocol/_common only") -- correct for the twelve mixin modules, but
+`dsp/__init__.py` is not a mixin module; from this chunk onward it is
+*expected* to import every mixin to re-export it. The test now explicitly
+skips `__init__.py` rather than treating it as a mixin-module violation.
 
 **Chunking hint:** one action-plan chunk per mixin; `support.py`,
 `dsp/_protocol.py`, and `dsp/_common.py` land first as a prerequisite chunk.

@@ -1,12 +1,11 @@
 """Unit tests for ``dsp/_time_alignment.py`` (``TimeAlignmentMixin``).
 
 Covers waveformDsp.md §Family contracts (``TimeAlignmentMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-composing both ``TimeAlignmentMixin`` and ``CorrelationMixin`` (the
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``,
+which composes both ``TimeAlignmentMixin`` and ``CorrelationMixin`` (the
 ``aligned``/``time_lag`` ``CORRELATION`` path calls
-``CorrelationMixin.find_max_correlation`` through a structural ``Protocol``,
-per the chunk's own test-subclass note), matching the pattern every DSP
-mixin chunk's tests use (chunk 18).
+``CorrelationMixin.find_max_correlation`` through a structural ``Protocol``)
+from the compose chunk (30) onward.
 """
 
 import unittest
@@ -14,20 +13,14 @@ import unittest
 import numpy as np
 
 from math_tools.errors import WaveformCompatibilityError
-from math_tools.waveforms.dsp._correlation import CorrelationMixin
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
-from math_tools.waveforms.dsp._time_alignment import TimeAlignmentMixin
 from math_tools.waveforms.support import WaveformAlignmentMethod
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(TimeAlignmentMixin, CorrelationMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestAlignedCorrelationRecoversKnownShift(unittest.TestCase):
@@ -43,7 +36,7 @@ class TestAlignedCorrelationRecoversKnownShift(unittest.TestCase):
         base = Waveform1D.white_noise(n, amplitude=1.0, seed=42, dt_seconds=0.001)
         w1 = _wrap(base)
         shifted_values = np.roll(base.values, k)
-        w2 = _W(shifted_values, dt=base.dt, t0=base.t0)
+        w2 = Waveform1D(shifted_values, dt=base.dt, t0=base.t0)
 
         aligned = w1.aligned(w2)
 
@@ -70,8 +63,8 @@ class TestAlignedCorrelationRecoversKnownShift(unittest.TestCase):
 
 class TestAlignedStartTime(unittest.TestCase):
     def test_adopts_reference_t0_unchanged_values_and_dt(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1, t0_seconds=0.0)
-        w2 = _W([5.0, 6.0, 7.0, 8.0], dt_seconds=0.1, t0_seconds=2.5)
+        w1 = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1, t0_seconds=0.0)
+        w2 = Waveform1D([5.0, 6.0, 7.0, 8.0], dt_seconds=0.1, t0_seconds=2.5)
 
         aligned = w1.aligned(w2, method=WaveformAlignmentMethod.START_TIME)
 
@@ -80,8 +73,8 @@ class TestAlignedStartTime(unittest.TestCase):
         np.testing.assert_allclose(aligned.values, w1.values)
 
     def test_no_qualifying_correlation_peak_returns_self_unshifted(self) -> None:
-        w1 = _W([0.0] * 10, dt_seconds=0.1)
-        w2 = _W(list(range(10)), dt_seconds=0.1)
+        w1 = Waveform1D([0.0] * 10, dt_seconds=0.1)
+        w2 = Waveform1D(list(range(10)), dt_seconds=0.1)
 
         aligned = w1.aligned(w2)  # default CORRELATION method
 
@@ -95,8 +88,8 @@ class TestTimeLagNoneWhenNoCorrelatablePeak(unittest.TestCase):
     anything, per ``CorrelationMixin``'s zero-variance handling)."""
 
     def test_all_zero_waveform_yields_none(self) -> None:
-        w1 = _W([0.0] * 10, dt_seconds=0.1)
-        w2 = _W(list(range(10)), dt_seconds=0.1)
+        w1 = Waveform1D([0.0] * 10, dt_seconds=0.1)
+        w2 = Waveform1D(list(range(10)), dt_seconds=0.1)
         self.assertIsNone(w1.time_lag(w2))
 
 
@@ -107,8 +100,8 @@ class TestTimeLagAccountsForExistingT0Offset(unittest.TestCase):
 
     def test_identical_values_different_t0_reports_the_t0_offset(self) -> None:
         values = [1.0, 3.0, 2.0, 4.0, 1.0, 5.0, 2.0]
-        w1 = _W(values, dt_seconds=0.1, t0_seconds=0.5)
-        w2 = _W(values, dt_seconds=0.1, t0_seconds=0.2)
+        w1 = Waveform1D(values, dt_seconds=0.1, t0_seconds=0.5)
+        w2 = Waveform1D(values, dt_seconds=0.1, t0_seconds=0.2)
 
         lag = w1.time_lag(w2)
 
@@ -120,14 +113,14 @@ class TestTimeLagAccountsForExistingT0Offset(unittest.TestCase):
 
 class TestTimeLagPropagatesCorrelationMixinValidation(unittest.TestCase):
     def test_dt_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         with self.assertRaises(WaveformCompatibilityError):
             w1.time_lag(w2)
 
     def test_empty_waveform_raises(self) -> None:
-        w1 = _W([], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0], dt_seconds=0.1)
+        w1 = Waveform1D([], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w1.time_lag(w2)
 
@@ -137,10 +130,10 @@ class TestSynchronizeCommonOverlap(unittest.TestCase):
     equal-length overlaps with matching ``t0``."""
 
     def test_two_offset_waveforms_return_matching_overlap(self) -> None:
-        w1 = _W(np.arange(50, dtype=np.float64), dt_seconds=0.1, t0_seconds=0.0)
-        w2 = _W(np.arange(100.0, 150.0), dt_seconds=0.1, t0_seconds=1.0)
+        w1 = Waveform1D(np.arange(50, dtype=np.float64), dt_seconds=0.1, t0_seconds=0.0)
+        w2 = Waveform1D(np.arange(100.0, 150.0), dt_seconds=0.1, t0_seconds=1.0)
 
-        synced = _W.synchronize([w1, w2])
+        synced = Waveform1D.synchronize([w1, w2])
 
         self.assertEqual(len(synced), 2)
         self.assertEqual(len(synced[0].values), 40)
@@ -151,32 +144,32 @@ class TestSynchronizeCommonOverlap(unittest.TestCase):
         np.testing.assert_allclose(synced[1].values, np.arange(100.0, 140.0))
 
     def test_empty_sequence_returns_empty_list(self) -> None:
-        self.assertEqual(_W.synchronize([]), [])
+        self.assertEqual(Waveform1D.synchronize([]), [])
 
     def test_dt_mismatch_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         with self.assertRaises(WaveformCompatibilityError):
-            _W.synchronize([w1, w2])
+            Waveform1D.synchronize([w1, w2])
 
     def test_empty_waveform_raises(self) -> None:
-        w1 = _W([], dt_seconds=0.1)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w1 = Waveform1D([], dt_seconds=0.1)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
-            _W.synchronize([w1, w2])
+            Waveform1D.synchronize([w1, w2])
 
     def test_no_overlap_raises(self) -> None:
-        w1 = _W([1.0, 2.0, 3.0], dt_seconds=0.1, t0_seconds=0.0)
-        w2 = _W([1.0, 2.0, 3.0], dt_seconds=0.1, t0_seconds=10.0)
+        w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1, t0_seconds=0.0)
+        w2 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1, t0_seconds=10.0)
         with self.assertRaises(ValueError):
-            _W.synchronize([w1, w2])
+            Waveform1D.synchronize([w1, w2])
 
 
 class TestTimeWindowsCountFormula(unittest.TestCase):
     """Acceptance criterion: ``time_windows(1.0, overlap=0.5)`` count formula pinned."""
 
     def test_pinned_window_count(self) -> None:
-        w = _W(np.arange(100, dtype=np.float64), dt_seconds=0.1)
+        w = Waveform1D(np.arange(100, dtype=np.float64), dt_seconds=0.1)
 
         windows = w.time_windows(1.0, overlap=0.5)
 
@@ -186,7 +179,7 @@ class TestTimeWindowsCountFormula(unittest.TestCase):
             self.assertEqual(window.dt, w.dt)
 
     def test_window_start_times_step_by_overlap(self) -> None:
-        w = _W(np.arange(100, dtype=np.float64), dt_seconds=0.1)
+        w = Waveform1D(np.arange(100, dtype=np.float64), dt_seconds=0.1)
         windows = w.time_windows(1.0, overlap=0.5)
 
         self.assertEqual(windows[0].t0, w.t0)
@@ -195,22 +188,22 @@ class TestTimeWindowsCountFormula(unittest.TestCase):
         np.testing.assert_allclose(windows[1].values, np.arange(5, 15, dtype=np.float64))
 
     def test_no_overlap_default(self) -> None:
-        w = _W(np.arange(30, dtype=np.float64), dt_seconds=0.1)
+        w = Waveform1D(np.arange(30, dtype=np.float64), dt_seconds=0.1)
         windows = w.time_windows(1.0)
         self.assertEqual(len(windows), 3)
 
     def test_non_positive_duration_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.time_windows(0.0)
 
     def test_overlap_out_of_range_raises(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=0.1)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.time_windows(0.5, overlap=1.0)
 
     def test_too_short_for_one_window_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.time_windows(1.0)
 
@@ -219,7 +212,7 @@ class TestTimeSegmentsBoundariesRespected(unittest.TestCase):
     """Acceptance criterion: segment boundaries respected."""
 
     def test_boundaries_split_into_three_segments(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=1.0, t0_seconds=0.0)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=1.0, t0_seconds=0.0)
 
         segments = w.time_segments([3.0, 6.0])
 
@@ -232,29 +225,29 @@ class TestTimeSegmentsBoundariesRespected(unittest.TestCase):
         self.assertEqual(segments[2].t0, w.t0 + w.dt * 6)
 
     def test_empty_boundaries_returns_whole_waveform_unsplit(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=1.0)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=1.0)
         segments = w.time_segments([])
         self.assertEqual(len(segments), 1)
         np.testing.assert_allclose(segments[0].values, w.values)
         self.assertEqual(segments[0].t0, w.t0)
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([], dt_seconds=1.0)
+        w = Waveform1D([], dt_seconds=1.0)
         with self.assertRaises(ValueError):
             w.time_segments([1.0])
 
     def test_boundary_out_of_range_raises(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=1.0)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=1.0)
         with self.assertRaises(ValueError):
             w.time_segments([9.0])
 
     def test_non_increasing_boundaries_raise(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=1.0)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=1.0)
         with self.assertRaises(ValueError):
             w.time_segments([5.0, 3.0])
 
     def test_boundaries_rounding_to_same_index_raise(self) -> None:
-        w = _W(np.arange(10, dtype=np.float64), dt_seconds=1.0)
+        w = Waveform1D(np.arange(10, dtype=np.float64), dt_seconds=1.0)
         with self.assertRaises(ValueError):
             w.time_segments([3.0, 3.01])
 

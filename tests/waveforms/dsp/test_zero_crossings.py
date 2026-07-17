@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_zero_crossings.py`` (``ZeroCrossingMixin``).
 
 Covers waveformDsp.md §Family contracts (``ZeroCrossingMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(ZeroCrossingMixin, Waveform1D): pass`` (the pattern every DSP
-mixin chunk's tests use, chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -11,18 +10,13 @@ import unittest
 import numpy as np
 
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
-from math_tools.waveforms.dsp._zero_crossings import ZeroCrossingMixin
 from math_tools.waveforms.support import WaveformZeroCrossingDirection
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(ZeroCrossingMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestZeroCrossingRateOfSine(unittest.TestCase):
@@ -91,7 +85,7 @@ class TestSubSampleInterpolation(unittest.TestCase):
         dt_seconds = 0.03
         n = 60
         values = np.arange(n, dtype=np.float64) * dt_seconds - 0.5
-        w = _W(values, dt_seconds=dt_seconds)
+        w = Waveform1D(values, dt_seconds=dt_seconds)
 
         crossings = w.zero_crossings()
 
@@ -103,7 +97,7 @@ class TestSubSampleInterpolation(unittest.TestCase):
         # Sample lands exactly on zero at index 5 -- must not be double-counted
         # as both an approach-to-zero and a departure-from-zero crossing.
         values = np.array([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=np.float64)
-        w = _W(values, dt_seconds=1.0)
+        w = Waveform1D(values, dt_seconds=1.0)
 
         crossings = w.zero_crossings()
 
@@ -116,17 +110,17 @@ class TestEmptyOrTooShortReturnsEmptyList(unittest.TestCase):
     -- empty/too-short input returns ``[]``, never raises."""
 
     def test_empty_waveform(self) -> None:
-        w = _W([], dt_seconds=0.1)
+        w = Waveform1D([], dt_seconds=0.1)
         self.assertEqual(w.zero_crossings(), [])
         self.assertEqual(w.zero_crossing_count(), 0)
         self.assertEqual(w.zero_crossing_rate(), 0.0)
 
     def test_single_sample(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         self.assertEqual(w.zero_crossings(), [])
 
     def test_no_crossing_all_positive(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         self.assertEqual(w.zero_crossings(), [])
         self.assertEqual(w.zero_crossing_rate(), 0.0)
 
@@ -154,20 +148,20 @@ class TestSegmentsBetweenZeroCrossings(unittest.TestCase):
         self.assertLessEqual(total_length, n + len(segments))
 
     def test_no_crossings_returns_whole_waveform(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1, t0_seconds=1.0)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1, t0_seconds=1.0)
         segments = w.segments_between_zero_crossings()
         self.assertEqual(len(segments), 1)
         np.testing.assert_allclose(segments[0].values, w.values)
         self.assertEqual(segments[0].t0, w.t0)
 
     def test_single_sample_returns_single_segment(self) -> None:
-        w = _W([5.0], dt_seconds=0.1)
+        w = Waveform1D([5.0], dt_seconds=0.1)
         segments = w.segments_between_zero_crossings()
         self.assertEqual(len(segments), 1)
         np.testing.assert_allclose(segments[0].values, [5.0])
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([], dt_seconds=0.1)
+        w = Waveform1D([], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.segments_between_zero_crossings()
 

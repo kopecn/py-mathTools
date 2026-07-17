@@ -59,12 +59,32 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
 
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
-from math_tools.waveforms.dsp._protocol import WaveformProtocol
+
+if TYPE_CHECKING:
+    # Deferred to type-checking only (chunk 30, semver 0.0.7): a module-level import
+    # here forces Python to fully execute `waveforms/dsp/__init__.py` -- which, from
+    # this chunk onward, eagerly imports every mixin to re-export it (see that
+    # module's docstring) -- before this module (`support.py`) finishes executing.
+    # Several mixins (e.g. `dsp/_correlation.py`) import types back out of
+    # `support.py`, so that eager chain landed here mid-import and raised
+    # `ImportError: cannot import name 'WaveformTimeLag' from partially initialized
+    # module`. `WaveformProtocol` is only ever used as a dataclass field annotation
+    # below (`WaveformWithEvents.waveform`), and `from __future__ import
+    # annotations` (above) already defers every annotation in this module to a
+    # string -- so the import is never needed at runtime, only for mypy, which
+    # resolves `TYPE_CHECKING` imports without executing them. This is the opposite
+    # direction from the forbidden case in `dsp/_protocol.py`'s docstring (a DSP
+    # mixin importing `Waveform1D`, forbidden even under `TYPE_CHECKING` because a
+    # mixin must stay import-cycle-free with the class it composes onto); a support
+    # module importing the mixins' own protocol under `TYPE_CHECKING` carries no
+    # such restriction.
+    from math_tools.waveforms.dsp._protocol import WaveformProtocol
 
 # MARK: - Enums
 

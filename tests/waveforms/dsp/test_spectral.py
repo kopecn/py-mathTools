@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_spectral.py`` (``SpectralMixin``).
 
 Covers waveformDsp.md §Family contracts (``SpectralMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(SpectralMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -11,17 +10,13 @@ import unittest
 import numpy as np
 
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
-from math_tools.waveforms.dsp._spectral import SpectralMixin, _mel_filterbank
+from math_tools.waveforms.dsp._spectral import _mel_filterbank
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(SpectralMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestFftPeakBin(unittest.TestCase):
@@ -46,12 +41,12 @@ class TestFftPeakBin(unittest.TestCase):
         self.assertEqual(len(spectrum.phases), n // 2 + 1)
 
     def test_minimum_length_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.fft()
 
     def test_empty_waveform_raises(self) -> None:
-        w = _W([])
+        w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.fft()
 
@@ -96,7 +91,7 @@ class TestPowerSpectralDensityOfWhiteNoiseIsFlat(unittest.TestCase):
         self.assertTrue(np.all(spectrum.phases == 0.0))
 
     def test_minimum_length_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.power_spectral_density()
 
@@ -136,7 +131,7 @@ class TestSpectrogramOfChirpIsMonotone(unittest.TestCase):
         self.assertEqual(spec.magnitudes.shape, (len(spec.times), len(spec.frequencies)))
 
     def test_minimum_length_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.spectrogram()
 
@@ -189,7 +184,7 @@ class TestMelSpectrogram(unittest.TestCase):
             w.mel_spectrogram(n_mels=0)
 
     def test_minimum_length_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.mel_spectrogram()
 
@@ -229,7 +224,7 @@ class TestSpectralFeaturesOfSine(unittest.TestCase):
         self.assertLessEqual(features.flatness, 1.0 + 1e-9)
 
     def test_minimum_length_raises(self) -> None:
-        w = _W([1.0])
+        w = Waveform1D([1.0])
         with self.assertRaises(ValueError):
             w.spectral_features()
 

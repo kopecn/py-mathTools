@@ -1,9 +1,8 @@
 """Unit tests for ``dsp/_resampling.py`` (``ResamplingMixin``).
 
 Covers waveformDsp.md §Family contracts (``ResamplingMixin``), §Numerical
-conventions, §Compliance 1-2. Exercises the mixin via a local test subclass
-``class _W(ResamplingMixin, Waveform1D): pass`` (the pattern every DSP mixin
-chunk's tests use, per chunk 18).
+conventions, §Compliance 1-2. Exercises the mixin directly on ``Waveform1D``, which
+composes every DSP mixin from the compose chunk (30) onward.
 """
 
 import unittest
@@ -12,33 +11,28 @@ import numpy as np
 
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
-from math_tools.waveforms.dsp._resampling import ResamplingMixin
 from math_tools.waveforms.support import WaveformInterpolationMethod
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
-class _W(ResamplingMixin, Waveform1D):
-    pass
-
-
-def _wrap(base: WaveformProtocol) -> _W:
-    """Rewrap a ``WaveformProtocol``-satisfying result as ``_W`` (see ``test_calc.py``)."""
-    return _W(base.values, dt=base.dt, t0=base.t0)
+def _wrap(base: WaveformProtocol) -> Waveform1D:
+    """Rewrap a ``WaveformProtocol``-satisfying result as ``Waveform1D`` (see ``test_calc.py``)."""
+    return Waveform1D(base.values, dt=base.dt, t0=base.t0)
 
 
 class TestDecimatedFactorValidation(unittest.TestCase):
     def test_factor_zero_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.decimated(0)
 
     def test_negative_factor_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.decimated(-2)
 
     def test_non_int_factor_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.decimated(1.5)  # type: ignore[arg-type]
 
@@ -53,7 +47,7 @@ class TestDecimatedDtIsExact(unittest.TestCase):
         self.assertEqual(decimated.dt, w.dt * 4)
 
     def test_decimated_by_one_is_identity_dt(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0, 5.0], dt_seconds=0.25)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0, 5.0], dt_seconds=0.25)
         decimated = w.decimated(1)
         self.assertEqual(decimated.dt, w.dt)
         np.testing.assert_allclose(decimated.values, w.values)
@@ -71,41 +65,41 @@ class TestDecimatedDtIsExact(unittest.TestCase):
 
 class TestInterpolatedFactorValidation(unittest.TestCase):
     def test_factor_zero_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.interpolated(0)
 
     def test_negative_factor_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.interpolated(-3)
 
     def test_non_int_factor_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.interpolated(2.5)  # type: ignore[arg-type]
 
 
 class TestInterpolatedDtIsExact(unittest.TestCase):
     def test_interpolated_by_two_dt_exact(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.5)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.5)
         interpolated = w.interpolated(2)
         self.assertEqual(interpolated.dt, w.dt / 2)
 
     def test_interpolated_by_one_is_identity_dt(self) -> None:
-        w = _W([1.0, 2.0, 3.0], dt_seconds=0.2)
+        w = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.2)
         interpolated = w.interpolated(1)
         self.assertEqual(interpolated.dt, w.dt)
         np.testing.assert_allclose(interpolated.values, w.values)
 
     def test_interpolated_preserves_t0(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.5, t0_seconds=1.0)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.5, t0_seconds=1.0)
         interpolated = w.interpolated(2)
         self.assertEqual(interpolated.t0, w.t0)
 
     def test_interpolated_endpoint_preserving_length(self) -> None:
         n = 10
-        w = _W(list(range(n)), dt_seconds=1.0)
+        w = Waveform1D(list(range(n)), dt_seconds=1.0)
         interpolated = w.interpolated(3)
         self.assertEqual(len(interpolated.values), (n - 1) * 3 + 1)
 
@@ -142,12 +136,12 @@ class TestInterpolatedDecimatedRoundTrip(unittest.TestCase):
 
 class TestResampledValidation(unittest.TestCase):
     def test_zero_target_frequency_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.resampled(0.0)
 
     def test_negative_target_frequency_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.resampled(-10.0)
 
@@ -201,39 +195,39 @@ class TestPolyphaseResampled(unittest.TestCase):
         self.assertEqual(len(result.values), expected_length)
 
     def test_dt_is_exact(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], dt_seconds=0.5)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], dt_seconds=0.5)
         result = w.polyphase_resampled(up=3, down=2)
         self.assertEqual(result.dt, (w.dt * 2) / 3)
 
     def test_invalid_up_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.polyphase_resampled(up=0, down=2)
 
     def test_invalid_down_raises(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.polyphase_resampled(up=2, down=0)
 
 
 class TestMinimumLengthRaises(unittest.TestCase):
     def test_decimated_on_single_sample_raises(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.decimated(2)
 
     def test_interpolated_on_single_sample_raises(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.interpolated(2)
 
     def test_resampled_on_single_sample_raises(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.resampled(20.0)
 
     def test_polyphase_resampled_on_single_sample_raises(self) -> None:
-        w = _W([1.0], dt_seconds=0.1)
+        w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.polyphase_resampled(up=3, down=2)
 
@@ -257,7 +251,7 @@ class TestMetadataPreserved(unittest.TestCase):
         self.assertEqual(result.t0, w.t0)
 
     def test_dt_is_precision_time_interval(self) -> None:
-        w = _W([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         decimated = w.decimated(2)
         self.assertIsInstance(decimated.dt, PrecisionTimeInterval)
 
