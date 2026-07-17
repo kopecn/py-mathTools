@@ -1114,3 +1114,15 @@ class Waveform1D(Waveform1dABC):
         §Organization).
         """
         return Waveform1D(values, dt=dt, t0=self._t0)
+
+    def _with_t0(self, values: npt.NDArray[Any], t0: PrecisionTimestamp) -> Waveform1D:
+        """A new ``Waveform1D`` with ``values`` as samples, ``dt`` unchanged from
+        ``self``, and a new ``t0``.
+
+        The t0-changing sibling of ``_with_values``/``_with_axis`` -- added in
+        chunk 26 for ``dsp/_time_alignment.py``'s ``TimeAlignmentMixin``, the
+        first DSP family whose results carry a genuinely different start time
+        than their source (see ``dsp/_protocol.py``'s docstring and
+        waveformDsp.md §Organization).
+        """
+        return Waveform1D(values, dt=self._dt, t0=t0)

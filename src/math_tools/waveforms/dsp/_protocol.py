@@ -46,6 +46,19 @@ the new ``dt``. ``t0`` is deliberately not a parameter -- every
 ``ResamplingMixin`` method keeps ``t0`` unchanged (waveformDsp.md §Family
 contracts (``ResamplingMixin``): "New ``t0`` is unchanged") -- so there is
 no caller yet that needs to vary it too; add that only when one does.
+
+**Added in chunk 26 (semver 0.0.5): ``_with_t0``.** ``TimeAlignmentMixin``
+(``dsp/_time_alignment.py``) is the first family whose results carry a
+genuinely different *start time* than their source: ``aligned`` shifts
+``t0`` by a detected (or reference) offset, ``synchronize`` slices every
+input down to a shared overlap window starting at a common ``t0``, and
+``time_windows``/``time_segments`` each cut out a sub-span starting partway
+through ``self``. None of these change ``dt``, so ``_with_axis`` (which
+pins ``t0`` to ``self``'s) does not fit; a third, single-purpose factory
+completes the same-dt / same-dt-and-t0 / same-t0 triangle
+(``_with_values``: same ``dt``, same ``t0``; ``_with_axis``: new ``dt``,
+same ``t0``; ``_with_t0``: same ``dt``, new ``t0``) rather than overloading
+either existing factory's meaning.
 """
 
 from __future__ import annotations
@@ -79,6 +92,8 @@ class WaveformProtocol(Protocol):
     def _with_axis(
         self, values: npt.NDArray[Any], dt: PrecisionTimeInterval
     ) -> WaveformProtocol: ...
+
+    def _with_t0(self, values: npt.NDArray[Any], t0: PrecisionTimestamp) -> WaveformProtocol: ...
 
 
 __all__ = ["WaveformProtocol"]

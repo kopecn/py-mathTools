@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
 last_updated: 2026-07-17
-semver: 0.0.4
+semver: 0.0.5
 author: Nicholas Bergantz
 ---
 
@@ -77,6 +77,19 @@ compute a new `dt`), so `WaveformProtocol` gained a second factory,
 `ResamplingMixin` method keeps `t0` unchanged (see its family-contract row
 below), so add a `t0` parameter only when a future mixin needs to vary it
 too.
+
+**Three result factories.** `TimeAlignmentMixin` (chunk 26,
+`dsp/_time_alignment.py`) is that future mixin: `aligned`, `synchronize`,
+`time_windows`, and `time_segments` all produce results with the same `dt`
+as their source but a genuinely different `t0` (a detected/reference time
+shift, an overlap window's start, or a sub-span's start). Neither existing
+factory fits (`_with_values` pins `t0`; `_with_axis` also pins `t0` while
+changing `dt`), so `WaveformProtocol` gained a third factory,
+`_with_t0(values, t0) -> WaveformProtocol` (new samples, same `dt` as
+`self`, a caller-supplied `t0`) — implemented alongside the other two on
+`Waveform1D`. The three factories now form a complete same-dt/same-t0
+triangle: `_with_values` (same `dt`, same `t0`), `_with_axis` (new `dt`,
+same `t0`), `_with_t0` (same `dt`, new `t0`).
 
 **Composition phasing** (mirrors waveformCore's "Instantiability" section):
 the core `Waveform1D` ships with base `Waveform1dABC` only. Each mixin chunk
