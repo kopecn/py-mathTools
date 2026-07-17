@@ -20,6 +20,8 @@ SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
 MATH_TOOLS_ROOT = SRC_ROOT / "math_tools"
 MATH_PLOT_HELPERS_ROOT = SRC_ROOT / "math_plot_helpers"
 OTG_ROOT = MATH_TOOLS_ROOT / "otg"
+DSP_ROOT = MATH_TOOLS_ROOT / "waveforms" / "dsp"
+_DSP_ALLOWED_SIBLING_MODULES = {"_protocol", "_common"}
 
 
 def _imported_top_level_names(module_path: Path) -> set[str]:
@@ -92,6 +94,56 @@ def test_otg_does_not_import_numpy() -> None:
             violations[str(module_path.relative_to(SRC_ROOT))] = imported
 
     assert not violations, f"math_tools.otg must not import numpy, but found: {violations}"
+
+
+def _dsp_sibling_imports(module_path: Path) -> set[str]:
+    """Sibling ``dsp/_*`` module names ``module_path`` imports (its own name excluded),
+    in both absolute (``math_tools.waveforms.dsp._foo``) and relative
+    (``from ._foo import ...`` / ``from . import _foo``) forms."""
+    tree = ast.parse(module_path.read_text(encoding="utf-8"), filename=str(module_path))
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.level == 0 and node.module == "math_tools.waveforms.dsp":
+            found.update(alias.name for alias in node.names)
+        elif (
+            node.level == 0 and node.module and node.module.startswith("math_tools.waveforms.dsp.")
+        ):
+            found.add(node.module.split(".")[-1])
+        elif node.level >= 1:
+            if node.module:
+                found.add(node.module.split(".")[-1])
+            else:
+                found.update(alias.name for alias in node.names)
+    found -= _DSP_ALLOWED_SIBLING_MODULES
+    found.discard(module_path.stem)
+    return found
+
+
+def test_dsp_mixins_do_not_import_sibling_mixins() -> None:
+    """waveformDsp.md §Compliance 2 / §Organization: each ``dsp/_*.py`` mixin module
+    imports scipy/numpy plus ``_protocol``/``_common`` only -- no sibling mixin
+    imports (shared helpers live in ``dsp/_common.py``).
+
+    Guarded to skip if ``waveforms/dsp`` does not exist yet so this enforcement is
+    inherited for free (mirrors ``test_otg_does_not_import_numpy``'s pattern).
+    """
+    if not DSP_ROOT.is_dir():
+        return
+
+    violations: dict[str, set[str]] = {}
+    for module_path in DSP_ROOT.glob("_*.py"):
+        if module_path.stem in _DSP_ALLOWED_SIBLING_MODULES:
+            continue
+        sibling_imports = _dsp_sibling_imports(module_path)
+        if sibling_imports:
+            violations[str(module_path.relative_to(SRC_ROOT))] = sibling_imports
+
+    assert not violations, (
+        "dsp mixin modules must import only _protocol/_common from within "
+        f"waveforms/dsp/, but found sibling-mixin imports: {violations}"
+    )
 
 
 def test_math_tools_is_scanned() -> None:

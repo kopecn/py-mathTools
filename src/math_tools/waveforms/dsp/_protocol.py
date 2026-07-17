@@ -10,6 +10,20 @@ mypy-strict-checkable without a circular import back into
 References only ``PrecisionTimeInterval``/``PrecisionTimestamp`` and numpy
 typing -- never a concrete mixin or ``Waveform1D`` itself.
 
+**Mixins type their ``self`` as this Protocol; they do not nominally
+inherit it** (i.e. ``def integrate(self: WaveformProtocol, ...)``, not
+``class CalcMixin(WaveformProtocol)``). Nominal inheritance was the
+original design and is broken at runtime: explicitly subclassing a
+``Protocol`` turns its stub property bodies (``...``, so the getter
+returns ``None``) into concrete inherited implementations, and when a test
+composes ``class _W(SomeMixin, Waveform1D)``, C3 linearization places that
+inherited stub ahead of ``Waveform1D``'s real property -- ``self.values``
+silently returns ``None`` instead of the sample array. Self-typing avoids
+this because the mixin then carries no runtime base beyond ``object``, so
+composing it with ``Waveform1D`` never pulls ``WaveformProtocol`` into the
+MRO. See ``.claude/specs/waveformDsp.md`` §Organization (fixed in chunk 18,
+semver 0.0.3) for the full account.
+
 Deviation from the chunk doc's literal code block: ``_with_values`` returns
 ``WaveformProtocol`` (self-type), not the quoted forward reference
 ``"Waveform1D"`` shown there -- importing ``Waveform1D`` here (even under

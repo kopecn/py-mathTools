@@ -94,3 +94,12 @@ files = ["src", "tests"]
 # go in requirements-local.txt (NEVER in pyproject — git URLs / path overrides here
 # are a module-deployment disaster). `make uv-sync-local` installs that overlay on top
 # of the normal env; it is gitignored and never read by CI/release.
+
+# scipy ships no inline type stubs and the third-party `scipy-stubs` package lags the
+# pinned scipy release (waveformDsp.md's DSP mixins are thin scipy wrappers per
+# mathToolsArchitecture.md's dependency policy, so every scipy submodule they touch
+# hits this). Narrowly scoped to `scipy.*` only -- every other third-party import stays
+# strict/unignored.
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true

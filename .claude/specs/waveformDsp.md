@@ -7,8 +7,8 @@ spec: WaveformDsp
 scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-07-17
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
@@ -39,12 +39,31 @@ class Waveform1D(
 
 Mixin rules: stateless; touch only the public `Waveform1D` surface
 (`values`, `dt`, `t0`, constructors). Typing mechanism (load-bearing —
-mypy strict rejects a bare mixin referencing `self.values`): each mixin
-**inherits** `WaveformProtocol` (a `typing.Protocol` in `dsp/_protocol.py`
-declaring `values: npt.NDArray`, `dt`, `t0`, and the replace-values factory
-the mixins use to build results). That makes every mixin independently
-mypy-strict-checkable and independently testable. Methods return new
-objects or descriptor types — never mutate.
+mypy strict rejects a bare mixin referencing `self.values`): each mixin is a
+**plain class** (no runtime base beyond `object`) that types its `self`
+parameter as `WaveformProtocol` on every method — mypy's documented "mixin
+classes" idiom, e.g. `def integrate(self: WaveformProtocol, ...) ->
+WaveformProtocol: ...` — where `WaveformProtocol` is a `typing.Protocol` in
+`dsp/_protocol.py` declaring `values: npt.NDArray`, `dt`, `t0`,
+`sampling_frequency_hz`, and the replace-values factory the mixins use to
+build results. That makes every mixin independently mypy-strict-checkable
+and independently testable. Methods return new objects or descriptor
+types — never mutate.
+
+**Do not nominally inherit `WaveformProtocol`** (`class CalcMixin
+(WaveformProtocol)`) — that was the first design tried and it is broken at
+runtime. Explicitly subclassing a `Protocol` (without also listing
+`Protocol` itself as a base) turns its stub property bodies — literally
+`...`, so the getter returns `None` — into concrete inherited
+implementations. The DSP mixin test convention composes a mixin directly
+with `Waveform1D` (`class _W(CalcMixin, Waveform1D): pass`, see below);
+under C3 linearization that puts the inherited Protocol stub ahead of
+`Waveform1D`'s real property, so `self.values` silently returns `None`
+instead of the sample array — caught by chunk 18's own TDD steps, not by
+inspection. Self-typing `self` avoids this: the mixin class carries no
+runtime base beyond `object`, so composing it with `Waveform1D` never pulls
+`WaveformProtocol` into the MRO, while mypy still resolves every `self.*`
+access structurally through the `self: WaveformProtocol` annotation.
 
 **Composition phasing** (mirrors waveformCore's "Instantiability" section):
 the core `Waveform1D` ships with base `Waveform1dABC` only. Each mixin chunk
