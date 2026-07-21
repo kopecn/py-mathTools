@@ -5,7 +5,8 @@ this package (and everything under it) never imports numpy (real-time
 control-loop constraint, enforced by ``tests/test_package_layering.py``).
 
 Public re-exports grow per chunk (otg.md §Module layout); this chunk adds
-``InputParameter`` to the wire-stable enums and the structural-misuse error.
+``Trajectory`` and ``OutputParameter`` to the previously-landed enums,
+structural-misuse error, and ``InputParameter``.
 """
 
 from __future__ import annotations
@@ -18,12 +19,16 @@ from math_tools.otg.enums import (
 )
 from math_tools.otg.errors import OtgError
 from math_tools.otg.input_parameter import InputParameter
+from math_tools.otg.output_parameter import OutputParameter
+from math_tools.otg.trajectory import Trajectory
 
 __all__ = [
     "ControlInterface",
     "DurationDiscretization",
     "InputParameter",
     "OtgError",
+    "OutputParameter",
     "Result",
     "Synchronization",
+    "Trajectory",
 ]
