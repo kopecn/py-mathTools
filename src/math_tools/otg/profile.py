@@ -14,30 +14,34 @@ as a call to ``integrate_jerk(t[i], p[i], v[i], a[i], j[i])`` throughout,
 including the "second-order" and "first-order" interfaces where the Swift
 source inlines the ``j == 0`` special case by hand.
 
-Two Swift types this file depends on have not landed yet:
+``brake``/``accel`` are the real ``math_tools.otg.brake.BrakeProfile``
+(chunk 34, ``otg/brake.py``): chunk 33 originally stood these in with a
+module-private ``_DeferredBrakeProfile`` dataclass because ``brake.py``
+didn't exist yet; chunk 34 landed it and this module now imports the real
+type directly (see ``33-otg-profile.md``'s Resolution notes for the
+original deferral and ``34-otg-block-brake-bound.md``'s Resolution notes
+for the reconciliation).
 
-- ``BrakeProfile`` (``brake``/``accel`` fields, chunk 34's ``otg/brake.py``)
-  -- stood in for by :class:`_DeferredBrakeProfile` below, which mirrors
-  ``Brake.swift``'s public shape closely enough for
-  :meth:`Profile.set_boundary` to copy it losslessly.
-- ``Bound`` (the ``ext`` parameter of ``check_position_extremum`` /
-  ``check_step_for_position_extremum``, chunk 34's ``otg/bound.py``) --
-  stood in for by the :class:`_PositionExtremumSink` structural
-  :class:`~typing.Protocol` below, which any real ``Bound`` will satisfy
-  without this module importing the not-yet-merged type.
-
-See ``33-otg-profile.md``'s Resolution notes for exactly how chunk 34 should
-reconcile both placeholders.
+``check_position_extremum``/``check_step_for_position_extremum``'s ``ext``
+parameter stays typed against the module-private structural
+:class:`~typing.Protocol` :class:`_PositionExtremumSink` (``min``, ``max``,
+``t_min``, ``t_max`` floats) rather than importing
+``math_tools.otg.bound.Bound`` directly -- chunk 34's real ``Bound`` has
+those exact field names (its own design constraint), so it satisfies this
+Protocol structurally without an import edge from this module to
+``bound.py``. ``33-otg-profile.md``'s Resolution notes explicitly permit
+the Protocol to "stay indefinitely"; kept as-is per
+``34-otg-block-brake-bound.md``'s Resolution notes for the same reason.
 """
 
 from __future__ import annotations
 
 import math
 import sys
-from dataclasses import dataclass, field
 from typing import Protocol, overload
 
 from math_tools.functional.roots import integrate_jerk
+from math_tools.otg.brake import BrakeProfile
 from math_tools.otg.enums import ControlSigns, Direction, ReachedLimits
 
 __all__ = ["Profile"]
@@ -78,35 +82,17 @@ _ZERO_ACC_AT_VEL_LIMITS = (
 )
 
 
-@dataclass
-class _DeferredBrakeProfile:
-    """Temporary stand-in for the not-yet-landed ``BrakeProfile``.
-
-    Mirrors ``Brake.swift``'s public shape (``duration``, ``t``, ``j``,
-    ``a``, ``v``, ``p``) closely enough for :meth:`Profile.set_boundary` to
-    copy it losslessly. Chunk 34 (``otg/brake.py``) is expected to replace
-    every use of this placeholder with the real ``BrakeProfile`` -- see
-    ``33-otg-profile.md``'s Resolution notes for the reconciliation plan.
-    """
-
-    duration: float = 0.0
-    t: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    j: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    a: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    v: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    p: list[float] = field(default_factory=lambda: [0.0, 0.0])
-
-
 class _PositionExtremumSink(Protocol):
-    """Structural stand-in for the not-yet-landed ``Bound`` (chunk 34,
-    ``otg/bound.py``).
+    """Structural stand-in for ``math_tools.otg.bound.Bound`` (chunk 34),
+    kept intentionally rather than importing ``Bound`` directly (see this
+    module's docstring).
 
     :meth:`Profile.check_position_extremum` and
     :meth:`Profile.check_step_for_position_extremum` only mutate these four
-    float attributes, so any object shaped like this -- including the
-    eventual real ``Bound``, whose fields are named identically per
+    float attributes, so any object shaped like this -- including the real
+    ``Bound``, whose fields are named identically per
     ``34-otg-block-brake-bound.md``'s design constraints -- satisfies it
-    structurally. No import of the unmerged module is required.
+    structurally without this module importing ``bound.py``.
     """
 
     min: float
@@ -132,9 +118,9 @@ class Profile:
         self.v: list[float] = [0.0] * 8
         self.p: list[float] = [0.0] * 8
 
-        # Brake sub-profiles -- see _DeferredBrakeProfile's docstring.
-        self.brake: _DeferredBrakeProfile = _DeferredBrakeProfile()
-        self.accel: _DeferredBrakeProfile = _DeferredBrakeProfile()
+        # Brake sub-profiles (math_tools.otg.brake.BrakeProfile, chunk 34).
+        self.brake: BrakeProfile = BrakeProfile()
+        self.accel: BrakeProfile = BrakeProfile()
 
         # Target (final) kinematic state.
         self.pf: float = 0.0
