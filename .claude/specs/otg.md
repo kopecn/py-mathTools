@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/otg/, tests/otg/
 last_updated: 2026-07-21
-semver: 0.0.3
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 
@@ -144,7 +144,21 @@ invalid.
    comparisons then naturally reject) rather than crashing. This is NOT a
    blanket rule to wrap every division in the OTG port — only sites where
    a real Swift Double division-by-zero has been shown (by a failing
-   test) to be reachable.
+   test) to be reachable. The same total-vs-partial-function divergence
+   applies to `sqrt`: Swift `Double`'s `sqrt` of a negative argument is
+   `nan` (never traps), Python's `math.sqrt` raises `ValueError`. A
+   negative-discriminant `sqrt` is the *generic* way a Step2 time-
+   synchronization solver's algebra signals "no real solution at this
+   prescribed duration" — reachable from ordinary usage (any
+   below-time-optimal duration), not a rare degenerate root — so
+   `steps/position_third_order_step2.py` routes every `sqrt` call through
+   an `_ieee754_sqrt` helper file-wide, unlike `_ieee754_div`'s
+   deliberately per-site scoping (see that file's module docstring and
+   `_ieee754_sqrt`'s docstring for the reachability trace that motivated
+   the broader scope, and `39-otg-position-third-step2.md`'s Resolution
+   notes). Future step-solver chunks should default to `_ieee754_div`'s
+   narrower, failing-test-driven scoping and only widen it the way this
+   file did if a similar cascade is demonstrated.
 5. Pure Python + stdlib `math` in the per-cycle path (no numpy — scalar
    loops over DOFs, matching Swift; performance is explicitly a non-goal
    until measured).
