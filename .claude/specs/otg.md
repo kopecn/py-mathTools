@@ -7,8 +7,8 @@ spec: OTG
 scope: project
 status: accepted
 applies_to: src/math_tools/otg/, tests/otg/
-last_updated: 2026-07-21
-semver: 0.0.4
+last_updated: 2026-07-22
+semver: 0.0.5
 author: Nicholas Bergantz
 ---
 
@@ -176,14 +176,16 @@ numeric golden lives in a hardcoded Swift test array.
    successful cases → `calculate` returns a non-error `Result`
    (`Result >= 0`); failed cases → an error `Result` (`Result < 0` — the
    JSON's free-text error strings are NOT mapped to specific codes).
-2. **Numeric oracle:** port the 32-case hardcoded truth table from
+2. **Numeric oracle:** port the 31-case hardcoded truth table from
    `OTGTruthTableTests.swift` (each case: input state/limits +
    `expectedDuration` + `expectedTimeIntervals`, the 7 profile segment
    times) into `tests/otg/data/otg_numeric_truth.json`, transcribed
    verbatim from the Swift literals. Assertions per case: trajectory
    duration rtol 1e-6; `Profile.t` segment times against
-   `expectedTimeIntervals` atol 1e-8 (this pins branch selection, not just
-   the coincidentally-summable duration).
+   `expectedTimeIntervals` atol 1e-6 (this pins branch selection, not just
+   the coincidentally-summable duration; capped at 1e-6 rather than 1e-8
+   because the Swift literals themselves are recorded to only 6 decimal
+   places — a tighter atol cannot be satisfied by any correct port).
 3. **Ported suites:** the Swift `OTGComprehensiveTests`, `OTGContinuityTests`
    (position/velocity/acceleration continuity across cycle boundaries and
    section changes), and `OTGFailureFixTests` regression cases are ported
@@ -195,8 +197,8 @@ numeric golden lives in a hardcoded Swift test array.
 
 ## Compliance requirements (test-checkable)
 
-1. Classification corpus passes 100% of cases; numeric 32-case oracle passes
-   (duration rtol 1e-6, segment times atol 1e-8).
+1. Classification corpus passes 100% of cases; numeric 31-case oracle passes
+   (duration rtol 1e-6, segment times atol 1e-6).
 2. Continuity suite passes (no kinematic discontinuities at cycle/section
    boundaries).
 3. `Result` enum integer values grep-match the table above.

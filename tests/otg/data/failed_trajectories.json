@@ -1,0 +1,3878 @@
+[
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      8.57360072082836
+    ],
+    "currentVelocity": [
+      3.698449371444841
+    ],
+    "currentAcceleration": [
+      -1.131609989236103
+    ],
+    "targetPosition": [
+      1.168721815265073
+    ],
+    "targetVelocity": [
+      2.345295199230902
+    ],
+    "targetAcceleration": [
+      -0.4454515567015265
+    ],
+    "maxVelocity": [
+      2.208166789445759
+    ],
+    "maxAcceleration": [
+      3.017567270002812
+    ],
+    "maxJerk": [
+      5.01305754633113
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.345295 of DoF 0 exceeds its maximum velocity limit 2.208167."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.325634447436885
+    ],
+    "currentVelocity": [
+      4.093811973161593
+    ],
+    "currentAcceleration": [
+      1.882104646880118
+    ],
+    "targetPosition": [
+      -7.861669332164061
+    ],
+    "targetVelocity": [
+      -2.7210514051841654
+    ],
+    "targetAcceleration": [
+      -0.6173232684287311
+    ],
+    "maxVelocity": [
+      2.4631035684858773
+    ],
+    "maxAcceleration": [
+      8.78682301089001
+    ],
+    "maxJerk": [
+      17.059119617353765
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.721051 of DoF 0 undercuts its minimum velocity limit -2.463104."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.6052936235697253
+    ],
+    "currentVelocity": [
+      0.9122767896119841
+    ],
+    "currentAcceleration": [
+      1.1143284887819083
+    ],
+    "targetPosition": [
+      -5.579980778542115
+    ],
+    "targetVelocity": [
+      -2.7654945181147292
+    ],
+    "targetAcceleration": [
+      0.5538168318870613
+    ],
+    "maxVelocity": [
+      2.7740058417217295
+    ],
+    "maxAcceleration": [
+      7.818245876624244
+    ],
+    "maxJerk": [
+      9.685700267813703
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.781328 from the target kinematic state that will undercut its minimum velocity limit -2.774006."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.635808841285806
+    ],
+    "currentVelocity": [
+      -2.636521830238563
+    ],
+    "currentAcceleration": [
+      -1.6579831455386285
+    ],
+    "targetPosition": [
+      -7.44875887773248
+    ],
+    "targetVelocity": [
+      -2.982321097871306
+    ],
+    "targetAcceleration": [
+      -0.7203536622938858
+    ],
+    "maxVelocity": [
+      2.285315695239664
+    ],
+    "maxAcceleration": [
+      7.244295913859068
+    ],
+    "maxJerk": [
+      17.711772432849777
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.982321 of DoF 0 undercuts its minimum velocity limit -2.285316."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      5.864357423229162
+    ],
+    "currentVelocity": [
+      3.0769662584199615
+    ],
+    "currentAcceleration": [
+      1.6252177120413673
+    ],
+    "targetPosition": [
+      -1.9500610290824625
+    ],
+    "targetVelocity": [
+      2.5294913560459786
+    ],
+    "targetAcceleration": [
+      -0.5557270425337628
+    ],
+    "maxVelocity": [
+      2.494845482917848
+    ],
+    "maxAcceleration": [
+      8.478167332882148
+    ],
+    "maxJerk": [
+      14.976182141694096
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.529491 of DoF 0 exceeds its maximum velocity limit 2.494845."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      5.916866440100252
+    ],
+    "currentVelocity": [
+      3.452744649504613
+    ],
+    "currentAcceleration": [
+      -0.26404387880268887
+    ],
+    "targetPosition": [
+      -8.439820498664258
+    ],
+    "targetVelocity": [
+      2.3282345972167917
+    ],
+    "targetAcceleration": [
+      -0.5371187932875479
+    ],
+    "maxVelocity": [
+      2.0830382521781123
+    ],
+    "maxAcceleration": [
+      4.745609843560436
+    ],
+    "maxJerk": [
+      7.875527513556764
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.328235 of DoF 0 exceeds its maximum velocity limit 2.083038."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      2.4874450057352604
+    ],
+    "currentVelocity": [
+      -2.6143954865655736
+    ],
+    "currentAcceleration": [
+      -1.2623379220249986
+    ],
+    "targetPosition": [
+      -2.8250718814435665
+    ],
+    "targetVelocity": [
+      2.8825617510582173
+    ],
+    "targetAcceleration": [
+      -0.5789857113089794
+    ],
+    "maxVelocity": [
+      2.021857826361347
+    ],
+    "maxAcceleration": [
+      7.12466838624233
+    ],
+    "maxJerk": [
+      16.418851785710594
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.882562 of DoF 0 exceeds its maximum velocity limit 2.021858."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.545372603289465
+    ],
+    "currentVelocity": [
+      2.1678952644171456
+    ],
+    "currentAcceleration": [
+      -1.3868743842877058
+    ],
+    "targetPosition": [
+      9.117771958409026
+    ],
+    "targetVelocity": [
+      -2.883626038481729
+    ],
+    "targetAcceleration": [
+      0.27333748169572214
+    ],
+    "maxVelocity": [
+      2.036365051590601
+    ],
+    "maxAcceleration": [
+      4.94269915736699
+    ],
+    "maxJerk": [
+      9.88655960569988
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.883626 of DoF 0 undercuts its minimum velocity limit -2.036365."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -0.351755068434068
+    ],
+    "currentVelocity": [
+      1.1285927820714514
+    ],
+    "currentAcceleration": [
+      1.5284210315709736
+    ],
+    "targetPosition": [
+      -6.028289440281882
+    ],
+    "targetVelocity": [
+      2.9297845522841808
+    ],
+    "targetAcceleration": [
+      -0.6141648904997818
+    ],
+    "maxVelocity": [
+      2.3220509879094156
+    ],
+    "maxAcceleration": [
+      4.719729654159961
+    ],
+    "maxJerk": [
+      10.677924083313735
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.929785 of DoF 0 exceeds its maximum velocity limit 2.322051."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.351642213152477
+    ],
+    "currentVelocity": [
+      1.9262477782316427
+    ],
+    "currentAcceleration": [
+      0.39345221878639824
+    ],
+    "targetPosition": [
+      8.19721292990549
+    ],
+    "targetVelocity": [
+      2.7715107209296823
+    ],
+    "targetAcceleration": [
+      0.9484474410948971
+    ],
+    "maxVelocity": [
+      2.6259341377836956
+    ],
+    "maxAcceleration": [
+      5.176991913645425
+    ],
+    "maxJerk": [
+      18.342900037885205
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.771511 of DoF 0 exceeds its maximum velocity limit 2.625934."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -1.6303562007943633
+    ],
+    "currentVelocity": [
+      -1.4713492550109697
+    ],
+    "currentAcceleration": [
+      1.8090707719072214
+    ],
+    "targetPosition": [
+      6.568742604737061
+    ],
+    "targetVelocity": [
+      -2.4561678884972977
+    ],
+    "targetAcceleration": [
+      -0.4826475646882846
+    ],
+    "maxVelocity": [
+      2.0179093126222716
+    ],
+    "maxAcceleration": [
+      6.30189150657942
+    ],
+    "maxJerk": [
+      6.813546131391397
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.456168 of DoF 0 undercuts its minimum velocity limit -2.017909."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.302418402437048
+    ],
+    "currentVelocity": [
+      -4.063995454489127
+    ],
+    "currentAcceleration": [
+      -1.1681995863978352
+    ],
+    "targetPosition": [
+      -2.450712904891798
+    ],
+    "targetVelocity": [
+      -2.266851564091764
+    ],
+    "targetAcceleration": [
+      -0.8981191633142234
+    ],
+    "maxVelocity": [
+      2.262600568199826
+    ],
+    "maxAcceleration": [
+      3.78012509046124
+    ],
+    "maxJerk": [
+      14.993735711678731
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.266852 of DoF 0 undercuts its minimum velocity limit -2.262601."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.444666669070947
+    ],
+    "currentVelocity": [
+      -1.6974616052956994
+    ],
+    "currentAcceleration": [
+      1.291990415962752
+    ],
+    "targetPosition": [
+      1.7090417394483204
+    ],
+    "targetVelocity": [
+      2.587203970014473
+    ],
+    "targetAcceleration": [
+      -0.17314881052867226
+    ],
+    "maxVelocity": [
+      2.169654039300433
+    ],
+    "maxAcceleration": [
+      3.6193037100997048
+    ],
+    "maxJerk": [
+      19.773164371198185
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.587204 of DoF 0 exceeds its maximum velocity limit 2.169654."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -2.931288995647485
+    ],
+    "currentVelocity": [
+      -0.870140945357317
+    ],
+    "currentAcceleration": [
+      -1.4561541267020308
+    ],
+    "targetPosition": [
+      -6.2282978116303305
+    ],
+    "targetVelocity": [
+      -2.882035393508427
+    ],
+    "targetAcceleration": [
+      -0.5239509567858873
+    ],
+    "maxVelocity": [
+      2.3395503002142206
+    ],
+    "maxAcceleration": [
+      3.037910954065846
+    ],
+    "maxJerk": [
+      14.625649514119932
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.882035 of DoF 0 undercuts its minimum velocity limit -2.339550."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.6600820954284092
+    ],
+    "currentVelocity": [
+      -4.075488761626751
+    ],
+    "currentAcceleration": [
+      1.203979510110495
+    ],
+    "targetPosition": [
+      -1.5988848970637743
+    ],
+    "targetVelocity": [
+      -2.6868581654581605
+    ],
+    "targetAcceleration": [
+      0.0016678904883222767
+    ],
+    "maxVelocity": [
+      2.617080146349781
+    ],
+    "maxAcceleration": [
+      9.401670395679432
+    ],
+    "maxJerk": [
+      6.0325654925697325
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.686858 of DoF 0 undercuts its minimum velocity limit -2.617080."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.09314578070574
+    ],
+    "currentVelocity": [
+      -1.8404166237258925
+    ],
+    "currentAcceleration": [
+      -1.2079637562228238
+    ],
+    "targetPosition": [
+      -5.226380903713441
+    ],
+    "targetVelocity": [
+      2.7219893664807513
+    ],
+    "targetAcceleration": [
+      0.05532916755276651
+    ],
+    "maxVelocity": [
+      2.1306193381870853
+    ],
+    "maxAcceleration": [
+      8.844934059684768
+    ],
+    "maxJerk": [
+      17.97907979976527
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.721989 of DoF 0 exceeds its maximum velocity limit 2.130619."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.927314734351874
+    ],
+    "currentVelocity": [
+      3.5354107590949866
+    ],
+    "currentAcceleration": [
+      0.6086059198947655
+    ],
+    "targetPosition": [
+      -0.21702711581733602
+    ],
+    "targetVelocity": [
+      -2.0312761390182494
+    ],
+    "targetAcceleration": [
+      -0.7915823700916447
+    ],
+    "maxVelocity": [
+      2.0295435365036116
+    ],
+    "maxAcceleration": [
+      3.7943491785011134
+    ],
+    "maxJerk": [
+      11.741123391652248
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.031276 of DoF 0 undercuts its minimum velocity limit -2.029544."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.106507962612941
+    ],
+    "currentVelocity": [
+      -1.5611428385475667
+    ],
+    "currentAcceleration": [
+      -0.26684007313732705
+    ],
+    "targetPosition": [
+      -3.314634136379939
+    ],
+    "targetVelocity": [
+      -2.74623017585111
+    ],
+    "targetAcceleration": [
+      -0.0038180495025259553
+    ],
+    "maxVelocity": [
+      2.6732628820758175
+    ],
+    "maxAcceleration": [
+      3.4887529982710577
+    ],
+    "maxJerk": [
+      15.97760157596163
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.746230 of DoF 0 undercuts its minimum velocity limit -2.673263."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      7.937928659439123
+    ],
+    "currentVelocity": [
+      1.0761679279978846
+    ],
+    "currentAcceleration": [
+      0.01136598865176941
+    ],
+    "targetPosition": [
+      -8.263758395474973
+    ],
+    "targetVelocity": [
+      2.9018910940148546
+    ],
+    "targetAcceleration": [
+      0.48176022087394865
+    ],
+    "maxVelocity": [
+      2.3847912338017325
+    ],
+    "maxAcceleration": [
+      8.213012929568404
+    ],
+    "maxJerk": [
+      15.692363476920857
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.901891 of DoF 0 exceeds its maximum velocity limit 2.384791."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      3.5898931826032268
+    ],
+    "currentVelocity": [
+      2.2774627018315456
+    ],
+    "currentAcceleration": [
+      -0.3982897564888779
+    ],
+    "targetPosition": [
+      8.661863567855754
+    ],
+    "targetVelocity": [
+      -2.5212348209458257
+    ],
+    "targetAcceleration": [
+      -0.18438133455500227
+    ],
+    "maxVelocity": [
+      2.505932688173641
+    ],
+    "maxAcceleration": [
+      7.549120207502748
+    ],
+    "maxJerk": [
+      10.208408956931374
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.521235 of DoF 0 undercuts its minimum velocity limit -2.505933."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      2.490913491372721
+    ],
+    "currentVelocity": [
+      -0.842193436803635
+    ],
+    "currentAcceleration": [
+      -0.9239370957907722
+    ],
+    "targetPosition": [
+      -9.746633595054748
+    ],
+    "targetVelocity": [
+      -2.291113711407607
+    ],
+    "targetAcceleration": [
+      0.9528640104455501
+    ],
+    "maxVelocity": [
+      2.083108375784498
+    ],
+    "maxAcceleration": [
+      5.116592527343359
+    ],
+    "maxJerk": [
+      7.715791386119639
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.291114 of DoF 0 undercuts its minimum velocity limit -2.083108."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      9.935747019766495
+    ],
+    "currentVelocity": [
+      -1.541605130458914
+    ],
+    "currentAcceleration": [
+      -1.3696037190117964
+    ],
+    "targetPosition": [
+      2.2005884016656694
+    ],
+    "targetVelocity": [
+      2.982879005262782
+    ],
+    "targetAcceleration": [
+      0.7042105864372974
+    ],
+    "maxVelocity": [
+      2.5254595944835367
+    ],
+    "maxAcceleration": [
+      4.600424050305248
+    ],
+    "maxJerk": [
+      5.816602367648521
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.982879 of DoF 0 exceeds its maximum velocity limit 2.525460."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -9.503567066035274
+    ],
+    "currentVelocity": [
+      2.113024057894286
+    ],
+    "currentAcceleration": [
+      -0.5777430516929409
+    ],
+    "targetPosition": [
+      -7.317162815607061
+    ],
+    "targetVelocity": [
+      2.532561000117555
+    ],
+    "targetAcceleration": [
+      -0.23093429016465672
+    ],
+    "maxVelocity": [
+      2.4658446920770145
+    ],
+    "maxAcceleration": [
+      8.803403272073963
+    ],
+    "maxJerk": [
+      7.256547261150691
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.532561 of DoF 0 exceeds its maximum velocity limit 2.465845."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.283880746843444
+    ],
+    "currentVelocity": [
+      -2.614422572927826
+    ],
+    "currentAcceleration": [
+      -1.4865299573251773
+    ],
+    "targetPosition": [
+      6.131777106245384
+    ],
+    "targetVelocity": [
+      2.9379861423519396
+    ],
+    "targetAcceleration": [
+      0.7093844060257881
+    ],
+    "maxVelocity": [
+      2.049946901157694
+    ],
+    "maxAcceleration": [
+      9.12454174088792
+    ],
+    "maxJerk": [
+      6.668301247391638
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity 2.937986 of DoF 0 exceeds its maximum velocity limit 2.049947."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.04052847343727
+    ],
+    "currentVelocity": [
+      3.242778206554055
+    ],
+    "currentAcceleration": [
+      -1.4672933355779745
+    ],
+    "targetPosition": [
+      -6.06247955665842
+    ],
+    "targetVelocity": [
+      -2.5439100407882984
+    ],
+    "targetAcceleration": [
+      0.7723070877685643
+    ],
+    "maxVelocity": [
+      2.2229752741566537
+    ],
+    "maxAcceleration": [
+      5.982423191483794
+    ],
+    "maxJerk": [
+      15.799354919737711
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.543910 of DoF 0 undercuts its minimum velocity limit -2.222975."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.993488541437696
+    ],
+    "currentVelocity": [
+      -2.0347421522247586
+    ],
+    "currentAcceleration": [
+      -1.1114388837038733
+    ],
+    "targetPosition": [
+      -9.617423139420005
+    ],
+    "targetVelocity": [
+      -2.230034562105093
+    ],
+    "targetAcceleration": [
+      0.10829464659500099
+    ],
+    "maxVelocity": [
+      2.032983684573977
+    ],
+    "maxAcceleration": [
+      9.616829219020918
+    ],
+    "maxJerk": [
+      14.814458375145099
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.230035 of DoF 0 undercuts its minimum velocity limit -2.032984."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      9.283155397368763
+    ],
+    "currentVelocity": [
+      3.6302871289493552
+    ],
+    "currentAcceleration": [
+      1.5490992089996132
+    ],
+    "targetPosition": [
+      -0.4585194567938409
+    ],
+    "targetVelocity": [
+      -2.921391563060483
+    ],
+    "targetAcceleration": [
+      0.37085774058395105
+    ],
+    "maxVelocity": [
+      2.4069551982445168
+    ],
+    "maxAcceleration": [
+      8.579463132939114
+    ],
+    "maxJerk": [
+      15.14962283989605
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] target velocity -2.921392 of DoF 0 undercuts its minimum velocity limit -2.406955."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.19695597081183
+    ],
+    "currentVelocity": [
+      1.7549820151883626
+    ],
+    "currentAcceleration": [
+      -1.7093157698030659
+    ],
+    "targetPosition": [
+      -8.525925645889178
+    ],
+    "targetVelocity": [
+      -2.0529734494180127
+    ],
+    "targetAcceleration": [
+      4.272380346707411
+    ],
+    "maxVelocity": [
+      2.1157731084037574
+    ],
+    "maxAcceleration": [
+      9.05183887964812
+    ],
+    "maxJerk": [
+      10.644348027067387
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.910388 from the target kinematic state that will undercut its minimum velocity limit -2.115773."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.430958782953331
+    ],
+    "currentVelocity": [
+      -4.3464236337508035
+    ],
+    "currentAcceleration": [
+      -5.504032458051865
+    ],
+    "targetPosition": [
+      7.403448770117482
+    ],
+    "targetVelocity": [
+      5.463547654581321
+    ],
+    "targetAcceleration": [
+      -1.6930052986346755
+    ],
+    "maxVelocity": [
+      5.4666484504182336
+    ],
+    "maxAcceleration": [
+      7.970831382253024
+    ],
+    "maxJerk": [
+      9.409730380316498
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.615851 from the target kinematic state that will exceed its maximum velocity limit 5.466648."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      8.388670350097083
+    ],
+    "currentVelocity": [
+      4.074386032443326
+    ],
+    "currentAcceleration": [
+      2.2012639208308293
+    ],
+    "targetPosition": [
+      -1.3675547668573351
+    ],
+    "targetVelocity": [
+      4.094504520152619
+    ],
+    "targetAcceleration": [
+      -5.127806516148983
+    ],
+    "maxVelocity": [
+      4.497543129259065
+    ],
+    "maxAcceleration": [
+      8.568368839324178
+    ],
+    "maxJerk": [
+      14.900096376454293
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.976861 from the target kinematic state that will exceed its maximum velocity limit 4.497543."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.121529934848226
+    ],
+    "currentVelocity": [
+      5.018296940768277
+    ],
+    "currentAcceleration": [
+      6.908357840171487
+    ],
+    "targetPosition": [
+      -3.5492174891350015
+    ],
+    "targetVelocity": [
+      -5.32869851350113
+    ],
+    "targetAcceleration": [
+      6.902003089169018
+    ],
+    "maxVelocity": [
+      5.5216611439910945
+    ],
+    "maxAcceleration": [
+      9.869612266410865
+    ],
+    "maxJerk": [
+      17.187052287338712
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.714557 from the target kinematic state that will undercut its minimum velocity limit -5.521661."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.2891674877506656
+    ],
+    "currentVelocity": [
+      0.6542235839639474
+    ],
+    "currentAcceleration": [
+      2.3467874197418244
+    ],
+    "targetPosition": [
+      1.2288536141724666
+    ],
+    "targetVelocity": [
+      -1.8864476395622556
+    ],
+    "targetAcceleration": [
+      4.819213381770535
+    ],
+    "maxVelocity": [
+      2.2435202759615747
+    ],
+    "maxAcceleration": [
+      8.895146457675091
+    ],
+    "maxJerk": [
+      6.125716144231395
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -3.782129 from the target kinematic state that will undercut its minimum velocity limit -2.243520."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -5.42701652784638
+    ],
+    "currentVelocity": [
+      -1.9631071617747355
+    ],
+    "currentAcceleration": [
+      -3.881241358260355
+    ],
+    "targetPosition": [
+      -1.9493236454977847
+    ],
+    "targetVelocity": [
+      -2.64742960980581
+    ],
+    "targetAcceleration": [
+      3.1509581330960996
+    ],
+    "maxVelocity": [
+      3.0691902843948373
+    ],
+    "maxAcceleration": [
+      7.1313352485027215
+    ],
+    "maxJerk": [
+      6.293123941169535
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -3.436270 from the target kinematic state that will undercut its minimum velocity limit -3.069190."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -2.2055117562767057
+    ],
+    "currentVelocity": [
+      0.44318540163411235
+    ],
+    "currentAcceleration": [
+      -3.321804508983371
+    ],
+    "targetPosition": [
+      9.433264746707607
+    ],
+    "targetVelocity": [
+      -2.5200067073226586
+    ],
+    "targetAcceleration": [
+      5.721710122433701
+    ],
+    "maxVelocity": [
+      2.5739805251588104
+    ],
+    "maxAcceleration": [
+      7.86417317228634
+    ],
+    "maxJerk": [
+      10.961700346792075
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.013295 from the target kinematic state that will undercut its minimum velocity limit -2.573981."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -9.912583140358075
+    ],
+    "currentVelocity": [
+      0.8905133680336763
+    ],
+    "currentAcceleration": [
+      3.3690792021309033
+    ],
+    "targetPosition": [
+      3.4469536490116504
+    ],
+    "targetVelocity": [
+      -1.8759604904178555
+    ],
+    "targetAcceleration": [
+      3.0504090044497953
+    ],
+    "maxVelocity": [
+      2.298488432022256
+    ],
+    "maxAcceleration": [
+      3.6013333160567367
+    ],
+    "maxJerk": [
+      11.005884228048924
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.298689 from the target kinematic state that will undercut its minimum velocity limit -2.298488."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.530286990700139
+    ],
+    "currentVelocity": [
+      -2.6302606829755963
+    ],
+    "currentAcceleration": [
+      -2.7108210496429637
+    ],
+    "targetPosition": [
+      -7.246710944407095
+    ],
+    "targetVelocity": [
+      -2.7757025801054858
+    ],
+    "targetAcceleration": [
+      7.433702965316311
+    ],
+    "maxVelocity": [
+      2.8731258124916006
+    ],
+    "maxAcceleration": [
+      8.439008276754393
+    ],
+    "maxJerk": [
+      18.00396125741164
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.310363 from the target kinematic state that will undercut its minimum velocity limit -2.873126."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -1.2842970492964767
+    ],
+    "currentVelocity": [
+      0.7480223906928334
+    ],
+    "currentAcceleration": [
+      -4.448216616378472
+    ],
+    "targetPosition": [
+      8.06221138385757
+    ],
+    "targetVelocity": [
+      4.23535996423314
+    ],
+    "targetAcceleration": [
+      -1.5579183226210294
+    ],
+    "maxVelocity": [
+      4.271069573337508
+    ],
+    "maxAcceleration": [
+      9.762579432042541
+    ],
+    "maxJerk": [
+      16.372640672587888
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.309481 from the target kinematic state that will exceed its maximum velocity limit 4.271070."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.001091198977019
+    ],
+    "currentVelocity": [
+      -2.3012317341620516
+    ],
+    "currentAcceleration": [
+      -9.745982520999304
+    ],
+    "targetPosition": [
+      9.007131058325164
+    ],
+    "targetVelocity": [
+      1.6307901309138453
+    ],
+    "targetAcceleration": [
+      8.34277813391837
+    ],
+    "maxVelocity": [
+      4.1618739627377295
+    ],
+    "maxAcceleration": [
+      9.763128455306573
+    ],
+    "maxJerk": [
+      5.480078885342512
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.719661 from the target kinematic state that will undercut its minimum velocity limit -4.161874."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -2.878164700195766
+    ],
+    "currentVelocity": [
+      2.9202380761457842
+    ],
+    "currentAcceleration": [
+      -0.7309066729118783
+    ],
+    "targetPosition": [
+      -6.976202231819386
+    ],
+    "targetVelocity": [
+      -4.521212994987729
+    ],
+    "targetAcceleration": [
+      8.430271017995622
+    ],
+    "maxVelocity": [
+      5.5883466406999975
+    ],
+    "maxAcceleration": [
+      8.88854215045112
+    ],
+    "maxJerk": [
+      14.765977334801873
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.927741 from the target kinematic state that will undercut its minimum velocity limit -5.588347."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.196111202077059
+    ],
+    "currentVelocity": [
+      -2.546778556082705
+    ],
+    "currentAcceleration": [
+      -8.875212268142745
+    ],
+    "targetPosition": [
+      9.829820774370766
+    ],
+    "targetVelocity": [
+      -4.460075385088505
+    ],
+    "targetAcceleration": [
+      8.460314596474047
+    ],
+    "maxVelocity": [
+      5.166486291951001
+    ],
+    "maxAcceleration": [
+      9.461744769109695
+    ],
+    "maxJerk": [
+      6.391999874899028
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -10.059021 from the target kinematic state that will undercut its minimum velocity limit -5.166486."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      3.244893452048066
+    ],
+    "currentVelocity": [
+      2.920879400853698
+    ],
+    "currentAcceleration": [
+      -0.6785633421951429
+    ],
+    "targetPosition": [
+      7.896511440051039
+    ],
+    "targetVelocity": [
+      6.145686111151589
+    ],
+    "targetAcceleration": [
+      -7.793133604027107
+    ],
+    "maxVelocity": [
+      7.77535986058262
+    ],
+    "maxAcceleration": [
+      7.880391810382884
+    ],
+    "maxJerk": [
+      11.155528977771311
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 8.867786 from the target kinematic state that will exceed its maximum velocity limit 7.775360."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.822561970095979
+    ],
+    "currentVelocity": [
+      -3.3280368898090575
+    ],
+    "currentAcceleration": [
+      5.352046596389826
+    ],
+    "targetPosition": [
+      -9.78813465950612
+    ],
+    "targetVelocity": [
+      0.6969403530293308
+    ],
+    "targetAcceleration": [
+      -9.754831187697569
+    ],
+    "maxVelocity": [
+      3.5381273519680834
+    ],
+    "maxAcceleration": [
+      9.763802651575869
+    ],
+    "maxJerk": [
+      14.140605113521936
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.061603 from the target kinematic state that will exceed its maximum velocity limit 3.538127."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      5.744070239495398
+    ],
+    "currentVelocity": [
+      1.06453952027409
+    ],
+    "currentAcceleration": [
+      -6.081455810153754
+    ],
+    "targetPosition": [
+      6.930171033659924
+    ],
+    "targetVelocity": [
+      0.9274508789294642
+    ],
+    "targetAcceleration": [
+      -6.35772429628449
+    ],
+    "maxVelocity": [
+      2.0307573402507915
+    ],
+    "maxAcceleration": [
+      7.138948334002314
+    ],
+    "maxJerk": [
+      8.864219517197084
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 3.207441 from the target kinematic state that will exceed its maximum velocity limit 2.030757."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      3.2609431679475875
+    ],
+    "currentVelocity": [
+      2.8035882430085537
+    ],
+    "currentAcceleration": [
+      8.05459554459783
+    ],
+    "targetPosition": [
+      -3.3151788639485353
+    ],
+    "targetVelocity": [
+      2.857127664243602
+    ],
+    "targetAcceleration": [
+      -7.908693738312488
+    ],
+    "maxVelocity": [
+      3.624484539506055
+    ],
+    "maxAcceleration": [
+      8.353874360606184
+    ],
+    "maxJerk": [
+      9.942099909641232
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 6.002712 from the target kinematic state that will exceed its maximum velocity limit 3.624485."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      9.87039104081492
+    ],
+    "currentVelocity": [
+      4.425117557028944
+    ],
+    "currentAcceleration": [
+      1.5453285482427814
+    ],
+    "targetPosition": [
+      5.77324309837765
+    ],
+    "targetVelocity": [
+      -6.52939030443061
+    ],
+    "targetAcceleration": [
+      2.7516188813692164
+    ],
+    "maxVelocity": [
+      6.575698605323506
+    ],
+    "maxAcceleration": [
+      6.399820428492621
+    ],
+    "maxJerk": [
+      15.207794292760203
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.778322 from the target kinematic state that will undercut its minimum velocity limit -6.575699."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -1.7640985206872113
+    ],
+    "currentVelocity": [
+      0.29650979785836995
+    ],
+    "currentAcceleration": [
+      -0.7868085083672067
+    ],
+    "targetPosition": [
+      1.2672933171742518
+    ],
+    "targetVelocity": [
+      2.658339032256177
+    ],
+    "targetAcceleration": [
+      -5.348771210520425
+    ],
+    "maxVelocity": [
+      3.806435588192464
+    ],
+    "maxAcceleration": [
+      9.748114858289934
+    ],
+    "maxJerk": [
+      8.918749834295996
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.262227 from the target kinematic state that will exceed its maximum velocity limit 3.806436."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -0.5469823704774406
+    ],
+    "currentVelocity": [
+      2.559602843995874
+    ],
+    "currentAcceleration": [
+      -0.9324866105669187
+    ],
+    "targetPosition": [
+      5.272417352987873
+    ],
+    "targetVelocity": [
+      -3.1147798410630374
+    ],
+    "targetAcceleration": [
+      7.943687429740866
+    ],
+    "maxVelocity": [
+      4.027247796414974
+    ],
+    "maxAcceleration": [
+      9.481334106508363
+    ],
+    "maxJerk": [
+      17.208346543642826
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.948256 from the target kinematic state that will undercut its minimum velocity limit -4.027248."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -2.6040451124395325
+    ],
+    "currentVelocity": [
+      -1.7795723646520216
+    ],
+    "currentAcceleration": [
+      0.8807307421219139
+    ],
+    "targetPosition": [
+      9.86882620751079
+    ],
+    "targetVelocity": [
+      2.620364711727346
+    ],
+    "targetAcceleration": [
+      -8.489337049894125
+    ],
+    "maxVelocity": [
+      3.3286751808435904
+    ],
+    "maxAcceleration": [
+      8.644883894641996
+    ],
+    "maxJerk": [
+      11.577549740423922
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.732804 from the target kinematic state that will exceed its maximum velocity limit 3.328675."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -9.18733734556149
+    ],
+    "currentVelocity": [
+      -1.2928802338712795
+    ],
+    "currentAcceleration": [
+      0.061192996249259224
+    ],
+    "targetPosition": [
+      -8.400295543896357
+    ],
+    "targetVelocity": [
+      1.8375507094123855
+    ],
+    "targetAcceleration": [
+      -2.5105069396195114
+    ],
+    "maxVelocity": [
+      2.0191737692666525
+    ],
+    "maxAcceleration": [
+      9.796975951374744
+    ],
+    "maxJerk": [
+      10.376676812751587
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.141244 from the target kinematic state that will exceed its maximum velocity limit 2.019174."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.9261569066684086
+    ],
+    "currentVelocity": [
+      -1.5357984702002887
+    ],
+    "currentAcceleration": [
+      -0.11135793157729079
+    ],
+    "targetPosition": [
+      0.2750773248753706
+    ],
+    "targetVelocity": [
+      1.4441787542866047
+    ],
+    "targetAcceleration": [
+      -4.151870356192392
+    ],
+    "maxVelocity": [
+      2.153292215694182
+    ],
+    "maxAcceleration": [
+      4.397276556587865
+    ],
+    "maxJerk": [
+      10.918599581628214
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.233567 from the target kinematic state that will exceed its maximum velocity limit 2.153292."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.6694114656642913
+    ],
+    "currentVelocity": [
+      2.6549498646573926
+    ],
+    "currentAcceleration": [
+      -4.774213145515481
+    ],
+    "targetPosition": [
+      -2.3956970635223085
+    ],
+    "targetVelocity": [
+      0.5932622862153321
+    ],
+    "targetAcceleration": [
+      -6.558874988330891
+    ],
+    "maxVelocity": [
+      3.235288125345987
+    ],
+    "maxAcceleration": [
+      6.581341678296301
+    ],
+    "maxJerk": [
+      5.915569511512762
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.229332 from the target kinematic state that will exceed its maximum velocity limit 3.235288."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      5.292827367635034
+    ],
+    "currentVelocity": [
+      1.078370311025079
+    ],
+    "currentAcceleration": [
+      -5.201752905456987
+    ],
+    "targetPosition": [
+      6.9926274158482755
+    ],
+    "targetVelocity": [
+      -2.956481560208076
+    ],
+    "targetAcceleration": [
+      4.801731695235505
+    ],
+    "maxVelocity": [
+      2.983542333570375
+    ],
+    "maxAcceleration": [
+      5.478559088317596
+    ],
+    "maxJerk": [
+      9.578378243535372
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.160058 from the target kinematic state that will undercut its minimum velocity limit -2.983542."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.256188285516522
+    ],
+    "currentVelocity": [
+      0.8800378722452793
+    ],
+    "currentAcceleration": [
+      -5.534627435534574
+    ],
+    "targetPosition": [
+      -2.6810758810169695
+    ],
+    "targetVelocity": [
+      2.6419579843440695
+    ],
+    "targetAcceleration": [
+      -6.966632574886354
+    ],
+    "maxVelocity": [
+      2.9976375667716355
+    ],
+    "maxAcceleration": [
+      9.756469890940334
+    ],
+    "maxJerk": [
+      9.511153279321906
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.193382 from the target kinematic state that will exceed its maximum velocity limit 2.997638."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      2.2533429583915616
+    ],
+    "currentVelocity": [
+      3.9809175470011784
+    ],
+    "currentAcceleration": [
+      -2.702555469271518
+    ],
+    "targetPosition": [
+      -1.183146069368659
+    ],
+    "targetVelocity": [
+      5.896617271704972
+    ],
+    "targetAcceleration": [
+      -5.217490898618907
+    ],
+    "maxVelocity": [
+      6.440974504533941
+    ],
+    "maxAcceleration": [
+      8.465588891968563
+    ],
+    "maxJerk": [
+      11.266197922604505
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 7.104754 from the target kinematic state that will exceed its maximum velocity limit 6.440975."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.6494048545825635
+    ],
+    "currentVelocity": [
+      0.33330766037189274
+    ],
+    "currentAcceleration": [
+      1.7246900195503159
+    ],
+    "targetPosition": [
+      -5.908246972443585
+    ],
+    "targetVelocity": [
+      -0.05814276165718901
+    ],
+    "targetAcceleration": [
+      7.447075687158939
+    ],
+    "maxVelocity": [
+      2.526715647415533
+    ],
+    "maxAcceleration": [
+      8.655921449981332
+    ],
+    "maxJerk": [
+      10.029046859158733
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.823058 from the target kinematic state that will undercut its minimum velocity limit -2.526716."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.753740627120353
+    ],
+    "currentVelocity": [
+      -4.4371088291985
+    ],
+    "currentAcceleration": [
+      -6.305162725564383
+    ],
+    "targetPosition": [
+      8.897123255815703
+    ],
+    "targetVelocity": [
+      -5.796662821998786
+    ],
+    "targetAcceleration": [
+      8.001449631464759
+    ],
+    "maxVelocity": [
+      7.75398145720785
+    ],
+    "maxAcceleration": [
+      8.205554795896482
+    ],
+    "maxJerk": [
+      12.982620343451632
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -8.262390 from the target kinematic state that will undercut its minimum velocity limit -7.753981."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -1.6945232884478738
+    ],
+    "currentVelocity": [
+      0.153682398217863
+    ],
+    "currentAcceleration": [
+      -4.73496285162177
+    ],
+    "targetPosition": [
+      -0.24102007706163953
+    ],
+    "targetVelocity": [
+      2.688133033280341
+    ],
+    "targetAcceleration": [
+      -1.5927025509534762
+    ],
+    "maxVelocity": [
+      2.7249529278344573
+    ],
+    "maxAcceleration": [
+      4.957867067583906
+    ],
+    "maxJerk": [
+      15.682256795239157
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.769011 from the target kinematic state that will exceed its maximum velocity limit 2.724953."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -9.386330042411963
+    ],
+    "currentVelocity": [
+      -6.487306542772561
+    ],
+    "currentAcceleration": [
+      2.6236945710633197
+    ],
+    "targetPosition": [
+      4.736029601771577
+    ],
+    "targetVelocity": [
+      -6.447756564585993
+    ],
+    "targetAcceleration": [
+      4.133572201709914
+    ],
+    "maxVelocity": [
+      6.746996087405929
+    ],
+    "maxAcceleration": [
+      7.423908700503537
+    ],
+    "maxJerk": [
+      10.792399602237715
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -7.239352 from the target kinematic state that will undercut its minimum velocity limit -6.746996."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -5.538534857396318
+    ],
+    "currentVelocity": [
+      2.685849446174722
+    ],
+    "currentAcceleration": [
+      -0.9211777218831028
+    ],
+    "targetPosition": [
+      1.54225158315697
+    ],
+    "targetVelocity": [
+      2.6520366519942877
+    ],
+    "targetAcceleration": [
+      -4.38912773519213
+    ],
+    "maxVelocity": [
+      2.713438384996328
+    ],
+    "maxAcceleration": [
+      4.988202168613128
+    ],
+    "maxJerk": [
+      11.168592282135094
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 3.514475 from the target kinematic state that will exceed its maximum velocity limit 2.713438."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.099680489083994
+    ],
+    "currentVelocity": [
+      -1.0995703505226477
+    ],
+    "currentAcceleration": [
+      -6.405602140103541
+    ],
+    "targetPosition": [
+      -2.794046227509157
+    ],
+    "targetVelocity": [
+      -2.8453275289518256
+    ],
+    "targetAcceleration": [
+      8.83510113198096
+    ],
+    "maxVelocity": [
+      3.2338538437401976
+    ],
+    "maxAcceleration": [
+      9.062369488513635
+    ],
+    "maxJerk": [
+      10.152123642653361
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.689795 from the target kinematic state that will undercut its minimum velocity limit -3.233854."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      7.5686625238673315
+    ],
+    "currentVelocity": [
+      1.8981109164699106
+    ],
+    "currentAcceleration": [
+      7.182319571188426
+    ],
+    "targetPosition": [
+      5.120838320430197
+    ],
+    "targetVelocity": [
+      4.467309670929074
+    ],
+    "targetAcceleration": [
+      -8.16687772324347
+    ],
+    "maxVelocity": [
+      5.819066366653493
+    ],
+    "maxAcceleration": [
+      9.059191919382766
+    ],
+    "maxJerk": [
+      11.501782529975372
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 7.366769 from the target kinematic state that will exceed its maximum velocity limit 5.819066."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -7.267487116838989
+    ],
+    "currentVelocity": [
+      -0.20412758094893002
+    ],
+    "currentAcceleration": [
+      0.010772002025654537
+    ],
+    "targetPosition": [
+      7.429745703099158
+    ],
+    "targetVelocity": [
+      3.234991067924163
+    ],
+    "targetAcceleration": [
+      -4.8847361032600585
+    ],
+    "maxVelocity": [
+      3.4549819565939233
+    ],
+    "maxAcceleration": [
+      5.877185381752835
+    ],
+    "maxJerk": [
+      13.457778004562421
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.121491 from the target kinematic state that will exceed its maximum velocity limit 3.454982."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      9.48275917337778
+    ],
+    "currentVelocity": [
+      -1.4260885907186034
+    ],
+    "currentAcceleration": [
+      4.061657272973562
+    ],
+    "targetPosition": [
+      0.8450592907027765
+    ],
+    "targetVelocity": [
+      1.6636083450992278
+    ],
+    "targetAcceleration": [
+      -8.190072383395421
+    ],
+    "maxVelocity": [
+      3.655211053986998
+    ],
+    "maxAcceleration": [
+      9.389306858499918
+    ],
+    "maxJerk": [
+      6.601932103786433
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 6.743734 from the target kinematic state that will exceed its maximum velocity limit 3.655211."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      2.1356130067123313
+    ],
+    "currentVelocity": [
+      4.064050731864639
+    ],
+    "currentAcceleration": [
+      3.4935753076949325
+    ],
+    "targetPosition": [
+      8.990038812111848
+    ],
+    "targetVelocity": [
+      -4.168783073816337
+    ],
+    "targetAcceleration": [
+      7.091187512900062
+    ],
+    "maxVelocity": [
+      5.596165327041809
+    ],
+    "maxAcceleration": [
+      8.655454422545453
+    ],
+    "maxJerk": [
+      13.33215853245669
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.054634 from the target kinematic state that will undercut its minimum velocity limit -5.596165."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.758033137313145
+    ],
+    "currentVelocity": [
+      2.3916540630044265
+    ],
+    "currentAcceleration": [
+      -5.062699321514701
+    ],
+    "targetPosition": [
+      -2.004716031956793
+    ],
+    "targetVelocity": [
+      -3.097561789381981
+    ],
+    "targetAcceleration": [
+      7.866128338813894
+    ],
+    "maxVelocity": [
+      3.4029620409962966
+    ],
+    "maxAcceleration": [
+      9.729932469171146
+    ],
+    "maxJerk": [
+      19.566668413067966
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.678719 from the target kinematic state that will undercut its minimum velocity limit -3.402962."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.7250088410234223
+    ],
+    "currentVelocity": [
+      -3.9717588946325426
+    ],
+    "currentAcceleration": [
+      0.07597348287887762
+    ],
+    "targetPosition": [
+      8.995340701915705
+    ],
+    "targetVelocity": [
+      6.488102699808441
+    ],
+    "targetAcceleration": [
+      -4.030449818092619
+    ],
+    "maxVelocity": [
+      7.121587037151694
+    ],
+    "maxAcceleration": [
+      9.619975099320081
+    ],
+    "maxJerk": [
+      8.300514449923163
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 7.466628 from the target kinematic state that will exceed its maximum velocity limit 7.121587."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      9.518263683162914
+    ],
+    "currentVelocity": [
+      0.9777007561278923
+    ],
+    "currentAcceleration": [
+      0.8747095486730139
+    ],
+    "targetPosition": [
+      -9.877574226535833
+    ],
+    "targetVelocity": [
+      -3.723536245345396
+    ],
+    "targetAcceleration": [
+      6.968783127086423
+    ],
+    "maxVelocity": [
+      3.7498905247527716
+    ],
+    "maxAcceleration": [
+      8.844506389614558
+    ],
+    "maxJerk": [
+      16.50180448604969
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -5.195010 from the target kinematic state that will undercut its minimum velocity limit -3.749891."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.121581568082825
+    ],
+    "currentVelocity": [
+      1.7742359959524405
+    ],
+    "currentAcceleration": [
+      -2.7415234981309786
+    ],
+    "targetPosition": [
+      1.525003954814725
+    ],
+    "targetVelocity": [
+      -6.198992198178015
+    ],
+    "targetAcceleration": [
+      6.152627046811993
+    ],
+    "maxVelocity": [
+      6.9790844122237745
+    ],
+    "maxAcceleration": [
+      6.663843198663912
+    ],
+    "maxJerk": [
+      16.260028548849483
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -7.363037 from the target kinematic state that will undercut its minimum velocity limit -6.979084."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.2789856701489732
+    ],
+    "currentVelocity": [
+      -4.743986615276941
+    ],
+    "currentAcceleration": [
+      -8.247043499785697
+    ],
+    "targetPosition": [
+      7.616697715289558
+    ],
+    "targetVelocity": [
+      3.7483129637397985
+    ],
+    "targetAcceleration": [
+      -5.123291180008871
+    ],
+    "maxVelocity": [
+      4.985338383698623
+    ],
+    "maxAcceleration": [
+      8.281499851157143
+    ],
+    "maxJerk": [
+      7.373077418195061
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.528310 from the target kinematic state that will exceed its maximum velocity limit 4.985338."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.3114910095901813
+    ],
+    "currentVelocity": [
+      -1.8008790323742674
+    ],
+    "currentAcceleration": [
+      8.27562825712801
+    ],
+    "targetPosition": [
+      1.905339709825677
+    ],
+    "targetVelocity": [
+      -1.382863397283908
+    ],
+    "targetAcceleration": [
+      6.2168371165445375
+    ],
+    "maxVelocity": [
+      2.062449172596665
+    ],
+    "maxAcceleration": [
+      9.87888642261258
+    ],
+    "maxJerk": [
+      19.518148226033986
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.372944 from the target kinematic state that will undercut its minimum velocity limit -2.062449."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.8964758615018456
+    ],
+    "currentVelocity": [
+      -2.111582456647176
+    ],
+    "currentAcceleration": [
+      -5.256429863912214
+    ],
+    "targetPosition": [
+      7.366125570906995
+    ],
+    "targetVelocity": [
+      -1.835373897674943
+    ],
+    "targetAcceleration": [
+      4.296389444707162
+    ],
+    "maxVelocity": [
+      2.1400370927444405
+    ],
+    "maxAcceleration": [
+      7.308706882073971
+    ],
+    "maxJerk": [
+      8.643671017705143
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.903147 from the target kinematic state that will undercut its minimum velocity limit -2.140037."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -9.519402414609857
+    ],
+    "currentVelocity": [
+      0.2420462423419525
+    ],
+    "currentAcceleration": [
+      3.398453165059202
+    ],
+    "targetPosition": [
+      6.731538634297571
+    ],
+    "targetVelocity": [
+      -2.250174314820236
+    ],
+    "targetAcceleration": [
+      3.029687552901419
+    ],
+    "maxVelocity": [
+      2.2974244433089037
+    ],
+    "maxAcceleration": [
+      4.6985246924401185
+    ],
+    "maxJerk": [
+      12.185042655432932
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.626825 from the target kinematic state that will undercut its minimum velocity limit -2.297424."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      5.827285628747811
+    ],
+    "currentVelocity": [
+      2.8686122995818186
+    ],
+    "currentAcceleration": [
+      -3.393221870979775
+    ],
+    "targetPosition": [
+      7.421944085095383
+    ],
+    "targetVelocity": [
+      -3.146345170590508
+    ],
+    "targetAcceleration": [
+      3.968226618135983
+    ],
+    "maxVelocity": [
+      3.440609320438771
+    ],
+    "maxAcceleration": [
+      5.719298091464784
+    ],
+    "maxJerk": [
+      17.77762893829167
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -3.589228 from the target kinematic state that will undercut its minimum velocity limit -3.440609."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.9610245606907988
+    ],
+    "currentVelocity": [
+      1.7649097430311422
+    ],
+    "currentAcceleration": [
+      -4.473961092076808
+    ],
+    "targetPosition": [
+      -3.614252162653795
+    ],
+    "targetVelocity": [
+      0.9278729638279382
+    ],
+    "targetAcceleration": [
+      -4.921910589571415
+    ],
+    "maxVelocity": [
+      2.0247887706771186
+    ],
+    "maxAcceleration": [
+      6.583889624038473
+    ],
+    "maxJerk": [
+      10.113235950252
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.125571 from the target kinematic state that will exceed its maximum velocity limit 2.024789."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.687166858100838
+    ],
+    "currentVelocity": [
+      -3.514344426296338
+    ],
+    "currentAcceleration": [
+      -1.5172866317379299
+    ],
+    "targetPosition": [
+      -5.125133021923123
+    ],
+    "targetVelocity": [
+      4.594479079704941
+    ],
+    "targetAcceleration": [
+      -3.9942057135762017
+    ],
+    "maxVelocity": [
+      5.253612457848373
+    ],
+    "maxAcceleration": [
+      9.548575411360497
+    ],
+    "maxJerk": [
+      11.133754071148344
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.310935 from the target kinematic state that will exceed its maximum velocity limit 5.253612."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.1578396455632785
+    ],
+    "currentVelocity": [
+      1.3458392902640313
+    ],
+    "currentAcceleration": [
+      4.38593318739403
+    ],
+    "targetPosition": [
+      8.743617828114822
+    ],
+    "targetVelocity": [
+      -2.071501030274987
+    ],
+    "targetAcceleration": [
+      6.68094431033589
+    ],
+    "maxVelocity": [
+      5.440564666412946
+    ],
+    "maxAcceleration": [
+      7.546823874213012
+    ],
+    "maxJerk": [
+      5.221058127339642
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.346019 from the target kinematic state that will undercut its minimum velocity limit -5.440565."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -2.30118534790307
+    ],
+    "currentVelocity": [
+      -2.0409082854715694
+    ],
+    "currentAcceleration": [
+      -5.5980284606726265
+    ],
+    "targetPosition": [
+      9.862932402873554
+    ],
+    "targetVelocity": [
+      0.14033095964323383
+    ],
+    "targetAcceleration": [
+      -8.791051352010088
+    ],
+    "maxVelocity": [
+      2.592624763076091
+    ],
+    "maxAcceleration": [
+      9.595978552342658
+    ],
+    "maxJerk": [
+      7.503114199595792
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.290365 from the target kinematic state that will exceed its maximum velocity limit 2.592625."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      8.326410254761388
+    ],
+    "currentVelocity": [
+      1.7275989734386679
+    ],
+    "currentAcceleration": [
+      -1.4884498291825796
+    ],
+    "targetPosition": [
+      3.9358212462284126
+    ],
+    "targetVelocity": [
+      -2.664750182610304
+    ],
+    "targetAcceleration": [
+      6.338881861928838
+    ],
+    "maxVelocity": [
+      3.1418593130231995
+    ],
+    "maxAcceleration": [
+      8.444223208664106
+    ],
+    "maxJerk": [
+      5.039280272835576
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.651572 from the target kinematic state that will undercut its minimum velocity limit -3.141859."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -7.079012044688568
+    ],
+    "currentVelocity": [
+      1.5535895331696783
+    ],
+    "currentAcceleration": [
+      5.094587967125519
+    ],
+    "targetPosition": [
+      5.117019447564671
+    ],
+    "targetVelocity": [
+      -0.5850952569001744
+    ],
+    "targetAcceleration": [
+      4.335595001142734
+    ],
+    "maxVelocity": [
+      2.3048416505679947
+    ],
+    "maxAcceleration": [
+      5.815919238637606
+    ],
+    "maxJerk": [
+      5.361496751454934
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.338093 from the target kinematic state that will undercut its minimum velocity limit -2.304842."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.1139887786364469
+    ],
+    "currentVelocity": [
+      -0.475532096439669
+    ],
+    "currentAcceleration": [
+      3.1779860582238832
+    ],
+    "targetPosition": [
+      -7.143225129849324
+    ],
+    "targetVelocity": [
+      -4.815092908541947
+    ],
+    "targetAcceleration": [
+      1.1066123567372328
+    ],
+    "maxVelocity": [
+      4.838225386332638
+    ],
+    "maxAcceleration": [
+      5.084219003751768
+    ],
+    "maxJerk": [
+      18.215945288540205
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.848706 from the target kinematic state that will undercut its minimum velocity limit -4.838225."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.86258421132226
+    ],
+    "currentVelocity": [
+      -7.365691148304207
+    ],
+    "currentAcceleration": [
+      1.9944321480558225
+    ],
+    "targetPosition": [
+      8.985582145430332
+    ],
+    "targetVelocity": [
+      7.0083045754786735
+    ],
+    "targetAcceleration": [
+      -3.71308369499679
+    ],
+    "maxVelocity": [
+      7.424585165301018
+    ],
+    "maxAcceleration": [
+      4.998961909028498
+    ],
+    "maxJerk": [
+      10.952482839368141
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 7.637705 from the target kinematic state that will exceed its maximum velocity limit 7.424585."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -0.9147959019647285
+    ],
+    "currentVelocity": [
+      -4.306978621040855
+    ],
+    "currentAcceleration": [
+      0.9285605141193933
+    ],
+    "targetPosition": [
+      -2.603595694525273
+    ],
+    "targetVelocity": [
+      -3.798463994913667
+    ],
+    "targetAcceleration": [
+      6.751984743591982
+    ],
+    "maxVelocity": [
+      7.848635955789611
+    ],
+    "maxAcceleration": [
+      6.818677091721512
+    ],
+    "maxJerk": [
+      5.36834586357476
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -8.044586 from the target kinematic state that will undercut its minimum velocity limit -7.848636."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.08832666405732
+    ],
+    "currentVelocity": [
+      2.0562368022143502
+    ],
+    "currentAcceleration": [
+      -4.538430922470334
+    ],
+    "targetPosition": [
+      -8.986542689348694
+    ],
+    "targetVelocity": [
+      -1.8776343025729842
+    ],
+    "targetAcceleration": [
+      6.211385244031346
+    ],
+    "maxVelocity": [
+      3.125679770520695
+    ],
+    "maxAcceleration": [
+      8.275493366364447
+    ],
+    "maxJerk": [
+      5.9763133451553365
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -5.105486 from the target kinematic state that will undercut its minimum velocity limit -3.125680."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      6.458553349949973
+    ],
+    "currentVelocity": [
+      0.9914660848856784
+    ],
+    "currentAcceleration": [
+      -2.31824830793747
+    ],
+    "targetPosition": [
+      3.4698950548458445
+    ],
+    "targetVelocity": [
+      2.1440594858826367
+    ],
+    "targetAcceleration": [
+      -3.3577417567963432
+    ],
+    "maxVelocity": [
+      2.645003294515158
+    ],
+    "maxAcceleration": [
+      6.230403973383613
+    ],
+    "maxJerk": [
+      8.833154982652847
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.782248 from the target kinematic state that will exceed its maximum velocity limit 2.645003."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -6.536646990139867
+    ],
+    "currentVelocity": [
+      -1.947089198875175
+    ],
+    "currentAcceleration": [
+      -0.5280101978668359
+    ],
+    "targetPosition": [
+      4.223216422249347
+    ],
+    "targetVelocity": [
+      2.565255635482631
+    ],
+    "targetAcceleration": [
+      -4.718394035513306
+    ],
+    "maxVelocity": [
+      3.597704572318294
+    ],
+    "maxAcceleration": [
+      5.331224045613037
+    ],
+    "maxJerk": [
+      8.66197581636365
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 3.850369 from the target kinematic state that will exceed its maximum velocity limit 3.597705."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.022419106141040146
+    ],
+    "currentVelocity": [
+      0.1896844234435462
+    ],
+    "currentAcceleration": [
+      2.191683766608432
+    ],
+    "targetPosition": [
+      -4.206215385059508
+    ],
+    "targetVelocity": [
+      -2.2275142014880536
+    ],
+    "targetAcceleration": [
+      6.168119664023728
+    ],
+    "maxVelocity": [
+      3.8653940508567923
+    ],
+    "maxAcceleration": [
+      6.6373625520672475
+    ],
+    "maxJerk": [
+      10.3796315946973
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.060224 from the target kinematic state that will undercut its minimum velocity limit -3.865394."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.9088357061173795
+    ],
+    "currentVelocity": [
+      -0.4097121917315567
+    ],
+    "currentAcceleration": [
+      1.9220913235338992
+    ],
+    "targetPosition": [
+      7.526401156368454
+    ],
+    "targetVelocity": [
+      -2.0939812262372346
+    ],
+    "targetAcceleration": [
+      4.3589155340048595
+    ],
+    "maxVelocity": [
+      2.4386718907426808
+    ],
+    "maxAcceleration": [
+      4.417447602531098
+    ],
+    "maxJerk": [
+      12.068282285486374
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -2.881175 from the target kinematic state that will undercut its minimum velocity limit -2.438672."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.8363969535900377
+    ],
+    "currentVelocity": [
+      -7.767188487333319
+    ],
+    "currentAcceleration": [
+      2.656005256676522
+    ],
+    "targetPosition": [
+      7.288517318153396
+    ],
+    "targetVelocity": [
+      7.077199656131876
+    ],
+    "targetAcceleration": [
+      -5.398391808135651
+    ],
+    "maxVelocity": [
+      7.946448323945683
+    ],
+    "maxAcceleration": [
+      6.440401346876746
+    ],
+    "maxJerk": [
+      12.32358924348642
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 8.259592 from the target kinematic state that will exceed its maximum velocity limit 7.946448."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      2.059181705574174
+    ],
+    "currentVelocity": [
+      -6.008254827210749
+    ],
+    "currentAcceleration": [
+      0.6181715860901669
+    ],
+    "targetPosition": [
+      9.299744416063305
+    ],
+    "targetVelocity": [
+      7.403071726477259
+    ],
+    "targetAcceleration": [
+      -6.49353199461764
+    ],
+    "maxVelocity": [
+      7.503778879888888
+    ],
+    "maxAcceleration": [
+      8.591933522351464
+    ],
+    "maxJerk": [
+      9.212389323074415
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 9.691618 from the target kinematic state that will exceed its maximum velocity limit 7.503779."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -0.34016447710950004
+    ],
+    "currentVelocity": [
+      0.7909409891702008
+    ],
+    "currentAcceleration": [
+      -0.16083846119420198
+    ],
+    "targetPosition": [
+      2.6867458119794545
+    ],
+    "targetVelocity": [
+      -6.017015350381536
+    ],
+    "targetAcceleration": [
+      3.789153568662485
+    ],
+    "maxVelocity": [
+      6.357827372825611
+    ],
+    "maxAcceleration": [
+      4.308478053396602
+    ],
+    "maxJerk": [
+      13.973494184944073
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.530762 from the target kinematic state that will undercut its minimum velocity limit -6.357827."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      4.877412605456508
+    ],
+    "currentVelocity": [
+      0.07665791721265602
+    ],
+    "currentAcceleration": [
+      -1.4400045989184358
+    ],
+    "targetPosition": [
+      5.280778186107929
+    ],
+    "targetVelocity": [
+      3.934536308943775
+    ],
+    "targetAcceleration": [
+      -6.0020488201162046
+    ],
+    "maxVelocity": [
+      4.0084711397058514
+    ],
+    "maxAcceleration": [
+      8.44157062739118
+    ],
+    "maxJerk": [
+      9.461891167913123
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 5.838204 from the target kinematic state that will exceed its maximum velocity limit 4.008471."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.7436232714451645
+    ],
+    "currentVelocity": [
+      -1.338242841030001
+    ],
+    "currentAcceleration": [
+      8.235661759150066
+    ],
+    "targetPosition": [
+      3.1308139823054084
+    ],
+    "targetVelocity": [
+      -1.6002345807567526
+    ],
+    "targetAcceleration": [
+      7.404119646975644
+    ],
+    "maxVelocity": [
+      2.1036629075688027
+    ],
+    "maxAcceleration": [
+      8.236921711888712
+    ],
+    "maxJerk": [
+      9.52740287660265
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.477251 from the target kinematic state that will undercut its minimum velocity limit -2.103663."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      3.9521552293170394
+    ],
+    "currentVelocity": [
+      -1.5627898924829262
+    ],
+    "currentAcceleration": [
+      -4.9955130821895
+    ],
+    "targetPosition": [
+      1.6394608074396153
+    ],
+    "targetVelocity": [
+      6.167968987838818
+    ],
+    "targetAcceleration": [
+      -5.1557873744536895
+    ],
+    "maxVelocity": [
+      6.75752873452677
+    ],
+    "maxAcceleration": [
+      5.290034355524481
+    ],
+    "maxJerk": [
+      11.721675779617936
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 7.301857 from the target kinematic state that will exceed its maximum velocity limit 6.757529."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.0290627146508564
+    ],
+    "currentVelocity": [
+      -0.04778002642120471
+    ],
+    "currentAcceleration": [
+      -0.2226530760381582
+    ],
+    "targetPosition": [
+      4.0903438372246
+    ],
+    "targetVelocity": [
+      -1.3888734516512884
+    ],
+    "targetAcceleration": [
+      7.611858820766684
+    ],
+    "maxVelocity": [
+      3.159207060280306
+    ],
+    "maxAcceleration": [
+      7.933444149377112
+    ],
+    "maxJerk": [
+      11.864604537150317
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -3.830607 from the target kinematic state that will undercut its minimum velocity limit -3.159207."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      3.9382699741970093
+    ],
+    "currentVelocity": [
+      -1.024558533659801
+    ],
+    "currentAcceleration": [
+      -4.748212823360032
+    ],
+    "targetPosition": [
+      9.85753935705916
+    ],
+    "targetVelocity": [
+      3.134361271230022
+    ],
+    "targetAcceleration": [
+      -4.4537737549765914
+    ],
+    "maxVelocity": [
+      3.1877805495830533
+    ],
+    "maxAcceleration": [
+      9.278534474834165
+    ],
+    "maxJerk": [
+      16.4275480057523
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 3.738106 from the target kinematic state that will exceed its maximum velocity limit 3.187781."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -7.29423181792999
+    ],
+    "currentVelocity": [
+      2.675112409026381
+    ],
+    "currentAcceleration": [
+      0.024315571139113867
+    ],
+    "targetPosition": [
+      7.996660745805826
+    ],
+    "targetVelocity": [
+      3.117340925072381
+    ],
+    "targetAcceleration": [
+      -3.501741849295518
+    ],
+    "maxVelocity": [
+      3.261565628528844
+    ],
+    "maxAcceleration": [
+      3.864149923951909
+    ],
+    "maxJerk": [
+      12.322942895357452
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 3.614876 from the target kinematic state that will exceed its maximum velocity limit 3.261566."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      0.20167441204696956
+    ],
+    "currentVelocity": [
+      -2.37420635116897
+    ],
+    "currentAcceleration": [
+      3.702647790584976
+    ],
+    "targetPosition": [
+      -0.8348608918834479
+    ],
+    "targetVelocity": [
+      2.327132447588945
+    ],
+    "targetAcceleration": [
+      -2.3687309873517637
+    ],
+    "maxVelocity": [
+      2.4000727641488337
+    ],
+    "maxAcceleration": [
+      4.851389620188884
+    ],
+    "maxJerk": [
+      18.72146575114001
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 2.476984 from the target kinematic state that will exceed its maximum velocity limit 2.400073."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -8.561364149104392
+    ],
+    "currentVelocity": [
+      -0.6672787537781961
+    ],
+    "currentAcceleration": [
+      -1.4970048591644822
+    ],
+    "targetPosition": [
+      6.981379460872695
+    ],
+    "targetVelocity": [
+      -1.5208062351891563
+    ],
+    "targetAcceleration": [
+      8.716640839210303
+    ],
+    "maxVelocity": [
+      2.180350283198078
+    ],
+    "maxAcceleration": [
+      9.977158437253806
+    ],
+    "maxJerk": [
+      5.92976462366596
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -7.927454 from the target kinematic state that will undercut its minimum velocity limit -2.180350."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -3.2565550894780397
+    ],
+    "currentVelocity": [
+      3.0007511529710786
+    ],
+    "currentAcceleration": [
+      -0.008362785814755469
+    ],
+    "targetPosition": [
+      -4.891912036569838
+    ],
+    "targetVelocity": [
+      -5.530120687386226
+    ],
+    "targetAcceleration": [
+      4.906082549735162
+    ],
+    "maxVelocity": [
+      6.43487788281678
+    ],
+    "maxAcceleration": [
+      8.50130243141033
+    ],
+    "maxJerk": [
+      11.882474138299605
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -6.542942 from the target kinematic state that will undercut its minimum velocity limit -6.434878."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      1.0851330562592523
+    ],
+    "currentVelocity": [
+      -0.69107852096935
+    ],
+    "currentAcceleration": [
+      -2.238556611084661
+    ],
+    "targetPosition": [
+      7.90909630480812
+    ],
+    "targetVelocity": [
+      2.801290105003645
+    ],
+    "targetAcceleration": [
+      -7.547266903669583
+    ],
+    "maxVelocity": [
+      3.365011550567424
+    ],
+    "maxAcceleration": [
+      7.907104926464803
+    ],
+    "maxJerk": [
+      18.435329453083074
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity 4.346184 from the target kinematic state that will exceed its maximum velocity limit 3.365012."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -4.7133173198042115
+    ],
+    "currentVelocity": [
+      3.1762258475021596
+    ],
+    "currentAcceleration": [
+      1.027297526632788
+    ],
+    "targetPosition": [
+      -7.9101952096296335
+    ],
+    "targetVelocity": [
+      -2.766803633087375
+    ],
+    "targetAcceleration": [
+      6.1979537530340565
+    ],
+    "maxVelocity": [
+      3.5252375929802984
+    ],
+    "maxAcceleration": [
+      9.860243814543555
+    ],
+    "maxJerk": [
+      11.736134858046949
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -4.403400 from the target kinematic state that will undercut its minimum velocity limit -3.525238."
+  },
+  {
+    "degreesOfFreedom": 1,
+    "controlInterface": "Position",
+    "synchronization": "Time",
+    "durationDiscretization": "Continuous",
+    "currentPosition": [
+      -7.423521634610218
+    ],
+    "currentVelocity": [
+      -3.1577816197007413
+    ],
+    "currentAcceleration": [
+      3.0499102362931323
+    ],
+    "targetPosition": [
+      3.3537099878971883
+    ],
+    "targetVelocity": [
+      -3.075900239661898
+    ],
+    "targetAcceleration": [
+      2.065501697214134
+    ],
+    "maxVelocity": [
+      3.242377056001931
+    ],
+    "maxAcceleration": [
+      4.82761215763945
+    ],
+    "maxJerk": [
+      5.2807888261095535
+    ],
+    "intermediatePositions": [],
+    "enabled": [
+      true
+    ],
+    "error": "\n[ruckig] DoF 0 will inevitably have reached a velocity -3.479845 from the target kinematic state that will undercut its minimum velocity limit -3.242377."
+  }
+]
