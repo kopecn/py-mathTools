@@ -7,8 +7,8 @@ spec: OTG
 scope: project
 status: accepted
 applies_to: src/math_tools/otg/, tests/otg/
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-07-21
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
@@ -132,7 +132,19 @@ invalid.
    the discrete-duration path).
 4. Float64 throughout; comparisons use the Swift port's exact epsilon
    constants (`EPS16`, `POLYNOMIAL_*` from `functional/roots.py` — never
-   fresh literals).
+   fresh literals). Swift `Double` division silently yields `inf`/`nan` on
+   a zero denominator (IEEE 754); Python's `/` raises `ZeroDivisionError`
+   instead. Where a step solver's own algebra can produce a legitimate
+   zero denominator at a degenerate root (e.g.
+   `steps/position_third_order_step1.py`'s `_time_all_none_acc0_acc1`, a
+   `t == 0` quartic root when the polynomial's constant term is zero), the
+   division is routed through an IEEE-754-semantics helper
+   (`_ieee754_div`) instead of the bare `/` operator, reproducing Swift's
+   silent nan/inf propagation (which `Profile.check`'s precision
+   comparisons then naturally reject) rather than crashing. This is NOT a
+   blanket rule to wrap every division in the OTG port — only sites where
+   a real Swift Double division-by-zero has been shown (by a failing
+   test) to be reachable.
 5. Pure Python + stdlib `math` in the per-cycle path (no numpy — scalar
    loops over DOFs, matching Swift; performance is explicitly a non-goal
    until measured).
