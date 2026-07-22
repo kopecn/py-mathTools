@@ -1,10 +1,10 @@
 ---
 chunk: 43-public-surface
 track: A
-status: pending
+status: complete
 depends_on: [30, 42, 09, 17]
 spec: ../specs/mathToolsArchitecture.md §Shared conventions (Public surface)
-last_updated: 2026-07-11
+last_updated: 2026-07-22
 semver: 0.0.1
 author: Nicholas Bergantz
 ---
@@ -41,10 +41,34 @@ after every exporting track is done.
 
 ## Acceptance criteria
 
-- [ ] `import math_tools as mt; mt.Waveform1D.sine(n=8)` works in a fresh interpreter
-- [ ] `__all__` pin test passes; no extra public names
-- [ ] `make uv-fullCheck` passes
+- [x] `import math_tools as mt; mt.Waveform1D.sine(n=8)` works in a fresh interpreter
+- [x] `__all__` pin test passes; no extra public names
+- [x] `make uv-fullCheck` passes
 
 ## Out of scope
 
 Adding names beyond the spec list (that requires an umbrella spec bump).
+
+## Resolution notes
+
+- `src/math_tools/__init__.py` was empty (stub) prior to this chunk; wired it
+  to re-export the umbrella spec's 19 names only, sourced from each
+  subpackage's already-curated `__all__` (`spatial`, `precision_time`,
+  `waveforms`, `functional`, `otg`, `errors`) — no new logic, pure
+  re-export, matching design constraint 1.
+- `Result` resolves to `math_tools.otg.Result` (the OTG result enum defined
+  in `otg/enums.py`); no naming collision with anything else in scope.
+- `tests/test_public_surface.py` (new) has three cases: (1) `__all__` pins
+  to the exact literal spec set via `assertEqual` on the `set` plus a
+  length check (catches accidental duplicates); (2) every name is checked
+  by identity (`assertIs`) against the subpackage-qualified source, per the
+  chunk's stated test shape; (3) the whole-plan smoke deliverable
+  `math_tools.Waveform1D.sine(n=8)`.
+- TDD order followed exactly: wrote the test against the empty
+  `__init__.py` first, confirmed 21 failures (`AttributeError` on every
+  pinned name), then wired the re-exports, then reran — 3 passed / 19
+  subtests passed.
+- `make uv-fullCheck` green: ruff clean, mypy strict clean (117 source
+  files), pytest 1356 passed (0 failed) including the new file.
+- No deviations from the chunk as written; no scope creep — only the two
+  listed files were touched.
