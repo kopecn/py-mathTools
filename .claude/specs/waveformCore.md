@@ -8,7 +8,7 @@ scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/, tests/waveforms/
 last_updated: 2026-07-23
-semver: 0.0.3
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 
@@ -89,6 +89,20 @@ random): `sine`, `cosine`, `square`, `triangle`, `sawtooth`, `chirp`,
 `damped_sinusoid`, `counter`, `digital_square`. Each maps to a one-line
 numpy expression; the Swift parameterization is the reference for argument
 names/meaning.
+
+**Generators — span convention (load-bearing).** For an `n`-sample
+waveform starting at `t0`, the sample span is `[0, (n-1)*dt]`
+(endpoint-inclusive) — consistent with `duration` above, NOT `n*dt`. Any
+generator parameter that scales by or defaults to "the waveform's total
+duration" or "the midpoint of the waveform" MUST derive it from `(n-1)*dt`:
+`chirp`'s sweep rate (so the **final** sample's instantaneous frequency is
+exactly `end_frequency`), `heaviside`'s default `step_time`, and
+`sigmoid`'s default `center` (both default to the span midpoint,
+`(n-1)*dt/2`). `n <= 1` is a zero-length span (`0`), not a
+division-by-zero — every affected generator must guard it explicitly.
+Generators whose math does not depend on total duration (e.g. `sine`'s
+`frequency`, `exponential_decay`'s `time_constant`) are unaffected and keep
+using the raw per-sample time axis `np.arange(n) * dt`.
 
 **Statistics** (properties; `None` on empty where Swift is optional):
 `minimum`, `maximum`, `peak_to_peak`, `mean`, `rms`, `standard_deviation`,

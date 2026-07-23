@@ -67,6 +67,20 @@ def _resolve_dt_seconds(dt: PrecisionTimeInterval | None, dt_seconds: float | No
     return dt_seconds if dt_seconds is not None else 1.0
 
 
+def _span_seconds(n: int, dt_s: float) -> float:
+    """The sample span of an ``n``-sample waveform: ``(n - 1) * dt_s``.
+
+    waveformCore.md's generator span convention (endpoint-inclusive: the
+    last sample of an ``n``-sample waveform is at ``t0 + (n-1)*dt``, not
+    ``n*dt``). Every generator whose default/scaling parameter depends on
+    the waveform's total duration (``chirp``'s sweep rate, ``heaviside``'s
+    default ``step_time``, ``sigmoid``'s default ``center``) MUST derive it
+    from this helper rather than recomputing ``n * dt_s`` inline. ``n <= 1``
+    is a zero-length span, not a division-by-zero.
+    """
+    return (n - 1) * dt_s if n > 1 else 0.0
+
+
 _SCALAR_TYPES: tuple[type, ...] = (int, float, np.integer, np.floating, np.bool_)
 
 
@@ -286,10 +300,11 @@ class Waveform1D(
         t0_seconds: float | None = None,
     ) -> Waveform1D:
         """Generate a linear chirp sweeping from ``start_frequency`` to ``end_frequency``
-        over the waveform's span (``n * dt``)."""
+        over the waveform's span (``(n-1) * dt`` -- the last sample's instantaneous
+        frequency is exactly ``end_frequency``)."""
         dt_s = _resolve_dt_seconds(dt, dt_seconds)
         t = np.arange(n, dtype=np.float64) * dt_s
-        duration = n * dt_s
+        duration = _span_seconds(n, dt_s)
         sweep_rate = (end_frequency - start_frequency) / duration if duration != 0.0 else 0.0
         phase = 2.0 * np.pi * (start_frequency * t + 0.5 * sweep_rate * t * t)
         values = amplitude * np.sin(phase)
@@ -436,11 +451,12 @@ class Waveform1D(
     ) -> Waveform1D:
         """Generate a Heaviside step: ``amplitude`` for ``t >= step_time`` else ``0``.
 
-        ``step_time`` defaults to the midpoint of the waveform's span.
+        ``step_time`` defaults to the midpoint of the waveform's span
+        (``(n-1) * dt / 2``).
         """
         dt_s = _resolve_dt_seconds(dt, dt_seconds)
         t = np.arange(n, dtype=np.float64) * dt_s
-        actual_step_time = step_time if step_time is not None else (n * dt_s) / 2.0
+        actual_step_time = step_time if step_time is not None else _span_seconds(n, dt_s) / 2.0
         values = np.where(t >= actual_step_time, amplitude, 0.0)
         return cls(values, dt=dt, dt_seconds=dt_seconds, t0=t0, t0_seconds=t0_seconds)
 
@@ -474,10 +490,11 @@ class Waveform1D(
         t0: PrecisionTimestamp | None = None,
         t0_seconds: float | None = None,
     ) -> Waveform1D:
-        """Generate a logistic sigmoid; ``center`` defaults to the span's midpoint."""
+        """Generate a logistic sigmoid; ``center`` defaults to the span's midpoint
+        (``(n-1) * dt / 2``)."""
         dt_s = _resolve_dt_seconds(dt, dt_seconds)
         t = np.arange(n, dtype=np.float64) * dt_s
-        actual_center = center if center is not None else (n * dt_s) / 2.0
+        actual_center = center if center is not None else _span_seconds(n, dt_s) / 2.0
         x = steepness * (t - actual_center)
         values = amplitude / (1.0 + np.exp(-x))
         return cls(values, dt=dt, dt_seconds=dt_seconds, t0=t0, t0_seconds=t0_seconds)
