@@ -8,7 +8,11 @@ composes every DSP mixin from the compose chunk (30) onward.
 import unittest
 
 import numpy as np
+from scipy.signal import get_window as scipy_get_window
 
+from math_tools.waveforms.dsp import _spectral as spectral_module
+from math_tools.waveforms.dsp import _windowing as windowing_module
+from math_tools.waveforms.dsp._common import DEFAULT_KAISER_BETA
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.dsp._windowing import WindowingMixin
 from math_tools.waveforms.support import WaveformWindowType
@@ -118,6 +122,75 @@ class TestWindowed(unittest.TestCase):
         w = Waveform1D([])
         with self.assertRaises(ValueError):
             w.windowed(WaveformWindowType.HANN)
+
+
+class TestPeriodicConvention(unittest.TestCase):
+    """Post-audit D-windowing-(c) / chunk 53: ``periodic=True`` pins scipy's
+    default (``fftbins=True``) convention -- the one ``SpectralMixin``
+    actually applies -- and ``periodic=False`` (default) keeps the existing
+    symmetric convention unchanged."""
+
+    def test_periodic_true_matches_scipy_default(self) -> None:
+        n = 64
+        coefficients = WindowingMixin.generate_window(WaveformWindowType.HANN, n, periodic=True)
+        expected = scipy_get_window("hann", n)
+        np.testing.assert_allclose(coefficients, expected)
+
+    def test_periodic_false_matches_scipy_symmetric(self) -> None:
+        n = 64
+        coefficients = WindowingMixin.generate_window(WaveformWindowType.HANN, n, periodic=False)
+        expected = scipy_get_window("hann", n, fftbins=False)
+        np.testing.assert_allclose(coefficients, expected)
+
+    def test_default_argument_is_symmetric_unchanged(self) -> None:
+        n = 64
+        default = WindowingMixin.generate_window(WaveformWindowType.HANN, n)
+        symmetric = WindowingMixin.generate_window(WaveformWindowType.HANN, n, periodic=False)
+        np.testing.assert_allclose(default, symmetric)
+
+
+class TestGainHelpersDescribePeriodicConvention(unittest.TestCase):
+    """Chunk 53 acceptance: the gain helpers, asked for ``periodic=True``,
+    describe the exact window ``power_spectral_density``/``spectrogram``
+    apply internally (``dsp/_spectral.py``'s ``_window_array``)."""
+
+    def test_coherent_gain_periodic_matches_spectral_window(self) -> None:
+        n = 128
+        w = _wrap(Waveform1D.constant(n, value=1.0, dt_seconds=0.01))
+        gain = w.window_coherent_gain(WaveformWindowType.HANN, periodic=True)
+        spectral_window = spectral_module._window_array(WaveformWindowType.HANN, n)
+        self.assertAlmostEqual(gain, float(np.mean(spectral_window)), places=12)
+
+    def test_processing_gain_periodic_matches_spectral_window(self) -> None:
+        n = 128
+        w = _wrap(Waveform1D.constant(n, value=1.0, dt_seconds=0.01))
+        gain = w.window_processing_gain(WaveformWindowType.HANN, periodic=True)
+        spectral_window = spectral_module._window_array(WaveformWindowType.HANN, n)
+        self.assertAlmostEqual(gain, float(np.sqrt(np.mean(spectral_window**2))), places=12)
+
+    def test_default_periodic_false_is_unchanged_from_before_chunk_53(self) -> None:
+        n = 128
+        w = _wrap(Waveform1D.constant(n, value=1.0, dt_seconds=0.01))
+        default_gain = w.window_coherent_gain(WaveformWindowType.HANN)
+        symmetric_gain = w.window_coherent_gain(WaveformWindowType.HANN, periodic=False)
+        self.assertEqual(default_gain, symmetric_gain)
+
+
+class TestSharedKaiserBeta(unittest.TestCase):
+    """Chunk 53 acceptance: one shared Kaiser beta constant backs both
+    ``_windowing.py`` and ``_spectral.py`` -- not two independent literals."""
+
+    def test_both_modules_reference_the_same_constant(self) -> None:
+        self.assertEqual(windowing_module.DEFAULT_KAISER_BETA, DEFAULT_KAISER_BETA)
+        self.assertEqual(spectral_module.DEFAULT_KAISER_BETA, DEFAULT_KAISER_BETA)
+
+    def test_kaiser_windows_agree_at_matching_length_and_convention(self) -> None:
+        n = 64
+        windowing_kaiser = WindowingMixin.generate_window(
+            WaveformWindowType.KAISER, n, periodic=True
+        )
+        spectral_kaiser = spectral_module._window_array(WaveformWindowType.KAISER, n)
+        np.testing.assert_allclose(windowing_kaiser, spectral_kaiser)
 
 
 if __name__ == "__main__":

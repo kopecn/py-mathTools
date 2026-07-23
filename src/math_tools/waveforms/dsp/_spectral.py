@@ -15,6 +15,20 @@ constraint -- chunk 28's ``WindowingMixin`` is for user-facing window
 utilities, not a dependency of this one; §Organization/§Compliance 2 forbid
 importing a sibling mixin module here regardless).
 
+**Window convention: periodic, by design (chunk 53).** ``_window_array``
+calls ``scipy.signal.get_window`` with scipy's default (``fftbins=True``,
+periodic) -- the correct convention for STFT frame tiling (``welch``,
+``spectrogram``), unlike ``dsp/_windowing.py``'s user-facing default
+(symmetric, ``fftbins=False``, for filter design / whole-waveform framing).
+Per waveformDsp.md's window-convention section this divergence is
+deliberate and unchanged by chunk 53; what chunk 53 fixed is that
+``WindowingMixin``'s gain helpers can now be asked (via
+``periodic=True``) to describe this exact window, so a caller correcting a
+``power_spectral_density``/``spectrogram`` estimate's scale gets the right
+factor. The Kaiser beta shape parameter is a single shared constant
+(``dsp/_common.DEFAULT_KAISER_BETA``) imported by both modules, replacing
+what were two independent ``14.0`` literals before chunk 53.
+
 **``spectral_features`` field-set divergence from the Swift reference.** The
 chunk doc for this module says to "mirror [the Swift ``extractSpectralFeatures``
 struct's] fields exactly", but that struct (``Waveform1D/Support/
@@ -56,7 +70,7 @@ import numpy.typing as npt
 from scipy.signal import get_window, welch
 from scipy.signal import spectrogram as _scipy_spectrogram
 
-from math_tools.waveforms.dsp._common import float_seconds
+from math_tools.waveforms.dsp._common import DEFAULT_KAISER_BETA, float_seconds
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.support import (
     WaveformMelSpectrogram,
@@ -72,13 +86,6 @@ _DEFAULT_OVERLAP = 0.5
 _DEFAULT_N_MELS = 40
 _DEFAULT_ROLLOFF_FRACTION = 0.95
 
-# scipy's `get_window` has no default shape parameter for "kaiser" -- the family
-# contract exposes no beta of its own, so this module fixes one general-purpose
-# value (comparable sidelobe suppression to a Blackman window) rather than adding
-# an extra parameter no other window type needs. Chunk 28's user-facing window
-# utilities may expose beta directly if a caller ever needs it (YAGNI).
-_DEFAULT_KAISER_BETA = 14.0
-
 _WINDOW_NAME_MAP: dict[WaveformWindowType, str] = {
     WaveformWindowType.HANN: "hann",
     WaveformWindowType.HAMMING: "hamming",
@@ -91,7 +98,7 @@ _WINDOW_NAME_MAP: dict[WaveformWindowType, str] = {
 def _scipy_window_spec(window: WaveformWindowType) -> str | tuple[str, float]:
     """``WaveformWindowType`` -> a ``scipy.signal.get_window``-compatible spec."""
     if window is WaveformWindowType.KAISER:
-        return ("kaiser", _DEFAULT_KAISER_BETA)
+        return ("kaiser", DEFAULT_KAISER_BETA)
     return _WINDOW_NAME_MAP[window]
 
 
@@ -398,4 +405,4 @@ class SpectralMixin:
         )
 
 
-__all__ = ["SpectralMixin"]
+__all__ = ["SpectralMixin", "DEFAULT_KAISER_BETA"]

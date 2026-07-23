@@ -9,8 +9,12 @@ import unittest
 
 import numpy as np
 
+from math_tools.waveforms.dsp import _spectral as spectral_module
+from math_tools.waveforms.dsp._common import DEFAULT_KAISER_BETA
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.dsp._spectral import _mel_filterbank
+from math_tools.waveforms.dsp._windowing import WindowingMixin
+from math_tools.waveforms.support import WaveformWindowType
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
@@ -263,6 +267,45 @@ class TestDescriptorsRoundTripFromMethods(unittest.TestCase):
         a, b = w.spectral_features(), w.spectral_features()
         # Scalar-only dataclass: default eq compares field values.
         self.assertEqual(a, b)
+
+
+class TestSharedKaiserBetaConstant(unittest.TestCase):
+    """Chunk 53 acceptance: ``_spectral.py`` sources its Kaiser beta from the
+    shared ``dsp/_common.py`` constant -- not an independent literal -- and
+    its own internal window array is unaffected by the reconciliation
+    (design constraint 4: no default-behavior change)."""
+
+    def test_spectral_module_constant_matches_common(self) -> None:
+        self.assertEqual(spectral_module.DEFAULT_KAISER_BETA, DEFAULT_KAISER_BETA)
+
+    def test_internal_kaiser_window_matches_windowing_periodic_convention(self) -> None:
+        n = 64
+        spectral_kaiser = spectral_module._window_array(WaveformWindowType.KAISER, n)
+        windowing_kaiser = WindowingMixin.generate_window(
+            WaveformWindowType.KAISER, n, periodic=True
+        )
+        np.testing.assert_allclose(spectral_kaiser, windowing_kaiser)
+
+    def test_power_spectral_density_default_unchanged(self) -> None:
+        """Regression pin: default PSD output is bit-identical pre/post chunk 53
+        (additive parameters only, per design constraint 4)."""
+        n = 2000
+        w = _wrap(Waveform1D.white_noise(n, amplitude=1.0, seed=17, dt_seconds=0.01))
+        spectrum = w.power_spectral_density(nperseg=256)
+        window_array = spectral_module._window_array(WaveformWindowType.HANN, 256)
+        # HANN default is periodic (scipy's own default) -- confirms this
+        # module's internal convention is untouched by the new `periodic`
+        # parameter, which lives only on WindowingMixin.
+        self.assertAlmostEqual(
+            float(np.mean(window_array)),
+            float(
+                np.mean(
+                    WindowingMixin.generate_window(WaveformWindowType.HANN, 256, periodic=True)
+                )
+            ),
+            places=12,
+        )
+        self.assertEqual(len(spectrum.magnitudes), len(spectrum.frequencies))
 
 
 if __name__ == "__main__":

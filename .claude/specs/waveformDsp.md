@@ -7,8 +7,8 @@ spec: WaveformDsp
 scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/dsp/, src/math_tools/waveforms/support.py, tests/waveforms/dsp/
-last_updated: 2026-07-17
-semver: 0.0.7
+last_updated: 2026-07-23
+semver: 0.0.8
 author: Nicholas Bergantz
 ---
 
@@ -160,8 +160,55 @@ and its backing implementation. Enum arguments use the support types below.
 | `ResamplingMixin` (`_resampling.py`) | `decimated(factor, ...)`, `interpolated(factor, method: WaveformInterpolationMethod = ...)`, `resampled(target_frequency_hz, ...)`, `resampled_to_match(other)`, `polyphase_resampled(up, down)` | `scipy.signal.decimate` / `resample` / `resample_poly`; results carry recomputed `dt` (attosecond-exact where the ratio is rational) |
 | `TimeAlignmentMixin` (`_time_alignment.py`) | `aligned(to, method: WaveformAlignmentMethod = ...)`, `time_lag(to, max_lag=None) -> WaveformTimeLag \| None`, `synchronize(waveforms: Sequence[Waveform1D]) -> list[Waveform1D]` (classmethod), `time_windows(...)`, `time_segments(...)` | correlation-lag via `CorrelationMixin` |
 | `TriggerMixin` (`_triggers.py`) | `detect_triggers(trigger: WaveformTrigger) -> list[WaveformTriggerEvent]`, `detect_edge_triggers(level, edge: WaveformEdgeType)`, `detect_level_triggers(...)`, `detect_window_triggers(low, high, kind: WaveformWindowTriggerType)`, `detect_pattern_triggers(pattern, tolerance)`, `with_event_markers(events) -> WaveformWithEvents` | numpy comparisons + sign-change indexing |
-| `WindowingMixin` (`_windowing.py`) | `windowed(window: WaveformWindowType)`, `generate_window(window, length) -> npt.NDArray` (staticmethod), `window_coherent_gain(window) -> float`, `window_processing_gain(window) -> float` | `scipy.signal.get_window` |
+| `WindowingMixin` (`_windowing.py`) | `windowed(window: WaveformWindowType)`, `generate_window(window, length, periodic: bool = False) -> npt.NDArray` (staticmethod), `window_coherent_gain(window, periodic: bool = False) -> float`, `window_processing_gain(window, periodic: bool = False) -> float` | `scipy.signal.get_window`; see §Window convention for the symmetric/periodic split with `SpectralMixin` |
 | `ZeroCrossingMixin` (`_zero_crossings.py`) | `zero_crossings(direction: WaveformZeroCrossingDirection = BOTH) -> list[WaveformZeroCrossing]`, `zero_crossing_count(...)`, `zero_crossing_rate(...) -> float`, `segments_between_zero_crossings(...) -> list[Waveform1D]` | numpy sign-change indexing, sub-sample linear interp |
+
+## Window convention (chunk 53)
+
+`WindowingMixin` and `SpectralMixin` both call `scipy.signal.get_window`, but
+for genuinely different purposes, and each keeps its own default:
+
+- **`WindowingMixin` default: symmetric** (`fftbins=False`). This matches the
+  Swift reference's own `n - 1`-denominator formulas: a finite-length
+  window's first and last samples are exactly the window's edge value, and
+  (for odd length) the true midpoint sample is exactly the window's peak.
+  This is the right convention for filter design, gain/coherent-gain
+  analysis, and applying a window to a whole waveform (`windowed`).
+- **`SpectralMixin` default: periodic** (`fftbins=True`, scipy's own
+  default). This is the right convention for STFT frame tiling
+  (`power_spectral_density` via `welch`, `spectrogram`), where the window
+  must satisfy the constant-overlap-add condition across abutting frames —
+  a symmetric window's duplicated edge sample breaks that condition.
+
+Both conventions are legitimate and neither family's default changes as a
+result of this reconciliation. The defect this section closes (post-audit
+finding D-windowing-(c)) was that `WindowingMixin.window_coherent_gain`/
+`window_processing_gain` — whose entire purpose is to let a caller correct a
+spectral estimate's scale factor — had no way to describe the periodic
+window `power_spectral_density`/`spectrogram` actually apply, so a caller
+using them together got a subtly wrong gain. Fix: `generate_window`,
+`window_coherent_gain`, and `window_processing_gain` all take an explicit
+`periodic: bool = False` parameter. `periodic=False` (the default,
+unchanged) is `WindowingMixin`'s own symmetric convention; `periodic=True`
+requests the exact periodic window `SpectralMixin` applies internally, so
+`w.window_coherent_gain(HANN, periodic=True)` correctly describes the
+window backing `w.power_spectral_density(window=HANN)`. `windowed` keeps
+the symmetric-only default — it is `WindowingMixin`'s own use case
+(filter/analysis framing on a whole waveform), not a spectral-estimate
+correction helper, so it gained no `periodic` parameter.
+
+**Kaiser beta: single shared constant.** `dsp/_common.DEFAULT_KAISER_BETA =
+14.0` is the one source both `_windowing.py` and `_spectral.py` import for
+the Kaiser window's shape parameter (previously two independent `14.0`
+literals with no test pinning them equal). `WaveformWindowType` is a flat
+`str` enum with no `beta` field (unlike the Swift reference's associated-
+value `.kaiser(beta:)`), so exposing a caller-supplied beta would force an
+enum redesign; this chunk took the "keep the shared constant, record the
+narrowing" path from the corrective-action chunk rather than redesigning
+the enum. **Known deviation from the Swift reference:** Kaiser beta is not
+caller-configurable in the Python surface (Swift: `case kaiser(beta:
+Double)`); it is fixed at `DEFAULT_KAISER_BETA` for both families. Revisit
+only if a caller needs a different beta (YAGNI).
 
 ## Support descriptor types — `waveforms/support.py`
 
