@@ -42,6 +42,14 @@ class TestSpecCompliance11Instantiability(unittest.TestCase):
         w = Waveform1D([1.0, 2.0, 3.0])
         self.assertEqual(float(np.mean(np.asarray(w))), 2.0)
 
+    def test_array_copy_false_raises_value_error(self) -> None:
+        # NumPy 2's __array__(copy=...) protocol: a copy is unavoidable here
+        # (the returned array must not alias the mutable backing store), so
+        # copy=False must raise rather than silently copy anyway (finding C-7).
+        w = Waveform1D([1.0, 2.0, 3.0])
+        with self.assertRaises(ValueError):
+            np.array(w, copy=False)
+
 
 class TestSpecCompliance1SerializationRoundTrip(unittest.TestCase):
     """§Compliance 1: to_dict round-trips through ScalarWaveformType."""

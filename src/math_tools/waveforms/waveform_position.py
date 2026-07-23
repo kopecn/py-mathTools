@@ -287,6 +287,22 @@ class WaveformPosition(PositionWaveformABC):
     def __iter__(self) -> Iterator[Position]:
         return (Position.from_vector(row) for row in self._positions)
 
+    def __array__(
+        self, dtype: npt.DTypeLike | None = None, copy: bool | None = None
+    ) -> npt.NDArray[Any]:
+        """Return the ``(sample_count, 3)`` position array for ``np.asarray(w)`` interop
+        (mathToolsArchitecture.md §API idioms).
+
+        Raises:
+            ValueError: If ``copy=False`` is requested -- a copy is always required
+                since the returned array must not alias the mutable backing store.
+        """
+        if copy is False:
+            raise ValueError(
+                "WaveformPosition.__array__: copy=False is not supported (a copy is required)"
+            )
+        return np.array(self._positions, dtype=dtype, copy=True)
+
     # MARK: - Mutation
 
     def append(self, value: Position) -> None:
@@ -370,6 +386,17 @@ class WaveformPosition(PositionWaveformABC):
             and self._t0 == other._t0
             and bool(np.array_equal(self._positions, other._positions))
         )
+
+    def isclose(self, other: WaveformPosition, rtol: float = 1e-9, atol: float = 0.0) -> bool:
+        """Whole-waveform approximate equality: same ``sample_count``, same ``dt``,
+        same ``t0``, all positions close (numpy ``rtol``/``atol`` vocabulary, mirroring
+        :meth:`~math_tools.spatial.position.Position.isclose`'s parameter order/defaults).
+        """
+        if self.sample_count != other.sample_count:
+            return False
+        if self._dt != other._dt or self._t0 != other._t0:
+            return False
+        return bool(np.allclose(self._positions, other._positions, rtol=rtol, atol=atol))
 
     __hash__ = None  # type: ignore[assignment]
 

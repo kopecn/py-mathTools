@@ -412,5 +412,62 @@ class TestRepr(unittest.TestCase):
         self.assertIn("WaveformPosition", repr(w))
 
 
+class TestArrayInterop(unittest.TestCase):
+    """mathToolsArchitecture.md §API idioms: ``__array__`` so ``np.asarray(w)`` works."""
+
+    def test_asarray_matches_positions_array(self) -> None:
+        w = _make(n=4)
+        np.testing.assert_array_equal(np.asarray(w), w.positions_array)
+
+    def test_asarray_shape_is_sample_count_by_3(self) -> None:
+        w = _make(n=4)
+        self.assertEqual(np.asarray(w).shape, (4, 3))
+
+    def test_asarray_returns_a_copy(self) -> None:
+        w = _make(n=2)
+        arr = np.asarray(w)
+        arr[0, 0] = 99.0
+        self.assertEqual(w[0].x, 0.0)
+
+    def test_array_copy_false_raises_value_error(self) -> None:
+        w = _make(n=2)
+        with self.assertRaises(ValueError):
+            np.array(w, copy=False)
+
+
+class TestIsClose(unittest.TestCase):
+    def test_true_within_tolerance(self) -> None:
+        # index 1's x-component is nonzero (_make's Position(1, 2, 3)); atol
+        # defaults to 0.0 (mirroring Position.isclose), so a perturbation at an
+        # exact-zero component would not be "close" -- perturb a nonzero one.
+        w1 = _make(n=3)
+        arr = w1.positions_array
+        arr[1, 0] += 1e-10
+        w2 = WaveformPosition(arr, dt=w1.dt, t0=w1.t0)
+        self.assertTrue(w1.isclose(w2))
+
+    def test_false_outside_tolerance(self) -> None:
+        w1 = _make(n=3)
+        arr = w1.positions_array
+        arr[1, 0] += 1.0
+        w2 = WaveformPosition(arr, dt=w1.dt, t0=w1.t0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_sample_count(self) -> None:
+        w1 = _make(n=3)
+        w2 = _make(n=4)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_dt(self) -> None:
+        w1 = _make(n=3, dt_seconds=1.0)
+        w2 = _make(n=3, dt_seconds=2.0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_true_for_identical_waveform(self) -> None:
+        w1 = _make(n=3)
+        w2 = _make(n=3)
+        self.assertTrue(w1.isclose(w2))
+
+
 if __name__ == "__main__":
     unittest.main()

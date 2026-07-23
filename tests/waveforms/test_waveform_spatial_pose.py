@@ -219,6 +219,51 @@ class TestSpecCompliance8FromComponentsAndPoseRoundTrip(unittest.TestCase):
         rebuilt = WaveformSpatialPose.from_waveforms(w.position_waveform, w.quaternion_waveform)
         self.assertEqual(rebuilt, w)
 
+    def test_from_components_round_trips_against_from_poses(self) -> None:
+        w = _make(n=5, dt_seconds=0.25, t0_seconds=3.0)
+        components = w.component_waveforms
+        rebuilt = WaveformSpatialPose.from_components(
+            components.position.x,
+            components.position.y,
+            components.position.z,
+            components.quaternion.w,
+            components.quaternion.x,
+            components.quaternion.y,
+            components.quaternion.z,
+        )
+        self.assertEqual(rebuilt, w)
+
+    def test_from_components_mismatched_length_raises_value_error(self) -> None:
+        short = WaveformPosition([Position(1.0, 2.0, 3.0)]).component_waveforms
+        w = _make(n=3)
+        components = w.component_waveforms
+        with self.assertRaises(ValueError):
+            WaveformSpatialPose.from_components(
+                short.x,
+                short.y,
+                short.z,
+                components.quaternion.w,
+                components.quaternion.x,
+                components.quaternion.y,
+                components.quaternion.z,
+            )
+
+    def test_from_components_mismatched_dt_raises_value_error(self) -> None:
+        w1 = _make(n=3, dt_seconds=1.0)
+        w2 = _make(n=3, dt_seconds=2.0)
+        c1 = w1.component_waveforms
+        c2 = w2.component_waveforms
+        with self.assertRaises(ValueError):
+            WaveformSpatialPose.from_components(
+                c1.position.x,
+                c1.position.y,
+                c1.position.z,
+                c2.quaternion.w,
+                c2.quaternion.x,
+                c2.quaternion.y,
+                c2.quaternion.z,
+            )
+
 
 class TestSpecCompliance9UnequalArrays(unittest.TestCase):
     """§Compliance 9: unequal parallel arrays -> is_valid False, sample_count = min."""
@@ -640,6 +685,82 @@ class TestEquality(unittest.TestCase):
         w = _make(n=2)
         with self.assertRaises(TypeError):
             hash(w)
+
+
+class TestArrayInterop(unittest.TestCase):
+    """mathToolsArchitecture.md §API idioms: ``__array__`` so ``np.asarray(w)`` works.
+
+    waveformCore.md §Array shape contract: ``(sample_count, 7)``, columns
+    ``[x, y, z, w, i, j, k]``.
+    """
+
+    def test_asarray_shape_is_sample_count_by_7(self) -> None:
+        w = _make(n=4)
+        self.assertEqual(np.asarray(w).shape, (4, 7))
+
+    def test_asarray_columns_are_position_then_quaternion(self) -> None:
+        w = _make(n=3)
+        arr = np.asarray(w)
+        np.testing.assert_array_equal(arr[:, :3], w.positions_array)
+        np.testing.assert_array_equal(arr[:, 3:], w.quaternions_array)
+
+    def test_asarray_reads_the_sample_count_prefix_for_unequal_arrays(self) -> None:
+        """Depends on chunk 49: sample_count is min(len(positions), len(quaternions))."""
+        w = WaveformSpatialPose(np.zeros((5, 3)), np.zeros((2, 4)))
+        arr = np.asarray(w)
+        self.assertEqual(arr.shape, (2, 7))
+
+    def test_asarray_returns_a_copy(self) -> None:
+        w = _make(n=2)
+        arr = np.asarray(w)
+        arr[0, 0] = 99.0
+        self.assertNotEqual(w[0].position.x, 99.0)
+
+    def test_array_copy_false_raises_value_error(self) -> None:
+        w = _make(n=2)
+        with self.assertRaises(ValueError):
+            np.array(w, copy=False)
+
+
+class TestIsClose(unittest.TestCase):
+    def test_true_within_tolerance(self) -> None:
+        # index 1's x-component is nonzero (_pose(1) = Position(1, 2, 3)); atol
+        # defaults to 0.0 (mirroring Position.isclose), so a perturbation at an
+        # exact-zero component would not be "close" -- perturb a nonzero one.
+        w1 = _make(n=3)
+        positions = w1.positions_array
+        positions[1, 0] += 1e-10
+        w2 = WaveformSpatialPose(positions, w1.quaternions_array, dt=w1.dt, t0=w1.t0)
+        self.assertTrue(w1.isclose(w2))
+
+    def test_false_outside_tolerance(self) -> None:
+        w1 = _make(n=3)
+        positions = w1.positions_array
+        positions[1, 0] += 1.0
+        w2 = WaveformSpatialPose(positions, w1.quaternions_array, dt=w1.dt, t0=w1.t0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_sample_count(self) -> None:
+        w1 = _make(n=3)
+        w2 = _make(n=4)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_dt(self) -> None:
+        w1 = _make(n=3, dt_seconds=1.0)
+        w2 = _make(n=3, dt_seconds=2.0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_double_cover_negated_quaternions_is_close(self) -> None:
+        w = _make(n=3)
+        negated = WaveformSpatialPose(
+            w.positions_array, -w.quaternions_array, dt=w.dt, t0=w.t0
+        )
+        self.assertTrue(w.isclose(negated))
+
+    def test_true_for_identical_waveform(self) -> None:
+        w1 = _make(n=3)
+        w2 = _make(n=3)
+        self.assertTrue(w1.isclose(w2))
 
 
 class TestRepr(unittest.TestCase):

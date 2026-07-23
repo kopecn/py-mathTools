@@ -1118,6 +1118,16 @@ class Waveform1D(
     def __array__(
         self, dtype: npt.DTypeLike | None = None, copy: bool | None = None
     ) -> npt.NDArray[Any]:
+        """Return the samples for ``np.asarray(w)`` interop.
+
+        Raises:
+            ValueError: If ``copy=False`` is requested -- a copy is always required
+                since the returned array must not alias the mutable backing store.
+        """
+        if copy is False:
+            raise ValueError(
+                "Waveform1D.__array__: copy=False is not supported (a copy is required)"
+            )
         return np.array(self._values, dtype=dtype, copy=True)
 
     def __repr__(self) -> str:

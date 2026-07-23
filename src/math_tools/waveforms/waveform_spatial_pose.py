@@ -236,6 +236,57 @@ class WaveformSpatialPose(WaveformSpatialABC):
         )
 
     @classmethod
+    def from_components(
+        cls,
+        position_x: Waveform1D,
+        position_y: Waveform1D,
+        position_z: Waveform1D,
+        quaternion_w: Waveform1D,
+        quaternion_x: Waveform1D,
+        quaternion_y: Waveform1D,
+        quaternion_z: Waveform1D,
+    ) -> WaveformSpatialPose:
+        """Build from seven per-component ``Waveform1D``s -- three for the position
+        half (``x, y, z``) and four for the quaternion half (``w, x, y, z``) --
+        following :meth:`WaveformPosition.from_components`'s /
+        :meth:`WaveformQuaternion.from_components`'s shape exactly (``dt``/``t0``
+        taken from ``position_x``; waveformCore.md §Aggregate containers).
+
+        Raises:
+            ValueError: Unless all seven inputs have equal length and equal ``dt``
+                (Swift's optional-returning ``init?`` becomes a raise in this port).
+        """
+        components = (
+            position_x,
+            position_y,
+            position_z,
+            quaternion_w,
+            quaternion_x,
+            quaternion_y,
+            quaternion_z,
+        )
+        lengths = {len(component) for component in components}
+        if len(lengths) != 1:
+            raise ValueError(
+                "WaveformSpatialPose.from_components: all seven component waveforms must "
+                f"have equal length (got {[len(component) for component in components]})"
+            )
+        dts = {component.dt for component in components}
+        if len(dts) != 1:
+            raise ValueError(
+                "WaveformSpatialPose.from_components: all seven component waveforms must "
+                f"have equal dt (got {[component.dt for component in components]})"
+            )
+        positions = np.stack(
+            [position_x.values, position_y.values, position_z.values], axis=1
+        ).astype(np.float64)
+        quaternions = np.stack(
+            [quaternion_w.values, quaternion_x.values, quaternion_y.values, quaternion_z.values],
+            axis=1,
+        ).astype(np.float64)
+        return cls(positions, quaternions, dt=position_x.dt, t0=position_x.t0)
+
+    @classmethod
     def from_waveforms(
         cls, position_waveform: WaveformPosition, quaternion_waveform: WaveformQuaternion
     ) -> WaveformSpatialPose:
@@ -515,6 +566,27 @@ class WaveformSpatialPose(WaveformSpatialABC):
             for i in range(self.sample_count)
         )
 
+    def __array__(
+        self, dtype: npt.DTypeLike | None = None, copy: bool | None = None
+    ) -> npt.NDArray[Any]:
+        """Return this waveform's ``(sample_count, 7)`` stacked array, columns
+        ``[x, y, z, w, i, j, k]`` (position ``xyz`` then quaternion ``wxyz``, both
+        truncated to :attr:`sample_count` -- waveformCore.md §Array shape contract;
+        mathToolsArchitecture.md §API idioms).
+
+        Raises:
+            ValueError: If ``copy=False`` is requested -- a copy is always required
+                since the returned array must not alias the mutable backing stores.
+        """
+        if copy is False:
+            raise ValueError(
+                "WaveformSpatialPose.__array__: copy=False is not supported (a copy is "
+                "required)"
+            )
+        n = self.sample_count
+        combined = np.concatenate([self._positions[:n], self._quaternions[:n]], axis=1)
+        return np.array(combined, dtype=dtype, copy=True)
+
     # MARK: - Mutation
 
     def append(self, value: SpatialPose) -> None:
@@ -631,6 +703,36 @@ class WaveformSpatialPose(WaveformSpatialABC):
             and bool(np.array_equal(self._positions, other._positions))
             and bool(np.array_equal(self._quaternions, other._quaternions))
         )
+
+    def isclose(self, other: WaveformSpatialPose, rtol: float = 1e-9, atol: float = 0.0) -> bool:
+        """Whole-waveform approximate equality: same ``sample_count``, same ``dt``,
+        same ``t0``, all positions AND quaternions close (numpy ``rtol``/``atol``
+        vocabulary, mirroring :meth:`~math_tools.spatial.position.Position.isclose`'s
+        parameter order/defaults; the same ``rtol``/``atol`` is applied to both halves).
+
+        Double-cover aware **per sample** on the quaternion half: each row
+        independently may match either ``other``'s quaternion row or its negation
+        (``q`` and ``-q`` are the same rotation), mirroring
+        :meth:`WaveformQuaternion.isclose`.
+        """
+        n = self.sample_count
+        if n != other.sample_count:
+            return False
+        if self._dt != other._dt or self._t0 != other._t0:
+            return False
+        if n == 0:
+            return True
+        positions_close = np.allclose(
+            self._positions[:n], other._positions[:n], rtol=rtol, atol=atol
+        )
+        if not positions_close:
+            return False
+        self_quaternions = self._quaternions[:n]
+        other_quaternions = other._quaternions[:n]
+        same_sign = np.isclose(self_quaternions, other_quaternions, rtol=rtol, atol=atol)
+        flipped_sign = np.isclose(self_quaternions, -other_quaternions, rtol=rtol, atol=atol)
+        row_matches = np.all(same_sign, axis=1) | np.all(flipped_sign, axis=1)
+        return bool(np.all(row_matches))
 
     __hash__ = None  # type: ignore[assignment]
 

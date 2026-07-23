@@ -311,6 +311,22 @@ class WaveformQuaternion(QuaternionWaveformABC):
     def __iter__(self) -> Iterator[Quaternion]:
         return (Quaternion.from_float_array(row) for row in self._quaternions)
 
+    def __array__(
+        self, dtype: npt.DTypeLike | None = None, copy: bool | None = None
+    ) -> npt.NDArray[Any]:
+        """Return the ``(sample_count, 4)`` ``(w, x, y, z)`` quaternion array for
+        ``np.asarray(w)`` interop (mathToolsArchitecture.md §API idioms).
+
+        Raises:
+            ValueError: If ``copy=False`` is requested -- a copy is always required
+                since the returned array must not alias the mutable backing store.
+        """
+        if copy is False:
+            raise ValueError(
+                "WaveformQuaternion.__array__: copy=False is not supported (a copy is required)"
+            )
+        return np.array(self._quaternions, dtype=dtype, copy=True)
+
     # MARK: - Mutation
 
     def append(self, value: Quaternion) -> None:
@@ -398,6 +414,28 @@ class WaveformQuaternion(QuaternionWaveformABC):
             and self._t0 == other._t0
             and bool(np.array_equal(self._quaternions, other._quaternions))
         )
+
+    def isclose(
+        self, other: WaveformQuaternion, rtol: float = 1e-9, atol: float = 1e-11
+    ) -> bool:
+        """Whole-waveform approximate equality: same ``sample_count``, same ``dt``,
+        same ``t0``, all quaternions close (numpy ``rtol``/``atol`` vocabulary and
+        defaults mirroring :meth:`~math_tools.spatial.quaternion.Quaternion.isclose`).
+
+        Double-cover aware **per sample**: each row independently may match either
+        ``other``'s row or its negation (``q`` and ``-q`` are the same rotation), so
+        a copy with every quaternion row negated still compares ``isclose``.
+        """
+        if self.sample_count != other.sample_count:
+            return False
+        if self._dt != other._dt or self._t0 != other._t0:
+            return False
+        if self.sample_count == 0:
+            return True
+        same_sign = np.isclose(self._quaternions, other._quaternions, rtol=rtol, atol=atol)
+        flipped_sign = np.isclose(self._quaternions, -other._quaternions, rtol=rtol, atol=atol)
+        row_matches = np.all(same_sign, axis=1) | np.all(flipped_sign, axis=1)
+        return bool(np.all(row_matches))
 
     __hash__ = None  # type: ignore[assignment]
 

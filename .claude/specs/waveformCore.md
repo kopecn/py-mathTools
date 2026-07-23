@@ -7,8 +7,8 @@ spec: WaveformCore
 scope: project
 status: accepted
 applies_to: src/math_tools/waveforms/, tests/waveforms/
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-07-23
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
@@ -161,6 +161,36 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
   `sample_count == min(len(positions), len(quaternions))` — both subtle Swift
   behaviors, kept.
 - `==`, `repr`, `to_dict`/`from_dict` per the ABC wire shapes.
+- **Shared API idioms** (mathToolsArchitecture.md §API idioms, chunk 50): all
+  three aggregates additionally implement `__array__` and
+  `isclose(other, rtol, atol)`, mirroring the umbrella idiom already required
+  of `Waveform1D`, `Position`, and `Quaternion`.
+  - `__array__(dtype=None, copy=None)`: `WaveformPosition` returns the
+    `(sample_count, 3)` position array; `WaveformQuaternion` returns the
+    `(sample_count, 4)` `(w, x, y, z)` array; `WaveformSpatialPose` returns a
+    **`(sample_count, 7)`** array, columns `[x, y, z, w, i, j, k]` (position
+    `xyz` then quaternion `wxyz`, both truncated to `sample_count` — the
+    "valid prefix" per §Compliance 9, not either raw array's own length).
+    All three raise `ValueError` when `copy=False` is requested, since a copy
+    is always required (the returned array must never alias the mutable
+    backing store) — the same contract `Waveform1D.__array__` follows.
+  - `isclose(other, rtol=1e-9, atol=...)`: `False` on differing
+    `sample_count` or differing `dt`/`t0`; otherwise elementwise
+    `np.isclose` over the backing array(s) (`atol` default mirrors the
+    wrapped element type: `0.0` for `WaveformPosition`/the position half of
+    `WaveformSpatialPose`, matching `Position.isclose`; `1e-11` for
+    `WaveformQuaternion`, matching `Quaternion.isclose`).
+    `WaveformQuaternion` and the quaternion half of `WaveformSpatialPose` are
+    double-cover aware **per sample**: each row independently may match
+    either `other`'s row or its negation (`q` and `-q` are the same
+    rotation).
+  - `WaveformSpatialPose.from_components(position_x, position_y, position_z,
+    quaternion_w, quaternion_x, quaternion_y, quaternion_z)`: the third
+    aggregate's `from_components`, dropped in chunk 17 and restored in chunk
+    50 — seven per-component `Waveform1D`s (three position, four quaternion),
+    following `WaveformPosition.from_components`/
+    `WaveformQuaternion.from_components`'s shape; `ValueError` unless all
+    seven share length and `dt`.
 
 ## Compliance requirements (test-checkable)
 

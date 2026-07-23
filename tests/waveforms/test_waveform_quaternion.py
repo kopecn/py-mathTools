@@ -532,5 +532,71 @@ class TestRepr(unittest.TestCase):
         self.assertIn("WaveformQuaternion", repr(w))
 
 
+def _make_unit(n: int = 3, dt_seconds: float = 1.0, t0_seconds: float = 0.0) -> WaveformQuaternion:
+    quaternions = [
+        Quaternion.from_components(1.0, float(i) * 0.01, 0.0, 0.0).normalized() for i in range(n)
+    ]
+    return WaveformQuaternion(quaternions, dt_seconds=dt_seconds, t0_seconds=t0_seconds)
+
+
+class TestArrayInterop(unittest.TestCase):
+    """mathToolsArchitecture.md §API idioms: ``__array__`` so ``np.asarray(w)`` works."""
+
+    def test_asarray_matches_quaternions_array(self) -> None:
+        w = _make_unit(n=4)
+        np.testing.assert_array_equal(np.asarray(w), w.quaternions_array)
+
+    def test_asarray_shape_is_sample_count_by_4(self) -> None:
+        w = _make_unit(n=4)
+        self.assertEqual(np.asarray(w).shape, (4, 4))
+
+    def test_asarray_returns_a_copy(self) -> None:
+        w = _make_unit(n=2)
+        arr = np.asarray(w)
+        arr[0, 0] = 99.0
+        self.assertNotEqual(w[0].w, 99.0)
+
+    def test_array_copy_false_raises_value_error(self) -> None:
+        w = _make_unit(n=2)
+        with self.assertRaises(ValueError):
+            np.array(w, copy=False)
+
+
+class TestIsClose(unittest.TestCase):
+    def test_true_within_tolerance(self) -> None:
+        w1 = _make_unit(n=3)
+        arr = w1.quaternions_array
+        arr[0, 0] += 1e-12
+        w2 = WaveformQuaternion(arr, dt=w1.dt, t0=w1.t0)
+        self.assertTrue(w1.isclose(w2))
+
+    def test_false_outside_tolerance(self) -> None:
+        w1 = _make_unit(n=3)
+        arr = w1.quaternions_array
+        arr[0, 0] += 1.0
+        w2 = WaveformQuaternion(arr, dt=w1.dt, t0=w1.t0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_sample_count(self) -> None:
+        w1 = _make_unit(n=3)
+        w2 = _make_unit(n=4)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_false_on_differing_dt(self) -> None:
+        w1 = _make_unit(n=3, dt_seconds=1.0)
+        w2 = _make_unit(n=3, dt_seconds=2.0)
+        self.assertFalse(w1.isclose(w2))
+
+    def test_double_cover_negated_waveform_is_close(self) -> None:
+        w = _make_unit(n=3)
+        negated = WaveformQuaternion(-w.quaternions_array, dt=w.dt, t0=w.t0)
+        self.assertTrue(w.isclose(negated))
+
+    def test_true_for_identical_waveform(self) -> None:
+        w1 = _make_unit(n=3)
+        w2 = _make_unit(n=3)
+        self.assertTrue(w1.isclose(w2))
+
+
 if __name__ == "__main__":
     unittest.main()
