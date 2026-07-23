@@ -47,6 +47,19 @@ _SIN_120 = 0.866025403784438646764
 #: Maximum iterations for shrink_interval's safe-Newton loop (Swift ``maxIts``).
 _MAX_ITS = 128
 
+#: Scale-relative degeneracy threshold for solve_cubic's leading coefficient.
+#: An *absolute* threshold (the original ``_ULP``) cannot be right across the
+#: coefficient scales this module sees: e.g. ``solve_cubic(1e-10, 2.0, -3.0,
+#: -2.0)`` has ``abs(a) == 1e-10 >> _ULP``, so it took the cubic branch, whose
+#: ``1/a**3`` scaling amplifies rounding error catastrophically as ``a``
+#: shrinks (empirically: the closed-form root error grows past the
+#: quadratic-fallback's ``O(a)`` error once ``abs(a)`` drops below roughly
+#: ``1e-6`` of the other coefficients' magnitude -- see polynomials.md
+#: design constraint 1 and the decade sweep in test_roots.py). Below this
+#: relative threshold, `a` is treated as zero and the cubic degrades to the
+#: quadratic branch, matching Swift's degenerate-leading-coefficient rule.
+_CUBIC_LEADING_COEFF_EPS = 1e-6
+
 
 def _cbrt(x: float) -> float:
     """Real cube root, defined for negative ``x`` (matches C/Swift ``cbrt``)."""
@@ -83,7 +96,7 @@ def solve_cubic(a: float, b: float, c: float, d: float) -> list[float]:
         b = a
         a = 0.0
 
-    if abs(a) < _ULP:
+    if abs(a) <= _CUBIC_LEADING_COEFF_EPS * max(abs(b), abs(c), abs(d)):
         if abs(b) < _ULP:
             # Linear equation.
             if abs(c) > _ULP:
@@ -370,6 +383,15 @@ def shrink_interval(coefficients: Sequence[float], left: float, right: float) ->
             if lo == rts:
                 break
         else:
+            if f == 0.0:
+                # f == 0 (regardless of df) means rts is already the root;
+                # dividing (0.0 / df) is either 0 or, when df is also 0.0,
+                # a ZeroDivisionError trap. Swift's untyped division would
+                # silently produce NaN/inf here and the safe-Newton loop
+                # would exit via the dx-tolerance check below; returning the
+                # already-found root directly is the guard called out in
+                # polynomials.md design constraint 2.
+                return rts
             dx_old = dx
             dx = f / df
             temp = rts

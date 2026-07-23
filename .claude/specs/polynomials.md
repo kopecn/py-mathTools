@@ -7,8 +7,8 @@ spec: Polynomials
 scope: project
 status: accepted
 applies_to: src/math_tools/functional/, tests/functional/
-last_updated: 2026-07-14
-semver: 0.0.3
+last_updated: 2026-07-23
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 
@@ -98,7 +98,24 @@ Rules:
 3. Pure `math`-module scalar code — **no numpy** in this module (called
    per-cycle by OTG; keep it allocation-light).
 4. Degenerate leading coefficients degrade exactly as Swift does (cubic with
-   `a ≈ 0` within tolerance solves the quadratic, etc.).
+   `a ≈ 0` within tolerance solves the quadratic, etc.) -- with one accepted
+   deviation from the literal Swift source: `solve_cubic`'s leading-
+   coefficient degeneracy check (`Roots.swift:37`'s `abs(a) < .ulpOfOne`) is
+   an **absolute** threshold, which is wrong across the coefficient scales
+   this module sees. A coefficient like `a = 1e-10` against `b, c, d` of
+   order 1 is negligible, but `1e-10 >> ulpOfOne`, so the literal port took
+   the cubic branch, whose `1/a**3` scaling amplifies rounding error until
+   the solve collapses (confirmed: `solve_cubic(1e-10, 2.0, -3.0, -2.0)`
+   returned `[]` instead of the root near `2.0`). `roots.py` instead uses a
+   **scale-relative** threshold:
+   `abs(a) <= 1e-6 * max(abs(b), abs(c), abs(d))` (constant
+   `_CUBIC_LEADING_COEFF_EPS`). `1e-6` is chosen empirically as the
+   crossover where the closed-form cubic formula's error (which grows as
+   `a` shrinks, due to the `1/a**3` scaling) exceeds the quadratic
+   fallback's error (which shrinks as `a` shrinks, `O(a)` by dropping the
+   cubic term) -- pinned by the decade sweep in
+   `TestSolveCubicNearZeroLeadingCoefficient` (`tests/functional/test_roots.py`),
+   `a` from `1e-4` to `1e-14` against `b, c, d` of order 1-5.
 5. **Accepted deviation from the literal Swift source:** `solve_cubic`'s
    `halfq` (the depressed-cubic resolvent term `R`) is scaled by `inva *
    invaa` (`1/a³`), not `Roots.swift:70`'s literal `invaa * invaa` (`1/a⁴`).

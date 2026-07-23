@@ -117,6 +117,49 @@ class TestSolveCubicLiteralVectors(unittest.TestCase):
         np.testing.assert_allclose(found, [2.0], atol=1e-9)
 
 
+class TestSolveCubicNearZeroLeadingCoefficient(unittest.TestCase):
+    """B-7: scale-relative degeneracy threshold for the leading coefficient.
+
+    polynomials.md rule 4 requires ``a ~= 0`` cubics to degrade to the
+    quadratic branch; the original ``_ULP`` (absolute) threshold let a
+    coefficient like ``1e-10`` take the cubic branch, whose ``1/a**3``
+    scaling collapses the solve (empirically confirmed: it returned []
+    instead of the real root near 2.0).
+    """
+
+    def test_a_1e10_matches_np_roots(self) -> None:
+        # Post-audit B-7 repro case.
+        found = roots.solve_cubic(1e-10, 2.0, -3.0, -2.0)
+        expected = np.roots([1e-10, 2.0, -3.0, -2.0])
+        mask = np.abs(expected.imag) < roots.POLYNOMIAL_ZERO_THRESHOLD
+        real_positive = sorted(
+            float(v) for v in expected.real[mask] if v >= 0.0
+        )
+        np.testing.assert_allclose(sorted(found), real_positive, atol=1e-8)
+
+    def test_leading_coefficient_decade_sweep_matches_np_roots(self) -> None:
+        """Sweep a across 1e-4..1e-14 -- this is what test_random_cubics's
+        old ``continue`` was suppressing. Below the degeneracy threshold,
+        solve_cubic drops to the quadratic branch, which introduces an
+        O(a) error relative to the true (a != 0) root -- so the tolerance
+        is scaled with `a` rather than fixed.
+        """
+        b, c, d = 2.0, -3.0, -2.0
+        for exponent in range(4, 15):
+            a = 10.0**-exponent
+            with self.subTest(a=a):
+                expected = np.roots([a, b, c, d])
+                mask = np.abs(expected.imag) < roots.POLYNOMIAL_ZERO_THRESHOLD
+                real_positive = sorted(
+                    float(v) for v in expected.real[mask] if v >= 0.0
+                )
+                found = sorted(roots.solve_cubic(a, b, c, d))
+                self.assertEqual(len(found), len(real_positive), msg=a)
+                np.testing.assert_allclose(
+                    found, real_positive, atol=max(2.0 * a, 1e-9)
+                )
+
+
 class TestSolveResolvent(unittest.TestCase):
     """Design constraint 3 / acceptance criterion: the real-root count guard."""
 
@@ -134,6 +177,15 @@ class TestSolveResolvent(unittest.TestCase):
         found, count = roots.solve_resolvent(-1.0, 8.0, -8.0)
         self.assertEqual(count, 1)
         self.assertAlmostEqual(found[0], 1.0, places=9)
+
+    def test_two_real_roots_case(self) -> None:
+        # (y-2)^2(y+1) = y^3 -3y^2 +0y +4 -> roots -1, 2 (double). This
+        # takes the r2 >= q3 branch (roots.py:193-203); the repeated pair
+        # makes x[2] cancel to within _ULP, so the branch collapses to the
+        # count == 2 case (finding B-8, previously unexercised).
+        found, count = roots.solve_resolvent(-3.0, 0.0, 4.0)
+        self.assertEqual(count, 2)
+        np.testing.assert_allclose(sorted(found), [-1.0, 2.0, 2.0], atol=1e-9)
 
 
 class TestSolveQuarticMonicLiteralVectors(unittest.TestCase):
@@ -203,8 +255,6 @@ class TestCrossCheckAgainstNumpyRoots(unittest.TestCase):
         rng = np.random.default_rng(1234)
         for _ in range(30):
             a, b, c, d = rng.uniform(-5.0, 5.0, size=4)
-            if abs(a) < 1e-6:
-                continue  # avoid degenerate leading coefficient in this sweep
             expected = self._non_negative_real_roots([a, b, c, d])
             actual = sorted(roots.solve_cubic(a, b, c, d))
             self.assertEqual(len(actual), len(expected), msg=(a, b, c, d))
@@ -267,6 +317,17 @@ class TestShrinkInterval(unittest.TestCase):
 
     def test_root_exactly_at_right_bound(self) -> None:
         found = roots.shrink_interval([1.0, -2.0], -1.0, 2.0)  # x - 2, root at x=2
+        self.assertEqual(found, 2.0)
+
+    def test_multiple_root_hits_f_and_df_both_zero_without_raising(self) -> None:
+        """B-14: the Newton branch's dx = f / df traps as ZeroDivisionError
+        when f(rts) == 0.0 and df(rts) == 0.0. (x-2)^3 = x^3 -6x^2 +12x -8
+        bracketed by [1, 3] lands the initial guess exactly on the triple
+        root x=2, where both f and its derivative vanish -- the bisection
+        guard (roots.py:364-366) evaluates to False here, so it falls
+        through to the Newton branch on the very first iteration.
+        """
+        found = roots.shrink_interval([1.0, -6.0, 12.0, -8.0], 1.0, 3.0)
         self.assertEqual(found, 2.0)
 
 
