@@ -1728,7 +1728,7 @@ class PositionThirdOrderStep2:
                         + 3 * self.a0 * _pow2(self.af + j_max * self.tf)
                         + 3
                         * self.j_max_p2
-                        * (8 * self.pd + j_max * self.tf_p3 * self.tf - 8 * self.tf * self.vf)
+                        * (8 * self.pd + j_max * self.tf_p2 * self.tf - 8 * self.tf * self.vf)
                     )
                     - 3
                     * (
@@ -1749,7 +1749,7 @@ class PositionThirdOrderStep2:
                         - 12
                         * self.af
                         * self.j_max_p2
-                        * (8 * self.pd + j_max * self.tf_p3 * self.tf - 8 * self.tf * self.v0)
+                        * (8 * self.pd + j_max * self.tf_p2 * self.tf - 8 * self.tf * self.v0)
                         + 48 * self.j_max_p2 * self.vd_p2
                         + 48 * self.j_max_p2 * j_max * self.tf * self.g2
                         - 4
@@ -1760,7 +1760,7 @@ class PositionThirdOrderStep2:
                             - 9 * self.af * self.j_max_p2 * self.tf_p2
                             - 3
                             * self.j_max_p2
-                            * (8 * self.pd + j_max * self.tf_p3 * self.tf - 8 * self.tf * self.vf)
+                            * (8 * self.pd + j_max * self.tf_p2 * self.tf - 8 * self.tf * self.vf)
                         )
                     )
                 )

@@ -17,6 +17,7 @@ exists) and so must fail.
 import unittest
 
 from math_tools.otg.block import Block
+from math_tools.otg.enums import ControlSigns
 from math_tools.otg.profile import Profile
 from math_tools.otg.steps.position_third_order_step1 import PositionThirdOrderStep1
 from math_tools.otg.steps.position_third_order_step2 import PositionThirdOrderStep2
@@ -194,6 +195,65 @@ class TestPositionThirdOrderStep2MovingStart(_Step2ScaledDurationMixin, unittest
         self.a_max = 10.0
         self.a_min = -10.0
         self.j_max = 1.0
+
+
+class TestPositionThirdOrderStep2UdudT0246Discriminant(unittest.TestCase):
+    """Regression pin for chunk 44 (action-plan
+    ``44-otg-step2-udud-discriminant.md``, post-audit finding E-1).
+
+    ``_time_none``'s "UDUD T 0246" branch had ``j_max * self.tf_p3 *
+    self.tf`` (``j*tf**4``) at three sites where the Swift source
+    (``PositionThirdOrderStep2.swift:1279,1286,1289``) computes ``jMax *
+    tfP2 * tf`` (``j*tf**3``). Both the buggy and the Swift-faithful form
+    produce a profile that satisfies ``Profile.check_with_timing`` for this
+    boundary condition -- they just pick *different* profiles -- so no
+    existing oracle (including the 31-case numeric truth table, which is
+    1-DOF and never reaches Step2) can distinguish them.
+
+    This boundary condition was found by exhaustive random search
+    (``a0 != 0`` so the two earlier guard blocks in ``_time_none`` are
+    skipped and "UDUD T 0246" is the first branch tried) for an input where
+    the buggy and Swift-faithful forms of the discriminant select different
+    control-sign profiles. The expected segment times below were derived by
+    evaluating the Swift-faithful (``j*tf**3``) form of the three sites
+    in-memory (a patched copy of the module, `tf_p3` -> `tf_p2` at the
+    three UDUD-T0246 discriminant sites) against this same boundary
+    condition -- i.e. these are the Swift-faithful oracle values, not the
+    values the pre-fix Python produced.
+    """
+
+    def test_udud_t0246_branch_matches_swift_faithful_j_tf3_discriminant(self) -> None:
+        p0, v0, a0 = 0.0, -0.5237, 2.7015
+        pf, vf, af = -1.7271, -1.9901, 1.6448
+        v_max, v_min, a_max, a_min, j_max = 10.0, -10.0, 10.0, -10.0, 1.0
+        tf = 11.2581
+
+        step2 = PositionThirdOrderStep2(
+            tf, p0, v0, a0, pf, vf, af, v_max, v_min, a_max, a_min, j_max
+        )
+        profile = Profile()
+        profile.set_boundary(p0, v0, a0, pf, vf, af)
+        self.assertTrue(step2.get_profile(profile), f"expected a feasible profile at tf={tf}")
+
+        # Swift-faithful (j*tf**3) UDUD T0246 branch: control signs UDUD,
+        # t[1] = t[3] = t[5] = 0.
+        self.assertEqual(profile.control_signs, ControlSigns.UDUD)
+        expected_t = [
+            0.1810029002957043,
+            0.0,
+            5.82749192002557,
+            0.0,
+            4.919697099704295,
+            0.0,
+            0.3299080799744306,
+        ]
+        for i, (actual, expected) in enumerate(zip(profile.t, expected_t, strict=True)):
+            self.assertAlmostEqual(actual, expected, delta=1e-9, msg=f"t[{i}]")
+
+        self.assertAlmostEqual(profile.t_sum[-1], tf, delta=1e-9, msg="t_sum")
+        self.assertAlmostEqual(profile.p[-1], pf, delta=1e-8, msg="pf")
+        self.assertAlmostEqual(profile.v[-1], vf, delta=1e-8, msg="vf")
+        self.assertAlmostEqual(profile.a[-1], af, delta=1e-8, msg="af")
 
 
 if __name__ == "__main__":
