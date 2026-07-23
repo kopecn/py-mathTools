@@ -5,6 +5,7 @@ construction, time axis, statistics, indexing/slicing, value_at_*,
 mutation, comparison, iteration/array interop, and generator coverage.
 """
 
+import time
 import unittest
 
 import numpy as np
@@ -49,6 +50,16 @@ class TestSpecCompliance11Instantiability(unittest.TestCase):
         w = Waveform1D([1.0, 2.0, 3.0])
         with self.assertRaises(ValueError):
             np.array(w, copy=False)
+
+    def test_waveform_abc_accessor_returns_samples_as_float_list(self) -> None:
+        """C-11: the ABC-required ``waveform`` accessor (waveformCore.md's
+        load-bearing O(n) materialization path) has no direct test elsewhere
+        -- only exercised indirectly via to_dict."""
+        w = Waveform1D([1.0, 2.0, 3.0])
+        result = w.waveform
+        self.assertEqual(result, [1.0, 2.0, 3.0])
+        self.assertIsInstance(result, list)
+        self.assertTrue(all(isinstance(value, float) for value in result))
 
 
 class TestSpecCompliance1SerializationRoundTrip(unittest.TestCase):
@@ -264,6 +275,24 @@ class TestSubsetTime(unittest.TestCase):
         with self.assertRaises(ValueError):
             w.subset_time(2.0, 1.0)
 
+    def test_start_before_t0_clamps_to_first_sample(self) -> None:
+        """C-13: a start_time before t0 must clamp rather than raise/skip samples."""
+        w = Waveform1D([0.0, 1.0, 2.0, 3.0, 4.0], dt_seconds=1.0)
+        sub = w.subset_time(-5.0, 2.0)
+        self.assertEqual(list(sub), [0.0, 1.0])
+
+    def test_end_past_span_clamps_to_last_sample(self) -> None:
+        """C-13: an end_time past the waveform's span must clamp to the end."""
+        w = Waveform1D([0.0, 1.0, 2.0, 3.0, 4.0], dt_seconds=1.0)
+        sub = w.subset_time(2.0, 100.0)
+        self.assertEqual(list(sub), [2.0, 3.0, 4.0])
+
+    def test_both_bounds_outside_span_returns_everything(self) -> None:
+        """C-13: both bounds clamp simultaneously."""
+        w = Waveform1D([0.0, 1.0, 2.0, 3.0, 4.0], dt_seconds=1.0)
+        sub = w.subset_time(-100.0, 100.0)
+        self.assertEqual(list(sub), [0.0, 1.0, 2.0, 3.0, 4.0])
+
 
 class TestValueAt(unittest.TestCase):
     def test_value_at_index_exact_sample(self) -> None:
@@ -348,6 +377,27 @@ class TestSpecCompliance7Mutation(unittest.TestCase):
         w.replace_range(slice(1, 3), [8.0, 9.0])
         self.assertEqual(list(w), [1.0, 8.0, 9.0, 4.0])
 
+    def test_replace_range_longer_replacement_raises_value_error(self) -> None:
+        """C-12: waveformCore.md §Compliance 7 says mutation verbs match
+        stdlib list semantics, but the storage is numpy, not a Python list.
+        A Python list slice-assignment resizes silently
+        (``[1,2,3,4][1:3] = [8,9,10]`` -> ``[1,8,9,10,4]``); this numpy-backed
+        implementation instead requires the replacement to broadcast onto the
+        slice's length, raising ``ValueError`` when it cannot -- pinned here
+        as the actual (numpy, not stdlib-list) semantics."""
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0])
+        with self.assertRaises(ValueError):
+            w.replace_range(slice(1, 3), [8.0, 9.0, 10.0])
+
+    def test_replace_range_single_element_broadcasts_not_shrinks(self) -> None:
+        """C-12: a single-element replacement *broadcasts* across the slice
+        (numpy assignment semantics) rather than shrinking the waveform the
+        way ``[1,2,3,4][1:3] = [8]`` (-> ``[1,8,4]``) would under stdlib list
+        semantics."""
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0])
+        w.replace_range(slice(1, 3), [8.0])
+        self.assertEqual(list(w), [1.0, 8.0, 8.0, 4.0])
+
     def test_pop_default_removes_last(self) -> None:
         w = Waveform1D([1.0, 2.0, 3.0])
         value = w.pop()
@@ -375,6 +425,42 @@ class TestSpecCompliance7Mutation(unittest.TestCase):
         w.clear()
         self.assertEqual(list(w), [])
         self.assertEqual(len(w), 0)
+
+    def test_append_float_onto_integer_waveform_truncates_to_dtype(self) -> None:
+        """C-6: ``append``/``insert`` cast the new value to the storage
+        dtype (numpy's ``np.asarray(value, dtype=...)`` semantics), so
+        appending a float onto an int waveform silently truncates. Pinning
+        the current (confirmed intentional) behavior, not a defect: mutation
+        verbs preserve dtype exactly, unlike the in-place arithmetic
+        operators (see TestInPlaceOperatorDtypePromotion in
+        test_waveform1d_operators.py) which promote it."""
+        w = Waveform1D(np.array([1, 2, 3], dtype=np.int64))
+        w.append(9.7)
+        self.assertEqual(w.values.dtype, np.int64)
+        self.assertEqual(list(w), [1, 2, 3, 9])
+
+    def test_insert_float_onto_integer_waveform_truncates_to_dtype(self) -> None:
+        w = Waveform1D(np.array([1, 2, 3], dtype=np.int64))
+        w.insert(1, 9.7)
+        self.assertEqual(w.values.dtype, np.int64)
+        self.assertEqual(list(w), [1, 9, 2, 3])
+
+
+class TestSpecCompliance10VectorizedBulkOps(unittest.TestCase):
+    """§Compliance 10: bulk ops never construct per-element objects;
+    smoke-test at 1e6 samples, guarding the vectorized design."""
+
+    def test_arithmetic_and_stats_smoke_test_large_n(self) -> None:
+        n = 1_000_000
+        rng = np.random.default_rng(0)
+        w = Waveform1D(rng.standard_normal(n), dt_seconds=0.001)
+        start = time.monotonic()
+        result = (w + 1.0) * 2.0
+        _ = result.mean
+        _ = result.rms
+        elapsed = time.monotonic() - start
+        self.assertLess(elapsed, 5.0)
+        self.assertEqual(len(result), n)
 
 
 class TestEquality(unittest.TestCase):

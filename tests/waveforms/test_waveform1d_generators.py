@@ -195,5 +195,114 @@ class TestGeneratorSpanConvention(unittest.TestCase):
         self.assertAlmostEqual(sigmoid.values[0], 0.5, places=12)
 
 
+class TestComplianceFourSquareDutyCycle(unittest.TestCase):
+    """C-9: ``square``'s ``duty_cycle`` was never exercised beyond its default."""
+
+    def test_quarter_duty_cycle_matches_analytic_phase_split(self) -> None:
+        # period = 1 s (frequency=1), 8 samples/period -> duty=0.25 keeps the
+        # first 2 of every 8 samples at +amplitude.
+        w = Waveform1D.square(n=8, frequency=1.0, amplitude=3.0, duty_cycle=0.25, dt_seconds=0.125)
+        expected = np.array([3.0, 3.0, -3.0, -3.0, -3.0, -3.0, -3.0, -3.0])
+        np.testing.assert_array_equal(w.values, expected)
+
+
+class TestComplianceFourDigitalSquareDutyCycle(unittest.TestCase):
+    """C-9: ``digital_square``'s ``duty_cycle`` was never exercised."""
+
+    def test_quarter_duty_cycle_matches_analytic_phase_split(self) -> None:
+        w = Waveform1D.digital_square(
+            n=8, frequency=1.0, high_value=5.0, low_value=1.0, duty_cycle=0.25, dt_seconds=0.125
+        )
+        expected = np.array([5.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(w.values, expected)
+
+
+class TestComplianceFourSawtooth(unittest.TestCase):
+    """C-9: ``sawtooth`` was only range-checked, never value-pinned."""
+
+    def test_matches_analytic_ramp(self) -> None:
+        w = Waveform1D.sawtooth(n=4, frequency=1.0, amplitude=2.0, dt_seconds=0.25)
+        expected = np.array([-2.0, -1.0, 0.0, 1.0])
+        np.testing.assert_allclose(w.values, expected, atol=1e-12)
+
+
+class TestComplianceFourTriangle(unittest.TestCase):
+    """C-9: ``triangle`` was only range-checked, never value-pinned."""
+
+    def test_matches_analytic_triangle(self) -> None:
+        w = Waveform1D.triangle(n=4, frequency=1.0, amplitude=2.0, dt_seconds=0.25)
+        expected = np.array([-2.0, 0.0, 2.0, 0.0])
+        np.testing.assert_allclose(w.values, expected, atol=1e-12)
+
+
+class TestComplianceFourHeavisideStepTime(unittest.TestCase):
+    """C-9: the explicit (non-default) ``step_time`` argument was never pinned."""
+
+    def test_explicit_step_time_overrides_default_midpoint(self) -> None:
+        w = Waveform1D.heaviside(n=5, amplitude=2.0, step_time=1.0, dt_seconds=1.0)
+        np.testing.assert_array_equal(w.values, [0.0, 2.0, 2.0, 2.0, 2.0])
+
+
+class TestComplianceFourSigmoid(unittest.TestCase):
+    """C-9: ``center``/``steepness`` were never exercised beyond the default center."""
+
+    def test_explicit_center_and_steepness_match_logistic_formula(self) -> None:
+        n, dt_seconds, amplitude, steepness, center = 6, 0.5, 4.0, 2.0, 1.0
+        w = Waveform1D.sigmoid(
+            n=n, amplitude=amplitude, steepness=steepness, center=center, dt_seconds=dt_seconds
+        )
+        t = np.arange(n) * dt_seconds
+        expected = amplitude / (1.0 + np.exp(-steepness * (t - center)))
+        np.testing.assert_allclose(w.values, expected, atol=1e-12)
+        self.assertAlmostEqual(float(w.value_at_time(center)), amplitude / 2.0, places=9)
+
+
+class TestComplianceFourRelu(unittest.TestCase):
+    """C-9: ``slope`` was never exercised beyond the default of 1.0."""
+
+    def test_slope_and_threshold_match_analytic_ramp(self) -> None:
+        w = Waveform1D.relu(n=5, slope=3.0, threshold=1.0, dt_seconds=1.0)
+        # t = [0, 1, 2, 3, 4]; x = t - 1 = [-1, 0, 1, 2, 3]; relu(x) * slope
+        expected = np.array([0.0, 0.0, 3.0, 6.0, 9.0])
+        np.testing.assert_allclose(w.values, expected, atol=1e-12)
+
+
+class TestComplianceFourWhiteNoiseAmplitude(unittest.TestCase):
+    """C-9: ``amplitude`` was never pinned -- only shape/seed reproducibility."""
+
+    def test_amplitude_scales_the_seeded_generator_output(self) -> None:
+        seed = 42
+        unit = Waveform1D.white_noise(n=32, amplitude=1.0, seed=seed)
+        scaled = Waveform1D.white_noise(n=32, amplitude=5.0, seed=seed)
+        np.testing.assert_allclose(scaled.values, 5.0 * unit.values, atol=1e-12)
+
+    def test_matches_scaled_rng_reference(self) -> None:
+        seed, amplitude, n = 11, 2.5, 16
+        w = Waveform1D.white_noise(n=n, amplitude=amplitude, seed=seed)
+        reference = amplitude * np.random.default_rng(seed).standard_normal(n)
+        np.testing.assert_allclose(w.values, reference, atol=1e-12)
+
+
+class TestComplianceFourDampedSinusoid(unittest.TestCase):
+    """C-9: the damped sinusoid's analytic form (envelope x oscillation) was
+    never pinned."""
+
+    def test_matches_analytic_envelope_times_sinusoid(self) -> None:
+        n, dt_seconds = 50, 0.01
+        frequency, damping_constant, amplitude, phase = 3.0, 0.2, 2.0, 0.3
+        w = Waveform1D.damped_sinusoid(
+            n=n,
+            frequency=frequency,
+            damping_constant=damping_constant,
+            amplitude=amplitude,
+            phase=phase,
+            dt_seconds=dt_seconds,
+        )
+        t = np.arange(n) * dt_seconds
+        envelope = np.exp(-t / damping_constant)
+        expected = amplitude * envelope * np.sin(2.0 * np.pi * frequency * t + phase)
+        np.testing.assert_allclose(w.values, expected, atol=1e-12)
+
+
 if __name__ == "__main__":
     unittest.main()

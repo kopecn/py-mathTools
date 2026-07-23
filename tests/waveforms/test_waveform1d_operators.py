@@ -48,6 +48,33 @@ class TestSpecCompliance2Compatibility(unittest.TestCase):
         with self.assertRaises(WaveformCompatibilityError):
             _ = a % b
 
+    def test_length_mismatch_raises_for_all_binary_ops(self) -> None:
+        """C-8: length-mismatch was previously pinned only for ``+``."""
+        a = Waveform1D([1.0, 2.0, 3.0], dt_seconds=1.0)
+        b = Waveform1D([1.0, 2.0], dt_seconds=1.0)
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = a - b
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = a * b
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = a / b
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = a // b
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = a % b
+        ai = Waveform1D(np.array([1, 2, 3], dtype=np.int64), dt_seconds=1.0)
+        bi = Waveform1D(np.array([1, 2], dtype=np.int64), dt_seconds=1.0)
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = ai & bi
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = ai | bi
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = ai ^ bi
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = ai << bi
+        with self.assertRaises(WaveformCompatibilityError):
+            _ = ai >> bi
+
 
 class TestScalarBothOrders(unittest.TestCase):
     def test_waveform_plus_scalar(self) -> None:
@@ -86,6 +113,30 @@ class TestScalarBothOrders(unittest.TestCase):
         w = Waveform1D([1.0, 2.0, 3.0])
         with self.assertRaises(TypeError):
             _ = w + "not a number"
+
+    def test_foreign_type_dunder_returns_not_implemented_directly(self) -> None:
+        """C-8: NotImplemented was previously only observed indirectly via the
+        resulting TypeError; call the dunder directly to pin the sentinel."""
+        w = Waveform1D([1.0, 2.0, 3.0])
+        self.assertIs(w.__add__("not a number"), NotImplemented)
+        self.assertIs(w.__radd__("not a number"), NotImplemented)
+        self.assertIs(w.__mul__(object()), NotImplemented)
+        self.assertIs(w.__and__("not a number"), NotImplemented)
+
+    def test_reflected_truediv(self) -> None:
+        w = Waveform1D([1.0, 2.0, 4.0])
+        result = 8.0 / w
+        np.testing.assert_array_equal(result.values, np.array([8.0, 4.0, 2.0]))
+
+    def test_reflected_floordiv(self) -> None:
+        w = Waveform1D(np.array([2, 3, 4], dtype=np.int64))
+        result = 10 // w
+        np.testing.assert_array_equal(result.values, np.array([5, 3, 2]))
+
+    def test_reflected_mod(self) -> None:
+        w = Waveform1D(np.array([3, 4, 5], dtype=np.int64))
+        result = 10 % w
+        np.testing.assert_array_equal(result.values, np.array([1, 2, 0]))
 
     def test_numpy_scalar_reflected_add_returns_waveform_not_bare_ndarray(self) -> None:
         # Regression guard: without __array_ufunc__ = None, numpy's ufunc
@@ -129,6 +180,36 @@ class TestInPlaceOperators(unittest.TestCase):
         self.assertIs(w, x)
         np.testing.assert_array_equal(w.values, np.array([1.0, 2.0, 3.0]))
 
+    def test_ifloordiv_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([7, 8, 9], dtype=np.int64))
+        x = w
+        w //= 2
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([3, 4, 4]))
+
+    def test_imod_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([7, 8, 9], dtype=np.int64))
+        x = w
+        w %= 3
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([1, 2, 0]))
+
+
+class TestInPlaceOperatorDtypePromotion(unittest.TestCase):
+    """C-6: in-place operators reassign a newly-constructed result rather
+    than mutating the numpy buffer via true in-place ufuncs, so they *silently
+    promote* dtype on mixed int/float arithmetic instead of raising numpy's
+    'same_kind' casting error. Pinning this as the confirmed, intentional
+    current behavior (numpy in-place ``arr += 0.5`` on an int array would
+    raise; this class's ``+=`` does not)."""
+
+    def test_iadd_scalar_float_promotes_int_waveform_to_float64(self) -> None:
+        w = Waveform1D(np.array([1, 2, 3], dtype=np.int64))
+        self.assertEqual(w.values.dtype, np.int64)
+        w += 0.5
+        self.assertEqual(w.values.dtype, np.float64)
+        np.testing.assert_array_equal(w.values, np.array([1.5, 2.5, 3.5]))
+
 
 class TestBitwiseOperators(unittest.TestCase):
     def test_bitwise_on_float_dtype_raises_type_error(self) -> None:
@@ -161,6 +242,83 @@ class TestBitwiseOperators(unittest.TestCase):
         w = Waveform1D([1.0, 2.0])
         with self.assertRaises(TypeError):
             _ = ~w
+
+    def test_bitwise_or_between_int_waveforms(self) -> None:
+        a = Waveform1D(np.array([0b100, 0b010], dtype=np.int64))
+        b = Waveform1D(np.array([0b001, 0b010], dtype=np.int64))
+        result = a | b
+        np.testing.assert_array_equal(result.values, np.array([0b101, 0b010]))
+
+    def test_bitwise_xor_between_int_waveforms(self) -> None:
+        a = Waveform1D(np.array([0b110, 0b101], dtype=np.int64))
+        b = Waveform1D(np.array([0b011, 0b110], dtype=np.int64))
+        result = a ^ b
+        np.testing.assert_array_equal(result.values, np.array([0b101, 0b011]))
+
+    def test_int_right_shift_works(self) -> None:
+        w = Waveform1D(np.array([4, 8, 16], dtype=np.int64))
+        result = w >> 1
+        np.testing.assert_array_equal(result.values, np.array([2, 4, 8]))
+
+    def test_reflected_and(self) -> None:
+        w = Waveform1D(np.array([0b110, 0b101], dtype=np.int64))
+        result = 0b011 & w
+        np.testing.assert_array_equal(result.values, np.array([0b010, 0b001]))
+
+    def test_reflected_or(self) -> None:
+        w = Waveform1D(np.array([0b100], dtype=np.int64))
+        result = 0b010 | w
+        np.testing.assert_array_equal(result.values, np.array([0b110]))
+
+    def test_reflected_xor(self) -> None:
+        w = Waveform1D(np.array([0b110], dtype=np.int64))
+        result = 0b011 ^ w
+        np.testing.assert_array_equal(result.values, np.array([0b101]))
+
+    def test_reflected_lshift(self) -> None:
+        w = Waveform1D(np.array([1, 2], dtype=np.int64))
+        result = 2 << w
+        np.testing.assert_array_equal(result.values, np.array([4, 8]))
+
+    def test_reflected_rshift(self) -> None:
+        w = Waveform1D(np.array([1, 2], dtype=np.int64))
+        result = 16 >> w
+        np.testing.assert_array_equal(result.values, np.array([8, 4]))
+
+    def test_iand_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([0b110, 0b101], dtype=np.int64))
+        x = w
+        w &= 0b011
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([0b010, 0b001]))
+
+    def test_ior_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([0b100, 0b010], dtype=np.int64))
+        x = w
+        w |= 0b001
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([0b101, 0b011]))
+
+    def test_ixor_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([0b110, 0b101], dtype=np.int64))
+        x = w
+        w ^= 0b011
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([0b101, 0b110]))
+
+    def test_ilshift_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([1, 2], dtype=np.int64))
+        x = w
+        w <<= 2
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([4, 8]))
+
+    def test_irshift_mutates_in_place(self) -> None:
+        w = Waveform1D(np.array([8, 16], dtype=np.int64))
+        x = w
+        w >>= 2
+        self.assertIs(w, x)
+        np.testing.assert_array_equal(w.values, np.array([2, 4]))
 
 
 class TestUnaryOperators(unittest.TestCase):

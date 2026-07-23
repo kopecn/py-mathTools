@@ -309,7 +309,7 @@ class TestShrinkInterval(unittest.TestCase):
         """Compliance 3: shrink_interval converges on a bracketed quintic root."""
         # x^5 - 32 = 0 -> root at x=2, bracketed by [1, 3]
         found = roots.shrink_interval([1.0, 0.0, 0.0, 0.0, 0.0, -32.0], 1.0, 3.0)
-        self.assertAlmostEqual(found, 2.0, delta=1e-9)
+        self.assertAlmostEqual(found, 2.0, delta=roots.POLYNOMIAL_TOLERANCE)
 
     def test_root_exactly_at_left_bound(self) -> None:
         found = roots.shrink_interval([1.0, -2.0], 2.0, 5.0)  # x - 2, root at x=2

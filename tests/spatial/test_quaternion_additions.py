@@ -116,5 +116,16 @@ class TestSnakeCaseAliases(unittest.TestCase):
         self.assertEqual(result.radius_angle, expected.radius_angle)
 
 
+class TestHashability(unittest.TestCase):
+    def test_hash_is_none(self) -> None:
+        """spatialMath.md Compliance 10: __hash__ is None for all three
+        classes, set explicitly (not merely a dataclass side effect)."""
+        self.assertIsNone(Quaternion.__hash__)
+
+    def test_unhashable_raises_type_error(self) -> None:
+        with self.assertRaises(TypeError):
+            hash(Quaternion.from_components(1.0, 0.0, 0.0, 0.0))
+
+
 if __name__ == "__main__":
     unittest.main()

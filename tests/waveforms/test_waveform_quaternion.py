@@ -315,7 +315,7 @@ class TestSpecCompliance10VectorizedBulkOps(unittest.TestCase):
     """§Compliance 10: bulk ops never construct per-element objects; smoke-test at scale."""
 
     def test_normalize_smoke_test_large_n(self) -> None:
-        n = 100_000
+        n = 1_000_000
         rng = np.random.default_rng(0)
         arr = rng.standard_normal((n, 4)) + 1.0  # avoid zero rows
         w = WaveformQuaternion(arr)
@@ -325,7 +325,7 @@ class TestSpecCompliance10VectorizedBulkOps(unittest.TestCase):
         self.assertLess(elapsed, 5.0)
 
     def test_component_waveforms_smoke_test_large_n(self) -> None:
-        n = 100_000
+        n = 1_000_000
         rng = np.random.default_rng(0)
         arr = rng.standard_normal((n, 4))
         w = WaveformQuaternion(arr)
@@ -458,6 +458,17 @@ class TestMutation(unittest.TestCase):
         w = WaveformQuaternion([])
         with self.assertRaises(IndexError):
             w.pop()
+
+    def test_pop_out_of_range_raises_index_error(self) -> None:
+        """C-14: only the empty case was previously pinned."""
+        w = WaveformQuaternion(
+            [
+                Quaternion.from_components(1.0, 1.0, 1.0, 1.0),
+                Quaternion.from_components(2.0, 2.0, 2.0, 2.0),
+            ]
+        )
+        with self.assertRaises(IndexError):
+            w.pop(5)
 
     def test_clear_empties(self) -> None:
         w = WaveformQuaternion([Quaternion.from_components(1.0, 1.0, 1.0, 1.0)])

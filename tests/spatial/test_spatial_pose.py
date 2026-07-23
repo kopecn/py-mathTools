@@ -349,6 +349,23 @@ class TestComparison(unittest.TestCase):
         b = SpatialPose(Position(1.0 + 1e-12, 2.0, 3.0))
         self.assertTrue(a.isclose(b))
 
+    def test_isclose_double_cover_orientation(self) -> None:
+        """Compliance 7 / spatialMath double-cover: q and -q are the same
+        rotation, so isclose must treat them as equal poses."""
+        position = Position(1.0, 2.0, 3.0)
+        orientation = Quaternion.from_axis_angle(np.array([0.0, 0.0, 1.0]), np.pi / 3)
+        a = SpatialPose(position, orientation)
+        b = SpatialPose(Position(1.0, 2.0, 3.0), -orientation)
+        self.assertTrue(a.isclose(b))
+
+    def test_isclose_false_for_different_orientation(self) -> None:
+        a = SpatialPose(Position(1.0, 2.0, 3.0), Quaternion.from_components(1.0, 0.0, 0.0, 0.0))
+        b = SpatialPose(
+            Position(1.0, 2.0, 3.0),
+            Quaternion.from_axis_angle(np.array([0.0, 0.0, 1.0]), np.pi / 2),
+        )
+        self.assertFalse(a.isclose(b))
+
     def test_hash_is_none(self) -> None:
         """Mutable, numpy-backed: unhashable, pinned by test."""
         self.assertIsNone(SpatialPose.__hash__)

@@ -264,6 +264,8 @@ class Quaternion(QuaternionABC):
         """Check inequality with another quaternion."""
         return not self.__eq__(other)
 
+    __hash__ = None  # type: ignore[assignment]
+
     def __repr__(self) -> str:
         """Return a detailed string representation."""
         return f"Quaternion(w={self.w}, x={self.x}, y={self.y}, z={self.z})"
