@@ -240,6 +240,16 @@ class TestVectorProperties(unittest.TestCase):
         p = Position(2.0, 0.0, 0.0)
         self.assertFalse(p.is_unit)
 
+    def test_is_unit_false_just_outside_tolerance(self) -> None:
+        """B-1: rtol must not leak in; 1e-5 relative slack is far outside the
+        spec's 1e-12 absolute tolerance."""
+        p = Position(1.00001, 0.0, 0.0)
+        self.assertFalse(p.is_unit)
+
+    def test_is_unit_true_just_inside_tolerance(self) -> None:
+        p = Position(1.0 + 1e-13, 0.0, 0.0)
+        self.assertTrue(p.is_unit)
+
 
 class TestCrossProduct(unittest.TestCase):
     def test_unit_x_cross_unit_y_is_unit_z(self) -> None:

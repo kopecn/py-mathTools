@@ -138,6 +138,37 @@ class TestAccessors(unittest.TestCase):
         ts = PrecisionTimestamp(seconds=86_400 * 3 + 10)
         self.assertEqual(ts.seconds_of_day, 10)
 
+    def test_days_since_epoch_pre_epoch_is_negative(self) -> None:
+        """B-2: days_since_epoch is a signed offset, not a magnitude."""
+        ts = PrecisionTimestamp(seconds=10, sign=NumericSign.NEGATIVE)
+        self.assertEqual(ts.days_since_epoch, -1)
+
+    def test_seconds_of_day_pre_epoch_wraps_to_wall_clock_second(self) -> None:
+        """1969-12-31T23:59:50Z is 10s before epoch: the wall-clock second
+        within the UTC day is 86_390, not -10 or 10."""
+        ts = PrecisionTimestamp(seconds=10, sign=NumericSign.NEGATIVE)
+        self.assertEqual(ts.seconds_of_day, 86_390)
+
+    def test_days_since_epoch_far_pre_epoch(self) -> None:
+        dt = datetime.datetime(1960, 1, 1, tzinfo=datetime.timezone.utc)
+        ts = PrecisionTimestamp.from_datetime(dt)
+        self.assertEqual(ts.days_since_epoch, -3653)
+
+    def test_seconds_of_day_far_pre_epoch_midnight_is_zero(self) -> None:
+        dt = datetime.datetime(1960, 1, 1, tzinfo=datetime.timezone.utc)
+        ts = PrecisionTimestamp.from_datetime(dt)
+        self.assertEqual(ts.seconds_of_day, 0)
+
+    def test_seconds_of_day_bounds_pre_epoch(self) -> None:
+        ts = PrecisionTimestamp(seconds=10, sign=NumericSign.NEGATIVE)
+        self.assertGreaterEqual(ts.seconds_of_day, 0)
+        self.assertLess(ts.seconds_of_day, 86_400)
+
+    def test_seconds_of_day_bounds_post_epoch(self) -> None:
+        ts = PrecisionTimestamp(seconds=86_400 * 3 + 10)
+        self.assertGreaterEqual(ts.seconds_of_day, 0)
+        self.assertLess(ts.seconds_of_day, 86_400)
+
     def test_as_datetime_round_trip_to_microsecond(self) -> None:
         """Compliance 9: as_datetime/from_datetime round-trips to microsecond
         precision."""

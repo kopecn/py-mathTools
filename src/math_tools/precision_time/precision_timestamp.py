@@ -246,13 +246,17 @@ class PrecisionTimestamp(PrecisionTimestampABC):
 
     @property
     def days_since_epoch(self) -> int:
-        """Whole days since the Unix epoch (magnitude only)."""
-        return self.seconds // _SECONDS_PER_DAY
+        """Whole days since the Unix epoch (signed; negative before
+        1970-01-01)."""
+        total_seconds = self._interval.total_attoseconds // ATTOSECONDS_PER_SECOND
+        return total_seconds // _SECONDS_PER_DAY
 
     @property
     def seconds_of_day(self) -> int:
-        """Seconds within the current day (0 .. 86_399, magnitude only)."""
-        return self.seconds % _SECONDS_PER_DAY
+        """Wall-clock second within the UTC day, always in ``[0, 86_400)``
+        regardless of sign."""
+        total_seconds = self._interval.total_attoseconds // ATTOSECONDS_PER_SECOND
+        return total_seconds % _SECONDS_PER_DAY
 
     @property
     def as_datetime(self) -> datetime.datetime:

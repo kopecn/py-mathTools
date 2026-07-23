@@ -231,7 +231,7 @@ class Position(PositionABC):
     @property
     def is_unit(self) -> bool:
         """Whether this is (approximately) a unit vector."""
-        return bool(np.isclose(self.magnitude, 1.0, atol=1e-12))
+        return bool(np.isclose(self.magnitude, 1.0, rtol=0.0, atol=1e-12))
 
     def __abs__(self) -> float:
         """Return the magnitude of the position vector."""
