@@ -77,6 +77,7 @@ from math_tools.functional.roots import solve_quartic_monic
 from math_tools.otg.block import Block, Interval
 from math_tools.otg.enums import ControlSigns, ReachedLimits
 from math_tools.otg.profile import Profile
+from math_tools.otg.steps.position_third_order_step2 import _ieee754_sqrt
 
 __all__: list[str] = []
 
@@ -236,7 +237,7 @@ class PositionThirdOrderStep1:
         # resulting peak acceleration in the acceleration phase would
         # violate limits. The deceleration phase explicitly uses aMin, so
         # it's automatically constrained.
-        t_acc0 = math.sqrt(self.a0_p2 / (2 * self.j_max_p2) + (v_max - self.v0) / j_max)
+        t_acc0 = _ieee754_sqrt(self.a0_p2 / (2 * self.j_max_p2) + (v_max - self.v0) / j_max)
         a_peak_acc0 = j_max * t_acc0
 
         # Check whether the peak is within [aMin, aMax] (handles both UP
@@ -280,7 +281,7 @@ class PositionThirdOrderStep1:
                     return
 
         # ACC0_VEL
-        t_acc1 = math.sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
+        t_acc1 = _ieee754_sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
 
         # BUG FIX: check whether the peak acceleration would exceed limits
         # (preserve sign!).
@@ -322,7 +323,7 @@ class PositionThirdOrderStep1:
         # BUG FIX: re-check tAcc0 and tAcc1 for the VEL profile (they were
         # calculated earlier). Peak accelerations: a_peak_acc0 (already
         # calculated), a_peak_acc1 (need t_acc1).
-        t_acc1_vel = math.sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
+        t_acc1_vel = _ieee754_sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
         a_peak_acc1_vel = j_max * t_acc1_vel
 
         # Check whether both phases respect limits (directional check, not
@@ -393,7 +394,7 @@ class PositionThirdOrderStep1:
         )
 
         if h1 >= 0:
-            h1 = math.sqrt(h1) / 2
+            h1 = _ieee754_sqrt(h1) / 2
 
             h2 = (
                 self.a0_p2 / (2 * a_max * j_max)
@@ -829,7 +830,7 @@ class PositionThirdOrderStep1:
             )
         )
 
-        h1 = math.sqrt(discriminant_numerator) * abs(j_max) / j_max
+        h1 = _ieee754_sqrt(discriminant_numerator) * abs(j_max) / j_max
 
         profile.t[0] = (
             4 * self.af_p3
@@ -888,7 +889,7 @@ class PositionThirdOrderStep1:
         either -- ported anyway per otg.md design constraint 2."""
         profile = copy.deepcopy(self.valid_profiles[self._profile_count])
 
-        h1 = math.sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
+        h1 = _ieee754_sqrt(self.af_p2 / (2 * self.j_max_p2) + (v_max - self.vf) / j_max)
 
         # Four-step profile: Solution 3/4
         profile.t[0] = -self.a0 / j_max
@@ -939,7 +940,7 @@ class PositionThirdOrderStep1:
 
         # Two step
         h0 = (
-            math.sqrt((self.a0_p2 + self.af_p2) / 2 + j_max * (self.vf - self.v0))
+            _ieee754_sqrt((self.a0_p2 + self.af_p2) / 2 + j_max * (self.vf - self.v0))
             * abs(j_max)
             / j_max
         )
@@ -988,7 +989,7 @@ class PositionThirdOrderStep1:
         profile.t = [0.0] * 7
 
         if abs(self.a0) > _LEAST_NORMAL_MAGNITUDE:
-            q = math.sqrt(2 * self.a0 * self.pd + self.v0_p2)
+            q = _ieee754_sqrt(2 * self.a0 * self.pd + self.v0_p2)
 
             # Solution 1
             profile.t[3] = (-self.v0 + q) / self.a0

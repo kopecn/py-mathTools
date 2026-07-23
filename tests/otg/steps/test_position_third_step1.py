@@ -225,5 +225,46 @@ class TestPositionThirdOrderStep1MovingStart(unittest.TestCase):
         self.assertAlmostEqual(a, self.af, delta=1e-9)
 
 
+class TestPositionThirdOrderStep1NegativeRadicandGuard(unittest.TestCase):
+    """Regression for post-audit finding E-3 (action-plan chunk 46).
+
+    ``_time_all_single_step`` (the zero-limits special case, entered from
+    ``get_profile`` when ``j_max == 0``) computes
+    ``q = sqrt(2 * a0 * pd + v0**2)`` with no guard. With ``a0 == af``
+    (required to enter this branch) and a radicand that goes negative --
+    e.g. ``a0 = af = -1``, ``v0 = 0``, ``pd = 1`` gives
+    ``2*(-1)*1 + 0 = -2`` -- Swift's ``Double.sqrt`` silently yields
+    ``nan`` and the candidate is rejected (``t[3] = nan`` fails the
+    ``>= 0.0`` guard immediately after). The un-guarded ``math.sqrt`` this
+    file used instead raised ``ValueError: math domain error``. Reproduced
+    directly at the ``PositionThirdOrderStep1.get_profile`` public entry --
+    not via fuzzing the full ``Otg.calculate`` stack, per the audit finding.
+    """
+
+    def test_negative_radicand_does_not_raise(self) -> None:
+        step1 = PositionThirdOrderStep1(
+            p0=0.0,
+            v0=0.0,
+            a0=-1.0,
+            pf=1.0,
+            vf=0.0,
+            af=-1.0,
+            v_max=10.0,
+            v_min=-10.0,
+            a_max=10.0,
+            a_min=-10.0,
+            j_max=0.0,
+        )
+        input_profile = Profile()
+        input_profile.set_boundary(0.0, 0.0, -1.0, 1.0, 0.0, -1.0)
+        block = Block()
+
+        # Must not raise ValueError ("math domain error"); the branch is
+        # rejected (returns False), matching Swift's nan-propagation
+        # behavior rather than crashing.
+        success = step1.get_profile(input_profile, block)
+        self.assertFalse(success)
+
+
 if __name__ == "__main__":
     unittest.main()
