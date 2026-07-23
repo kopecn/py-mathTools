@@ -448,6 +448,26 @@ class WaveformSpatialPose(WaveformSpatialABC):
 
     # MARK: - Indexing / slicing
 
+    def _resolve_index(self, index: int) -> int:
+        """Normalize ``index`` against :attr:`sample_count` (the valid prefix, per
+        waveformCore.md §Compliance 9) to a non-negative raw-array index.
+
+        The single shared bounds helper for every entry point that indexes the
+        raw ``positions``/``quaternions`` arrays with an integer -- see the
+        module docstring's note that all index paths must derive from
+        ``sample_count``, not either raw array's own length.
+
+        Raises:
+            IndexError: If ``index`` is out of range for ``sample_count``.
+        """
+        n = self.sample_count
+        resolved = index + n if index < 0 else index
+        if resolved < 0 or resolved >= n:
+            raise IndexError(
+                f"WaveformSpatialPose index {index!r} out of range for sample_count={n}"
+            )
+        return resolved
+
     @overload
     def __getitem__(self, index: int) -> SpatialPose: ...
     @overload
@@ -468,17 +488,18 @@ class WaveformSpatialPose(WaveformSpatialABC):
                 dt=self._dt,
                 t0=new_t0,
             )
+        resolved = self._resolve_index(index)
         return SpatialPose(
-            Position.from_vector(self._positions[index]),
-            Quaternion.from_float_array(self._quaternions[index]),
+            Position.from_vector(self._positions[resolved]),
+            Quaternion.from_float_array(self._quaternions[resolved]),
         )
 
     def get(self, index: int) -> SpatialPose | None:
         """Like ``__getitem__(int)`` but returns ``None`` instead of raising when
         ``index`` is out of range (Swift's ``subscript(safe:)``)."""
-        n = self.sample_count
-        resolved = index + n if index < 0 else index
-        if resolved < 0 or resolved >= n:
+        try:
+            resolved = self._resolve_index(index)
+        except IndexError:
             return None
         return SpatialPose(
             Position.from_vector(self._positions[resolved]),
@@ -542,17 +563,22 @@ class WaveformSpatialPose(WaveformSpatialABC):
     def pop(self, index: int = -1) -> SpatialPose:
         """Remove and return the pose at ``index`` (default: last), from both arrays.
 
+        ``index`` is normalized against :attr:`sample_count`, so it removes the
+        same sample from both arrays even when they differ in length
+        (waveformCore.md §Compliance 9).
+
         Raises:
             IndexError: If the waveform is empty, or ``index`` is out of range.
         """
-        if len(self._positions) == 0 or len(self._quaternions) == 0:
+        if self.sample_count == 0:
             raise IndexError("pop from an empty WaveformSpatialPose")
+        resolved = self._resolve_index(index)
         value = SpatialPose(
-            Position.from_vector(self._positions[index]),
-            Quaternion.from_float_array(self._quaternions[index]),
+            Position.from_vector(self._positions[resolved]),
+            Quaternion.from_float_array(self._quaternions[resolved]),
         )
-        self._positions = np.delete(self._positions, index, axis=0)
-        self._quaternions = np.delete(self._quaternions, index, axis=0)
+        self._positions = np.delete(self._positions, resolved, axis=0)
+        self._quaternions = np.delete(self._quaternions, resolved, axis=0)
         return value
 
     def clear(self) -> None:

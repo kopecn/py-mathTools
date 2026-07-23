@@ -260,6 +260,47 @@ class TestSpecCompliance9UnequalArrays(unittest.TestCase):
         self.assertTrue(rebuilt.is_valid)
 
 
+class TestSpecCompliance9IndexingRespectsSampleCount(unittest.TestCase):
+    """Post-audit C-4/C-5: negative indexing, ``get``, and ``pop`` must resolve
+    against ``sample_count`` (the valid prefix), not each raw array's own
+    length, on a deliberately unequal-length instance (3 positions, 2
+    quaternions, ``sample_count == 2``)."""
+
+    def _make_unequal(self) -> WaveformSpatialPose:
+        positions = [Position(0.0, 0.0, 0.0), Position(1.0, 1.0, 1.0), Position(2.0, 2.0, 2.0)]
+        quaternions = [Quaternion.identity(), Quaternion.from_components(0.0, 1.0, 0.0, 0.0)]
+        return WaveformSpatialPose(positions, quaternions)
+
+    def test_negative_index_agrees_with_sample_count_bound_positive_index(self) -> None:
+        w = self._make_unequal()
+        self.assertEqual(w.sample_count, 2)
+        self.assertEqual(w[-1], w[1])
+
+    def test_negative_index_agrees_with_get(self) -> None:
+        w = self._make_unequal()
+        self.assertEqual(w[-1], w.get(-1))
+
+    def test_index_past_sample_count_raises_index_error_even_if_longer_array_has_it(
+        self,
+    ) -> None:
+        w = self._make_unequal()
+        with self.assertRaises(IndexError):
+            _ = w[2]
+
+    def test_pop_negative_removes_sample_count_bound_sample_from_both_arrays(self) -> None:
+        w = self._make_unequal()
+        popped = w.pop(-1)
+        self.assertEqual(
+            popped,
+            SpatialPose(
+                Position(1.0, 1.0, 1.0), Quaternion.from_components(0.0, 1.0, 0.0, 0.0)
+            ),
+        )
+        self.assertEqual(w.sample_count, 1)
+        self.assertEqual(len(w.positions_array), 2)
+        self.assertEqual(len(w.quaternions_array), 1)
+
+
 class TestElementAccess(unittest.TestCase):
     def test_index_returns_spatial_pose_equal_to_stored_row(self) -> None:
         w = _make(n=3)
