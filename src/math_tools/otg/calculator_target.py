@@ -368,9 +368,16 @@ class TargetCalculator:
                 p.t = [0.0] * 7
                 p.t_sum = [0.0] * 7
                 p.j = [0.0] * 7
-                p.a = [input_parameter.current_acceleration[dof]] * 7
-                p.v = [input_parameter.current_velocity[dof]] * 7
-                p.p = [input_parameter.current_position[dof]] * 7
+                # 8-element a/v/p, deliberately NOT the 7-element form of
+                # CalculatorTarget.swift:256-261 -- otg.md §Internal
+                # fidelity requirement 1 mandates fixed-length a[8]/v[8]/
+                # p[8] (never resized) on every path, and the Swift
+                # 7-element trivial branch is a latent bug, not a contract
+                # to port faithfully (see chunk 45).
+                p.a = [input_parameter.current_acceleration[dof]] * 8
+                p.v = [input_parameter.current_velocity[dof]] * 8
+                p.p = [input_parameter.current_position[dof]] * 8
+                p.pf = input_parameter.current_position[dof]
                 trajectory.independent_min_durations[dof] = 0.0
 
             return Result.WORKING

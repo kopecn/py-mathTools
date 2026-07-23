@@ -155,6 +155,52 @@ class TestDisabledDofStaysAtCurrentState(unittest.TestCase):
         self.assertAlmostEqual(enabled_profile.p[-1], 10.0, delta=1e-6)
 
 
+class TestTrivialProfileUsesFixedLengthArrays(unittest.TestCase):
+    """(f) chunk 45 / post-audit finding E-2: the trivial "already at
+    target" branch must produce the same fixed-length ``Profile`` arrays
+    (``a``/``v``/``p`` length 8, ``t``/``t_sum``/``j`` length 7) as every
+    other path, per ``.claude/specs/otg.md`` §Internal fidelity requirement
+    1 -- not the 7-element form that made ``p.p[7]`` raise ``IndexError``.
+    """
+
+    def test_trivial_target_profile_arrays_are_fixed_length(self) -> None:
+        dofs = 1
+        calc = TargetCalculator(dofs)
+        inp = _make_position_input(dofs, [0.0])  # current_position defaults to 0.0 -> trivial.
+
+        trajectory = Trajectory(dofs)
+        result = calc.calculate(inp, trajectory, delta_time=0.001)
+
+        self.assertEqual(result, Result.WORKING)
+        profile = trajectory.profiles[0][0]
+        self.assertEqual(len(profile.p), 8)
+        self.assertEqual(len(profile.v), 8)
+        self.assertEqual(len(profile.a), 8)
+        self.assertEqual(len(profile.t), 7)
+        self.assertEqual(len(profile.t_sum), 7)
+        self.assertEqual(len(profile.j), 7)
+
+
+class TestTrivialProfilePositionExtrema(unittest.TestCase):
+    """(g) a trajectory parked at a non-zero position (trivial branch)
+    must report that position as both min and max extrema, not ``0.0`` --
+    requires ``p.pf`` to be set in the trivial branch."""
+
+    def test_parked_trajectory_extrema_report_parked_position(self) -> None:
+        dofs = 1
+        calc = TargetCalculator(dofs)
+        inp = _make_position_input(dofs, [5.0])
+        inp.current_position = [5.0]  # already at target -> trivial branch.
+
+        trajectory = Trajectory(dofs)
+        result = calc.calculate(inp, trajectory, delta_time=0.001)
+
+        self.assertEqual(result, Result.WORKING)
+        extrema = trajectory.position_extrema()
+        self.assertAlmostEqual(extrema[0].min, 5.0, delta=1e-12)
+        self.assertAlmostEqual(extrema[0].max, 5.0, delta=1e-12)
+
+
 class TestUnsolvableSynchronizationReturnsErrorNotRaise(unittest.TestCase):
     """(e) an unsolvable synchronization input returns
     ``ERROR_SYNCHRONIZATION_CALCULATION`` rather than raising.
