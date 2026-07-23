@@ -58,8 +58,7 @@ print(rotated.to_rotation_matrix())
 
 ```python
 import numpy as np
-from math_tools.spherical.constructors import arc_from_two_points
-from math_tools.spherical.spherical_transforms import compute_spherical_arc_endpoint
+from math_tools.spherical import arc_from_two_points, compute_spherical_arc_endpoint
 
 arc = arc_from_two_points(azimuth1=0, polar1=0, azimuth2=0, polar2=np.pi / 2)
 end_azimuth, end_polar = compute_spherical_arc_endpoint(arc)

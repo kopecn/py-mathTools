@@ -32,9 +32,7 @@ from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
 
 from math_tools.spatial.quaternion import Quaternion
 
-from math_plot_helpers.plot_unit_spherical import (
-    plot_unit_spherical_multiplot,
-)
+from math_plot_helpers import plot_unit_spherical_multiplot
 
 
 def main():

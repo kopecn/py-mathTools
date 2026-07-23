@@ -2,18 +2,15 @@ from typing import List
 
 from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType
 
+from math_plot_helpers import plot_unit_spherical_multiplot
 from math_plot_helpers.plot_unit_spherical import (
     deg45,
     deg90,
     deg180,
     deg22_5,
-    plot_unit_spherical_multiplot,
 )
 
-from math_tools.spherical.constructors import (
-    arc_from_two_points,
-)
-from math_tools.spherical.spherical_transforms import compute_spherical_arc_endpoint
+from math_tools.spherical import arc_from_two_points, compute_spherical_arc_endpoint
 
 
 def demo() -> None:
