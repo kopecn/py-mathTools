@@ -1,8 +1,8 @@
 ---
 plan: math-tools-port
-status: in_progress
+status: complete
 last_updated: 2026-07-23
-semver: 0.1.1
+semver: 0.1.2
 author: Nicholas Bergantz
 ---
 
