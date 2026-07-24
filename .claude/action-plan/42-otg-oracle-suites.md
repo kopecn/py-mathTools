@@ -131,8 +131,11 @@ scope the compliance check to the duration-only assertion.
 `testFailedTrajectoriesFromJSON` (which load the exact same JSON files
 copied into `tests/otg/data/` by this chunk) are skipped as exact-data
 duplicates of `test_otg_truth_table.py`'s own suites, not ported a second
-time under a different tolerance. All 4 of the Swift file's
-`testBugFix_*` cases are ported case-for-case.
+time under a different tolerance. **Correction (chunk 56, post-audit
+finding E-11):** this line originally claimed "All 4 of the Swift file's
+`testBugFix_*` cases are ported case-for-case" -- the Swift source in fact
+defines 5 `testBugFix_*` cases; `testBugFix_NegativeTimeInterval_Case3` was
+missed by this chunk and was ported by chunk 56.
 
 **Invariant suite (design constraint 5) design decisions.** Interpreted
 "output never exceeds max velocity/acceleration/jerk beyond 1e-9" as the

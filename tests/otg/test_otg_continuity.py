@@ -12,6 +12,20 @@ using its own ``(t, j)`` and compare against the profile's own stored
 constant-jerk integration (``integrate_jerk``), so this is a self-consistency
 check on the profile's internal bookkeeping, not a comparison against an
 external oracle -- exactly the Swift test's intent.
+
+**Chunk 56 addition (post-audit finding E-7).** The 5 classes above only
+call ``Otg.calculate`` once each and never cross a section boundary --
+a self-consistency check on one profile's own bookkeeping, not a check of
+continuity *across* real ``update()`` control cycles including the section
+transition ``OutputParameter.did_section_change`` flags. ``TestUpdateCycleContinuity``
+below drives a real ``update()`` control loop to completion and asserts
+continuity at every cycle boundary, including the one genuine section
+transition a single-section (no-waypoint) trajectory has: the cycle where
+``output.time`` first crosses ``trajectory.duration`` and
+``Trajectory._state_to_integrate_from`` switches from section 0 to the
+"past the last section" branch (``new_section = len(self.profiles) == 1``),
+which is exactly the cycle ``did_section_change`` flips ``True`` and
+``update()`` returns ``FINISHED``.
 """
 
 from __future__ import annotations
@@ -28,6 +42,12 @@ from math_tools.otg.trajectory import Trajectory
 _CONTROL_CYCLE = 0.01
 _CONTINUITY_TOLERANCE = 1e-6
 _BOUNDARY_TOLERANCE = 1e-6
+
+_UPDATE_V_MAX = 2.0
+_UPDATE_A_MAX = 1.0
+_UPDATE_J_MAX = 1.0
+_UPDATE_CONTROL_CYCLE = 0.1
+_UPDATE_TARGET = 2.0
 
 
 def _check_trajectory_continuity(
@@ -210,6 +230,104 @@ class TestZeroInitialBoundaryConditions(unittest.TestCase):
         self.assertTrue(
             _check_trajectory_continuity(output.trajectory), "trajectory must be continuous"
         )
+
+
+class TestUpdateCycleContinuity(unittest.TestCase):
+    """Post-audit E-7: continuity across real ``Otg.update()`` control
+    cycles, including the ``did_section_change`` transition."""
+
+    def test_continuous_across_update_cycles_including_section_change(self) -> None:
+        otg = Otg(_UPDATE_CONTROL_CYCLE, dofs=1)
+        inp = InputParameter(1)
+        inp.target_position = [_UPDATE_TARGET]
+        inp.max_velocity = [_UPDATE_V_MAX]
+        inp.min_velocity = [-_UPDATE_V_MAX]
+        inp.max_acceleration = [_UPDATE_A_MAX]
+        inp.min_acceleration = [-_UPDATE_A_MAX]
+        inp.max_jerk = [_UPDATE_J_MAX]
+        output = OutputParameter(dofs=1)
+
+        max_calls = 1000
+        calls = 0
+        result = Result.WORKING
+        section_change_cycles: list[int] = []
+        previous_state: tuple[float, float, float] | None = None
+
+        while result != Result.FINISHED:
+            calls += 1
+            self.assertLessEqual(calls, max_calls, "did not reach FINISHED within bound")
+
+            result = otg.update(inp, output)
+            self.assertGreaterEqual(result, 0, f"update() returned an error on call {calls}")
+
+            if output.did_section_change:
+                section_change_cycles.append(calls)
+
+            # A fresh, independent at_time() query at this cycle's time
+            # must reproduce update()'s own sampled state -- on every
+            # cycle, including the section-change cycle (this is the
+            # continuity check: at_time uses a different branch of
+            # Trajectory._state_to_integrate_from once time >= duration).
+            expected_p, expected_v, expected_a = output.trajectory.at_time(output.time)
+            self.assertAlmostEqual(
+                output.new_position[0], expected_p[0], delta=1e-9, msg=f"call {calls} position"
+            )
+            self.assertAlmostEqual(
+                output.new_velocity[0], expected_v[0], delta=1e-9, msg=f"call {calls} velocity"
+            )
+            self.assertAlmostEqual(
+                output.new_acceleration[0],
+                expected_a[0],
+                delta=1e-9,
+                msg=f"call {calls} acceleration",
+            )
+
+            # Cross-cycle continuity: the state must not jump beyond what
+            # one control cycle of bounded jerk/acceleration/velocity can
+            # produce -- generous bounds (a few control cycles' worth),
+            # not tight kinematic integration, since this is a
+            # discontinuity smoke check, not a duplicate of the numeric
+            # oracle.
+            current_state = (
+                output.new_position[0],
+                output.new_velocity[0],
+                output.new_acceleration[0],
+            )
+            if previous_state is not None:
+                prev_p, prev_v, prev_a = previous_state
+                self.assertLessEqual(
+                    abs(current_state[0] - prev_p),
+                    (_UPDATE_V_MAX + 1.0) * _UPDATE_CONTROL_CYCLE,
+                    f"call {calls}: position jump too large across cycle boundary",
+                )
+                self.assertLessEqual(
+                    abs(current_state[1] - prev_v),
+                    (_UPDATE_A_MAX + 1.0) * _UPDATE_CONTROL_CYCLE,
+                    f"call {calls}: velocity jump too large across cycle boundary",
+                )
+                self.assertLessEqual(
+                    abs(current_state[2] - prev_a),
+                    (_UPDATE_J_MAX + 1.0) * _UPDATE_CONTROL_CYCLE,
+                    f"call {calls}: acceleration jump too large across cycle boundary",
+                )
+            previous_state = current_state
+
+            output.pass_to_input(inp)
+
+        self.assertEqual(result, Result.FINISHED)
+        # A single-section (no-waypoint) trajectory has exactly one real
+        # section transition: section 0 -> "past the last section", which
+        # coincides with the FINISHED cycle.
+        self.assertEqual(
+            section_change_cycles,
+            [calls],
+            "expected exactly one did_section_change transition, on the FINISHED cycle",
+        )
+
+        # The transition itself must land exactly on the target state.
+        self.assertAlmostEqual(output.new_position[0], _UPDATE_TARGET, delta=1e-6)
+        self.assertAlmostEqual(output.new_velocity[0], 0.0, delta=1e-6)
+        self.assertAlmostEqual(output.new_acceleration[0], 0.0, delta=1e-6)
 
 
 if __name__ == "__main__":

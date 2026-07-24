@@ -13,6 +13,12 @@ Limits (``v_max=2, a_max=1, j_max=1``) and the closed-form rest-to-rest
 optimal duration formula reuse chunk 40's ``test_calculator_target.py``
 convention, scaled to a short move (target distance 2.0) so the
 control-loop test converges in ~40 cycles instead of thousands.
+
+**Chunk 56 addition (post-audit finding E-8).** ``TestMidTrajectoryRetarget``
+pins a genuine mid-flight retarget (changing ``inp.target_position`` partway
+through an in-progress move), which no existing test drove: the closest
+case, ``TestUpdateLoopReachesFinishedWithinBound``, only asserts the
+*absence* of recalculation under an unchanging input.
 """
 
 import math
@@ -211,6 +217,56 @@ class TestReset(unittest.TestCase):
         otg.reset()
         otg.update(inp, output)
         self.assertTrue(output.new_calculation)
+
+
+class TestMidTrajectoryRetarget(unittest.TestCase):
+    """Post-audit E-8: a genuine mid-flight target change must trigger
+    exactly one extra recalculation (``new_calculation`` True again) and
+    the control loop must converge to the NEW target, not the original
+    one. Unlike ``TestUpdateLoopReachesFinishedWithinBound``, which drives
+    an unchanging input and asserts the *absence* of any later
+    recalculation, this drives a real retarget partway through a longer
+    move."""
+
+    def test_retarget_mid_flight_triggers_one_recalculation_and_converges(self) -> None:
+        otg = Otg(_CONTROL_CYCLE, dofs=1)
+        inp = _rest_to_rest_input(target=6.0)
+        output = OutputParameter(dofs=1)
+
+        retarget_cycle = 11
+        new_target = -3.0
+        max_calls = 2000
+
+        calls = 0
+        result = Result.WORKING
+        new_calculation_cycles: list[int] = []
+        retargeted = False
+        while result != Result.FINISHED:
+            calls += 1
+            self.assertLessEqual(calls, max_calls, "did not reach FINISHED within a generous bound")
+
+            if calls == retarget_cycle and not retargeted:
+                inp.target_position = [new_target]
+                retargeted = True
+
+            result = otg.update(inp, output)
+            self.assertGreaterEqual(result, 0, f"update() returned an error on call {calls}")
+            if output.new_calculation:
+                new_calculation_cycles.append(calls)
+
+            output.pass_to_input(inp)
+
+        self.assertTrue(retargeted, "test setup error: retarget never applied before FINISHED")
+        self.assertEqual(
+            new_calculation_cycles,
+            [1, retarget_cycle],
+            "expected exactly the initial calculation plus one recalculation at the retarget "
+            "cycle, no more",
+        )
+
+        self.assertAlmostEqual(output.new_position[0], new_target, delta=1e-6)
+        self.assertAlmostEqual(output.new_velocity[0], 0.0, delta=1e-6)
+        self.assertAlmostEqual(output.new_acceleration[0], 0.0, delta=1e-6)
 
 
 class TestPublicSurface(unittest.TestCase):

@@ -6,15 +6,27 @@ Port of ``SWIFT_TESTS/OTGTests/OTGComprehensiveTests.swift``. See
 ("port ... case-for-case; skip Swift cases that only test Swift-specific
 machinery; list every skip with a reason").
 
-**Ported (4 cases):** the "Bug Fix Tests" section (``testBugFix_*``), which
+**Ported (5 cases):** the "Bug Fix Tests" section (``testBugFix_*``), which
 asserts unconditional success plus the file's own ``validateTrajectory``
 helper (no negative time intervals, acceleration/velocity limits held
 throughout a 100-sample sweep, AND the final state matches the target
 within 0.01) -- strictly stronger than ``test_otg_failure_fixes.py``'s port
-of the same 2 inputs from ``OTGFailureFixTests.swift`` (which only checks
+of the same inputs from ``OTGFailureFixTests.swift`` (which only checks
 limits, not target-reached, and does so under the "may legitimately fail"
 contract). Both ports are kept: they assert different things about the
-same 2 inputs, matching the two Swift source files' own duplication.
+same inputs, matching the two Swift source files' own duplication.
+
+**Chunk 56 correction (post-audit finding E-11).** The Swift source's "Bug
+Fix Tests" section defines 5 ``testBugFix_*`` cases, not 4:
+``testBugFix_NegativeTimeInterval_Case3`` was missing from this port (this
+docstring previously claimed "all 4" were ported, as did
+``.claude/action-plan/42-otg-oracle-suites.md``'s Resolution notes -- both
+corrected by this chunk). It matters beyond a count: the only prior port of
+that exact input (``test_otg_failure_fixes.py``'s ``test_case_3_...``) wraps
+every assertion in ``if result >= 0:``, so a regression to an error
+``Result`` would silently assert nothing there, whereas
+``TestBugFixNegativeTimeInterval.test_case_3`` below asserts unconditional
+success, closing that gap.
 
 **Skipped (5 cases), with reasons -- not "Swift-specific machinery" in the
 literal sense, but exact-data duplicates of suites this same chunk already
@@ -168,6 +180,29 @@ class TestBugFixNegativeTimeInterval(unittest.TestCase):
         inp.target_velocity = [-1.5414200165198237]
         inp.target_acceleration = [-1.5255311582232012]
         inp.max_velocity = [9.088312224669604]
+        inp.max_acceleration = [9.973774779735683]
+        inp.max_jerk = [10.0]
+
+        result, output = _calculate(inp)
+
+        self.assertGreaterEqual(result, 0, f"expected trajectory to succeed, got {result!r}")
+        _validate_trajectory(self, output.trajectory, inp)
+
+    def test_case_3(self) -> None:
+        """``testBugFix_NegativeTimeInterval_Case3`` -- same input as
+        ``test_case_2`` but with a different (lower) ``max_velocity``. Same
+        input as ``test_otg_failure_fixes.py``'s
+        ``test_case_3_previously_produced_negative_t5_different_max_vel``,
+        but here unconditional success plus the full ``validateTrajectory``
+        contract are required (post-audit finding E-11)."""
+        inp = InputParameter(1)
+        inp.current_position = [2.6603799559471364]
+        inp.current_velocity = [1.9695301027900147]
+        inp.current_acceleration = [1.972541529001468]
+        inp.target_position = [-6.297064289647577]
+        inp.target_velocity = [-1.5414200165198237]
+        inp.target_acceleration = [-1.5255311582232012]
+        inp.max_velocity = [6.282291093061675]
         inp.max_acceleration = [9.973774779735683]
         inp.max_jerk = [10.0]
 

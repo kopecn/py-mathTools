@@ -12,6 +12,22 @@ report success, (b) land on the target ``pf``/``vf``/``af`` state, and (c)
 sum its segment times to exactly the prescribed ``tf``. A duration below
 the time-optimal minimum must be infeasible (no ``t >= 0`` decomposition
 exists) and so must fail.
+
+**Chunk 56 coverage note (post-audit finding E-10).** No new cases were
+added to this file for E-10 -- the multi-DOF corpus test
+(``test_calculator_target.py::TestMultiDofCorpusReachesStep2``) exercises
+these branches indirectly through 450 real synchronized multi-DOF cases,
+which is a more representative sample than hand-authored boundary
+conditions here. Statement coverage measured via ``sys.settrace`` over the
+full OTG test suite, before -> after chunk 56's additions (design
+constraint 1, "measure, don't assume"): ``check_root_udud`` 82% -> 98%,
+``_time_acc0_vel`` 39% -> 99% (effectively complete -- the one "uncovered"
+line is the ``def`` line itself, a measurement artifact), ``_time_acc1_vel``
+41% -> 99% (same artifact), ``_time_acc0_acc1`` 98% -> 98% (unchanged; one
+substantive branch, an alternate ``check_with_timing`` outcome at
+``position_third_order_step2.py:1267``, remains unreached -- recorded, not
+chased further). ``_time_none_smooth`` (0%, dead in Swift too) is out of
+this chunk's scope per its own "Out of scope" section.
 """
 
 import unittest
