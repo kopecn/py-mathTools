@@ -4,8 +4,8 @@ track: C
 status: complete
 depends_on: [11, 06]
 spec: ../specs/waveformCore.md §ABC accessor, §Aggregate containers, §Compliance 1, 2, 8, 10
-last_updated: 2026-07-14
-semver: 0.0.1
+last_updated: 2026-07-23
+semver: 0.0.2
 author: Nicholas Bergantz
 ---
 
@@ -78,10 +78,12 @@ Quaternion/pose containers (16, 17); DSP on components.
   `extend`/`concatenate` compat-check only `dt` (not length) since these
   are concatenation ops, matching the spec's literal "dt mismatch" wording
   (contrast with `Waveform1D`'s elementwise operators, which check both).
-- `are_all_unit` and the zero-magnitude `ValueError` in `normalize()` use
-  the same `atol=1e-12` tolerance and error-message style as
-  `Position.is_unit`/`Position.normalize()`, for parity with the
-  non-waveform type.
+- `are_all_unit` uses the same `atol=1e-12` tolerance as `Position.is_unit`,
+  for parity with the non-waveform type. The zero-magnitude `ValueError` in
+  `normalize()` does NOT use that tolerance — it is an exact `norms == 0.0`
+  check, matching `Position.normalize()`'s own exact `magnitude == 0.0`
+  check (corrected 2026-07-23: this note previously and incorrectly claimed
+  `atol=1e-12` applied there too).
 - Verified live: `w[i]` returns a `Position` equal to the stored row;
   `to_dict()`/`from_dict()` round-trips to an equal instance, and
   `foundationTypes.mathTypes.MathTypes.PositionWaveformType.from_dict()`

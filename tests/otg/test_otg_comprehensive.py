@@ -38,7 +38,7 @@ stay-in-scope's minimum-diff default:**
   array in ``OTGTruthTableTests.swift``): the full 31-case table is already
   transcribed verbatim into ``tests/otg/data/otg_numeric_truth.json`` and
   asserted by ``test_otg_truth_table.py::TestNumericTruthTable`` with a
-  *tighter* tolerance (duration rtol 1e-6, segment atol 1e-8, vs. this
+  *tighter* tolerance (duration rtol 1e-6, segment atol 1e-6, vs. this
   Swift file's 0.001 accuracy on both) -- re-asserting the same 3 inputs
   here with a looser bound would add no coverage.
 - ``testSuccessfulTrajectoriesFromJSON`` /

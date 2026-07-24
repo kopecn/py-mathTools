@@ -36,9 +36,15 @@ generation).
 
 ## Installation
 
+The package is not published (`pyproject.toml`'s project URLs point at
+`github.com/kopecn/py_math_tools`, not a PyPI release). Install from source:
+
 ```bash
-pip install py_math_tools
+make uv-sync
 ```
+
+See [Development Workflows](#development-workflows) below for the full
+`uv-`-prefixed workflow.
 
 ## Quick Start
 

@@ -1,3 +1,9 @@
+---
+last_updated: 2026-07-23
+semver: 0.0.1
+author: Nicholas Bergantz
+---
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.

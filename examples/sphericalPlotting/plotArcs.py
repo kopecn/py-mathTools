@@ -1,20 +1,16 @@
-from typing import List
 
+from foundation_abc.math.sphericalABCs import UnitSphericalArcABC
 from foundationTypes.mathTypes.MathTypes import UnitSphericalArcType
 
 from math_plot_helpers import plot_unit_spherical_multiplot
 from math_plot_helpers.plot_unit_spherical import (
-    deg45,
     deg90,
-    deg180,
-    deg22_5,
 )
-
 from math_tools.spherical import arc_from_two_points, compute_spherical_arc_endpoint
 
 
 def demo() -> None:
-    """Demonstration of multiplot view showing spherical small circles in three different projections."""
+    """Demo of the multiplot view: spherical small circles in three projections."""
 
     arc1 = UnitSphericalArcType(orient=0, azimuth=0, polar=0, arc_length=deg90)
     arc2 = UnitSphericalArcType(orient=deg90, azimuth=0, polar=deg90, arc_length=deg90)
@@ -26,7 +22,7 @@ def demo() -> None:
         polar2=arc1.polar,
     )
 
-    arcs: List[UnitSphericalArcType] = [
+    arcs: list[UnitSphericalArcABC] = [
         arc1,
         arc2,
         arc3,

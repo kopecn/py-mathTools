@@ -118,7 +118,7 @@ class TestClassificationCorpusFailedCases(unittest.TestCase):
 class TestNumericTruthTable(unittest.TestCase):
     """otg.md §Oracle and test strategy 2, §Compliance 1: the 31-case
     (see module docstring) hardcoded numeric oracle -- duration rtol
-    1e-6, segment times atol 1e-8."""
+    1e-6, segment times atol 1e-6."""
 
     def test_all_cases_match_expected_duration_and_segment_times(self) -> None:
         data = _load_json("otg_numeric_truth.json")

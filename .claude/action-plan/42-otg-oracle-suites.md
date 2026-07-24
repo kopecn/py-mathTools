@@ -4,14 +4,14 @@ track: E
 status: complete
 depends_on: [41]
 spec: ../specs/otg.md §Oracle and test strategy, §Compliance 1–2
-last_updated: 2026-07-22
-semver: 0.0.2
+last_updated: 2026-07-23
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
 # 42 — OTG oracle suites
 
-**Deliverable:** the classification corpus, the 32-case numeric truth
+**Deliverable:** the classification corpus, the 31-case numeric truth
 table, and the ported continuity/comprehensive/regression suites — the
 proof the port is faithful.
 
@@ -21,7 +21,7 @@ proof the port is faithful.
   `tests/otg/data/failed_trajectories.json` (copied UNMODIFIED from
   `SWIFT_TESTS/OTGTests/truthTables/`),
   `tests/otg/data/otg_numeric_truth.json` (transcribed from the hardcoded
-  32-case array in `SWIFT_TESTS/OTGTests/OTGTruthTableTests.swift` — each
+  31-case array in `SWIFT_TESTS/OTGTests/OTGTruthTableTests.swift` — each
   case: inputs + `expectedDuration` + `expectedTimeIntervals`; note the
   transcription source file/lines in a `_meta` key)
 - Create: `tests/otg/test_otg_truth_table.py`,
@@ -34,7 +34,7 @@ proof the port is faithful.
    `Result >= 0`; failed cases → `Result < 0` (free-text error strings are
    NOT mapped to specific codes). Load through `InputParameter.from_dict`.
 2. Numeric suite: per case, duration rtol 1e-6; the selected profile's
-   `t` segment times vs `expectedTimeIntervals` atol 1e-8.
+   `t` segment times vs `expectedTimeIntervals` atol 1e-6.
 3. Continuity: port `OTGContinuityTests.swift` — across consecutive
    `update` cycles, position/velocity/acceleration are continuous
    (|Δ| bounded by the cycle's kinematic limits) including at section

@@ -7,8 +7,8 @@ spec: TemplateConformance
 scope: project
 status: accepted
 applies_to: pyproject.toml, requirements.txt, Makefile, .env, .github/, .claude/, src/, README.md
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-07-23
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
@@ -24,10 +24,11 @@ author: Nicholas Bergantz
 ## Already conformant (verify, don't re-do)
 
 The current branch already carries: the uv Makefile (with `uv-fullCheck`
-gate), `.env` (`PY_SRC=src`), `.bumpversion.cfg`, `ci.yml` /
-`tag-on-prod.yml` / `publish.yml` scaffold, names-only `pyproject.toml`
-policy, and pinned `requirements.txt`. Conformance work MUST NOT rewrite
-these wholesale; only close the specific gaps below.
+gate), `.env` (`PY_SRC=src`), `.bumpversion.cfg`, the `ci-cd.yml` workflow
+(quality checks + Python compatibility matrix on PRs to `dev`/`prod`),
+names-only `pyproject.toml` policy, and pinned `requirements.txt`.
+Conformance work MUST NOT rewrite these wholesale; only close the specific
+gaps below.
 
 ## Gap 1 — package rename (breaking, approved)
 
@@ -101,9 +102,9 @@ Port the template's layering-enforcement pattern
 
 ## Compliance checklist (mechanically verifiable)
 
-- [ ] `grep -r "pyMathTools" src/ tests/ examples/ Makefile pyproject.toml` → no hits
-- [ ] `find src -name py.typed` covers every public package
-- [ ] `make uv-fullCheck` passes after rename
-- [ ] `.claude/CLAUDE.md` exists and links every spec in `.claude/specs/`
-- [ ] `README.md` contains no "Boilerplate" text
-- [ ] `tests/test_package_layering.py` passes and fails if `import matplotlib` is added to any `math_tools` module
+- [x] `grep -r "pyMathTools" src/ tests/ examples/ Makefile pyproject.toml` → no hits
+- [x] `find src -name py.typed` covers every public package
+- [x] `make uv-fullCheck` passes after rename
+- [x] `.claude/CLAUDE.md` exists and links every spec in `.claude/specs/`
+- [x] `README.md` contains no "Boilerplate" text
+- [x] `tests/test_package_layering.py` passes and fails if `import matplotlib` is added to any `math_tools` module

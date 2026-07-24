@@ -34,7 +34,7 @@ VENV ?= .cleanroom-venv
 # (see GAPS.md §6). The template half overrides these to src/. Overridable via .env.
 PY_SRC ?= hooks
 PY_TESTS ?= tests
-PY_EXAMPLES ?=
+PY_EXAMPLES ?= examples
 PY_ALL ?= $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
 
 
@@ -421,18 +421,18 @@ release-test: checkCleanGit validateBuild  ## Dry-run publish to TestPyPI (clean
 	@echo "Uploading $(REPO) v$$($(MAKE) -s version) to TestPyPI..."
 	@$(PYTHON) -m twine upload --repository testpypi dist/*
 
-# PyPI publishing is owned by CI, not this Makefile. Per the ci-cd spec, the
-# pipeline is the single authoritative path to production — no manual, out-of-band
-# uploads. `.github/workflows/tag-on-prod.yml` tags v<version> on push to `prod`;
-# a publish-on-tag workflow promotes that artifact. `make release` therefore
-# refuses to upload and prints the release procedure instead.
-release: validateBuild  ## Refuse local upload; print the CI-driven release procedure
-	@echo "Local PyPI upload is disabled — the pipeline is the authoritative publish path."
+# No CI-driven publish path exists: `.github/workflows/ci-cd.yml` runs quality
+# checks and the Python compatibility matrix on PRs to dev/prod only — it does not
+# tag or upload anything. Release is therefore a manual, human-run procedure;
+# `make release` refuses to upload from an unreviewed working tree and prints that
+# procedure instead of performing it.
+release: validateBuild  ## Refuse local upload; print the manual release procedure
+	@echo "No CI-driven publish path exists — release is a manual procedure."
 	@echo ""
 	@echo "To release $(REPO) v$$($(MAKE) -s version):"
 	@echo "  1. Bump the version (make bump-patch|bump-minor|bump-major) and merge to prod."
-	@echo "  2. Push to prod → tag-on-prod.yml creates the v<version> tag."
-	@echo "  3. The publish-on-tag workflow uploads to PyPI."
+	@echo "  2. Build + validate: make validateBuild."
+	@echo "  3. Upload by hand: python3 -m twine upload dist/*"
 	@echo ""
 	@echo "For a local pre-flight, use: make release-test (TestPyPI)."
 	@exit 1

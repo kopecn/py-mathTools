@@ -1,8 +1,8 @@
 ---
 plan: math-tools-port
 status: in_progress
-last_updated: 2026-07-22
-semver: 0.1.0
+last_updated: 2026-07-23
+semver: 0.1.1
 author: Nicholas Bergantz
 ---
 
@@ -31,7 +31,9 @@ minimal ceremony — well-typed numpy-adjacent Python, not translated Swift.
 4. **Stay in scope:** touch ONLY the files the chunk lists. Adjacent
    problems get reported in the chunk's completion notes, not fixed.
 5. **Frontmatter:** every chunk carries `status: pending` → set
-   `in_progress` / `done` as you work; bump `last_updated`.
+   `in_progress` while working, then `complete` when done (not `done`
+   — `complete` is the convention actually used across every chunk file
+   in this repo); bump `last_updated`.
 6. **Swift reference roots** (read-only, for faithful-port chunks):
    - `SWIFT_MATH` = `/Users/nbergantz/__Workspaces__/spmWorkspaces/spmMathTools/spm/Sources/spmMathTools/FoundationMathTypes`
    - `SWIFT_TYPES` = `/Users/nbergantz/__Workspaces__/spmWorkspaces/spmFoundationTools/spm/Sources/FoundationTypes`

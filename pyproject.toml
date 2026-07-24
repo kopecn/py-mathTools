@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 authors = [
   {name = "Nicholas Bergantz", email = "nicholas.bergantz@gmail.com"}
 ]
-keywords = ["my_package", "python", "package"]
+keywords = ["math", "numpy", "quaternion", "spatial", "waveform", "trajectory-generation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

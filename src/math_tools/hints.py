@@ -9,8 +9,7 @@ from typing import TYPE_CHECKING, Union
 
 from numpy import float64
 from numpy.typing import NDArray
-from quaternion import one as q_one  # type: ignore[import-untyped]
-from quaternion import quaternion as np_quaternion
+from quaternion import quaternion as np_quaternion  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from math_tools.spatial.quaternion import Quaternion
@@ -25,8 +24,3 @@ FloatOrQuaternion = Union["Quaternion", float, np_quaternion]
 FloatArray3 = NDArray[float64]  # Shape (..., 3)
 FloatArray4 = NDArray[float64]  # Shape (..., 4)
 RotationMatrix = NDArray[float64]  # Shape (..., 3, 3)
-
-
-if __name__ == "__main__":
-    q = q_one
-    assert isinstance(q, np_quaternion)

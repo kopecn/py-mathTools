@@ -4,8 +4,8 @@ track: C
 status: complete
 depends_on: [11, 07]
 spec: ../specs/waveformCore.md §ABC accessor, §Aggregate containers, §Compliance 1, 2, 8
-last_updated: 2026-07-14
-semver: 0.0.1
+last_updated: 2026-07-23
+semver: 0.0.2
 author: Nicholas Bergantz
 ---
 
@@ -65,8 +65,11 @@ Pose container (17); slerp/orientation interpolation on series (not in spec).
 - `_quaternions_to_array` / element materialization use `Quaternion`'s
   real `as_float_array()`/`from_float_array()` methods (chunk 07's
   `__array__`-adjacent additions), not invented ones.
-- `are_all_unit` and `normalize()`'s zero-magnitude `ValueError` mirror
-  `WaveformPosition`'s exact tolerance (`atol=1e-12`) and message style
+- `are_all_unit` mirrors `WaveformPosition`'s exact tolerance
+  (`atol=1e-12`). `normalize()`'s zero-magnitude `ValueError` does NOT use
+  that tolerance — like `WaveformPosition`, it is an exact `norms == 0.0`
+  check (corrected 2026-07-23: this note previously and incorrectly
+  claimed `atol=1e-12` applied there too) — with matching message style
   (`"cannot normalize a zero-magnitude quaternion at index {i}"`) — a
   judgment call since `Quaternion` itself has no `normalize()` method
   (only `normalized()`, no explicit zero-magnitude raise), so
