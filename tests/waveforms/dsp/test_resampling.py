@@ -8,6 +8,8 @@ composes every DSP mixin from the compose chunk (30) onward.
 import unittest
 
 import numpy as np
+from scipy.signal import resample as scipy_resample
+from scipy.signal import resample_poly as scipy_resample_poly
 
 from math_tools.precision_time.precision_time_interval import PrecisionTimeInterval
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
@@ -183,6 +185,21 @@ class TestResampledToMatch(unittest.TestCase):
         )
         self.assertLessEqual(abs(len(matched.values) - len(other.values)), 1)
 
+    def test_samples_match_direct_scipy_resample(self) -> None:
+        """§Gap 14 (chunk 55): samples were never compared to the reference --
+        only ``dt``/length. Pin against the same ``scipy.signal.resample`` call
+        the implementation makes internally at the achieved length."""
+        n1 = 200
+        n2 = 130
+        w1 = _wrap(Waveform1D.sine(n1, frequency=5.0, amplitude=1.0, dt_seconds=0.01))
+        other = Waveform1D.sine(n2, frequency=5.0, amplitude=1.0, dt_seconds=0.015)
+
+        matched = w1.resampled_to_match(other)
+
+        expected_length = round(n1 * other.sampling_frequency_hz / w1.sampling_frequency_hz)
+        expected = scipy_resample(np.asarray(w1.values), expected_length)
+        np.testing.assert_allclose(matched.values, expected)
+
 
 class TestPolyphaseResampled(unittest.TestCase):
     """§Compliance 1 (TDD step 1): polyphase 3:2 length check."""
@@ -199,6 +216,16 @@ class TestPolyphaseResampled(unittest.TestCase):
         result = w.polyphase_resampled(up=3, down=2)
         self.assertEqual(result.dt, (w.dt * 2) / 3)
 
+    def test_samples_match_direct_scipy_resample_poly(self) -> None:
+        """§Gap 15 (chunk 55): no numeric check against the source existed --
+        only length/dt. Pin against a direct ``scipy.signal.resample_poly`` call."""
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, amplitude=1.0, dt_seconds=0.01))
+
+        result = w.polyphase_resampled(up=3, down=2)
+
+        expected = scipy_resample_poly(np.asarray(w.values), 3, 2)
+        np.testing.assert_allclose(result.values, expected)
+
     def test_invalid_up_raises(self) -> None:
         w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
@@ -208,6 +235,64 @@ class TestPolyphaseResampled(unittest.TestCase):
         w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.polyphase_resampled(up=2, down=0)
+
+
+class TestResampledTimesTwoThenHalfRoundTrips(unittest.TestCase):
+    """§Gap 3 (chunk 55): waveformDsp.md §Compliance 1's own named case --
+    "``resampled`` x2 then /2 round-trips (rtol 1e-3, interior)" -- was
+    substituted by ``interpolated(2).decimated(2)`` in the existing suite. This
+    is the literal ``resampled`` round trip."""
+
+    def test_sine_round_trip(self) -> None:
+        n = 1000
+        w = _wrap(Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=1.0 / 1000.0))
+        fs = w.sampling_frequency_hz
+
+        round_tripped = _wrap(w.resampled(2.0 * fs)).resampled(fs)
+
+        self.assertEqual(len(round_tripped.values), n)
+        interior = slice(20, -20)
+        np.testing.assert_allclose(
+            round_tripped.values[interior], w.values[interior], rtol=1e-3, atol=1e-3
+        )
+
+
+class TestNearestInterpolation(unittest.TestCase):
+    """§Gap 12 (chunk 55): ``NEAREST`` (``_resampling.py:116``) was never exercised
+    by any test -- including its banker's-rounding (round-half-to-even) half-sample
+    bias at exactly-.5 target positions."""
+
+    def test_half_sample_positions_round_to_even_index(self) -> None:
+        # target_positions for factor=2 on 3 samples: [0, 0.5, 1, 1.5, 2].
+        # np.round's banker's rounding sends 0.5 -> 0 (even) and 1.5 -> 2 (even).
+        w = Waveform1D([0.0, 10.0, 20.0], dt_seconds=1.0)
+
+        result = w.interpolated(2, method=WaveformInterpolationMethod.NEAREST)
+
+        np.testing.assert_allclose(result.values, [0.0, 0.0, 10.0, 20.0, 20.0])
+
+    def test_endpoints_and_length_preserved(self) -> None:
+        w = Waveform1D([1.0, 2.0, 3.0, 4.0], dt_seconds=0.5)
+        result = w.interpolated(3, method=WaveformInterpolationMethod.NEAREST)
+        self.assertEqual(len(result.values), (4 - 1) * 3 + 1)
+        self.assertEqual(float(result.values[0]), 1.0)
+        self.assertEqual(float(result.values[-1]), 4.0)
+
+
+class TestFourierInterpolation(unittest.TestCase):
+    """§Gap 13 (chunk 55): ``FOURIER`` (``_resampling.py:102``) was never exercised
+    -- pin it against a direct ``scipy.signal.resample`` call at the same
+    target length."""
+
+    def test_matches_direct_scipy_resample(self) -> None:
+        n = 200
+        w = _wrap(Waveform1D.sine(n, frequency=5.0, amplitude=1.0, dt_seconds=0.01))
+        new_length = (n - 1) * 2 + 1
+
+        result = w.interpolated(2, method=WaveformInterpolationMethod.FOURIER)
+
+        expected = scipy_resample(np.asarray(w.values), new_length)
+        np.testing.assert_allclose(result.values, expected)
 
 
 class TestMinimumLengthRaises(unittest.TestCase):

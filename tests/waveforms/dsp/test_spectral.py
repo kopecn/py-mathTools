@@ -8,13 +8,15 @@ composes every DSP mixin from the compose chunk (30) onward.
 import unittest
 
 import numpy as np
+from scipy.signal import get_window, welch
+from scipy.signal import spectrogram as scipy_spectrogram
 
 from math_tools.waveforms.dsp import _spectral as spectral_module
 from math_tools.waveforms.dsp._common import DEFAULT_KAISER_BETA
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.dsp._spectral import _mel_filterbank
 from math_tools.waveforms.dsp._windowing import WindowingMixin
-from math_tools.waveforms.support import WaveformWindowType
+from math_tools.waveforms.support import WaveformPSDScaling, WaveformWindowType
 from math_tools.waveforms.waveform1d import Waveform1D
 
 
@@ -238,6 +240,176 @@ class TestSpectralFeaturesOfSine(unittest.TestCase):
             w.spectral_features(rolloff_fraction=0.0)
         with self.assertRaises(ValueError):
             w.spectral_features(rolloff_fraction=1.5)
+
+
+class TestPsdScalingParameter(unittest.TestCase):
+    """§Gap 8 (chunk 55): ``scaling: WaveformPSDScaling`` (``_spectral.py:232``) was
+    never passed by any test -- pin both members against a direct
+    ``scipy.signal.welch`` call and confirm they diverge materially."""
+
+    def test_density_matches_direct_scipy_call(self) -> None:
+        n = 4000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=1.0 / fs))
+        window_array = spectral_module._window_array(WaveformWindowType.HANN, 512)
+
+        result = w.power_spectral_density(nperseg=512, scaling=WaveformPSDScaling.DENSITY)
+
+        _, expected = welch(
+            np.asarray(w.values), fs=fs, window=window_array, nperseg=512, scaling="density"
+        )
+        np.testing.assert_allclose(result.magnitudes, expected)
+
+    def test_spectrum_matches_direct_scipy_call(self) -> None:
+        n = 4000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=1.0 / fs))
+        window_array = spectral_module._window_array(WaveformWindowType.HANN, 512)
+
+        result = w.power_spectral_density(nperseg=512, scaling=WaveformPSDScaling.SPECTRUM)
+
+        _, expected = welch(
+            np.asarray(w.values), fs=fs, window=window_array, nperseg=512, scaling="spectrum"
+        )
+        np.testing.assert_allclose(result.magnitudes, expected)
+
+    def test_density_and_spectrum_diverge_materially(self) -> None:
+        n = 4000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=1.0 / fs))
+
+        density = w.power_spectral_density(nperseg=512, scaling=WaveformPSDScaling.DENSITY)
+        spectrum = w.power_spectral_density(nperseg=512, scaling=WaveformPSDScaling.SPECTRUM)
+
+        peak_ratio = float(np.max(spectrum.magnitudes) / np.max(density.magnitudes))
+        # Observed ratio for this nperseg/fs combination is ~5.9x -- assert it is
+        # far from 1.0 so a `scaling` parameter that silently no-ops would fail.
+        self.assertGreater(peak_ratio, 2.0)
+
+
+class TestSpectralWindowVariedToKaiser(unittest.TestCase):
+    """§Gap 9 (chunk 55): ``window: WaveformWindowType`` (``_spectral.py:231,268,292``)
+    was never varied from ``HANN`` in any test -- the KAISER branch of
+    ``_window_array``/``_scipy_window_spec`` (``get_window`` with an explicit beta
+    tuple) was unreached."""
+
+    def test_power_spectral_density_kaiser_matches_direct_scipy(self) -> None:
+        n = 2000
+        fs = 1000.0
+        w = _wrap(Waveform1D.white_noise(n, amplitude=1.0, seed=5, dt_seconds=1.0 / fs))
+        kaiser_array = get_window(("kaiser", DEFAULT_KAISER_BETA), 256)
+
+        result = w.power_spectral_density(window=WaveformWindowType.KAISER, nperseg=256)
+
+        _, expected = welch(np.asarray(w.values), fs=fs, window=kaiser_array, nperseg=256)
+        np.testing.assert_allclose(result.magnitudes, expected)
+
+    def test_spectrogram_kaiser_matches_direct_scipy(self) -> None:
+        n = 2000
+        fs = 1000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, dt_seconds=1.0 / fs))
+        kaiser_array = get_window(("kaiser", DEFAULT_KAISER_BETA), 256)
+
+        result = w.spectrogram(window=WaveformWindowType.KAISER, nperseg=256, overlap=0.5)
+
+        expected_f, expected_t, expected_sxx = scipy_spectrogram(
+            np.asarray(w.values),
+            fs=fs,
+            window=kaiser_array,
+            nperseg=256,
+            noverlap=128,
+            mode="magnitude",
+        )
+        np.testing.assert_allclose(result.frequencies, expected_f)
+        np.testing.assert_allclose(result.times, expected_t)
+        np.testing.assert_allclose(result.magnitudes, expected_sxx.T)
+
+
+class TestMelSpectrogramConcentratesEnergyInTonalBand(unittest.TestCase):
+    """§Gap 10 (chunk 55): mel magnitudes for a pure tone should concentrate in the
+    mel band nearest the tone's frequency, not merely be non-negative of the right
+    shape (the existing coverage before this chunk)."""
+
+    def test_1khz_tone_dominates_its_nearest_mel_band(self) -> None:
+        n = 8000
+        fs = 8000.0
+        w = _wrap(Waveform1D.sine(n, frequency=1000.0, amplitude=1.0, dt_seconds=1.0 / fs))
+
+        mel_spec = w.mel_spectrogram(n_mels=40, nperseg=512, overlap=0.5)
+
+        mean_per_mel_band = np.mean(mel_spec.magnitudes, axis=0)
+        peak_band_index = int(np.argmax(mean_per_mel_band))
+        peak_band_frequency = float(mel_spec.mel_frequencies[peak_band_index])
+
+        self.assertAlmostEqual(peak_band_frequency, 1000.0, delta=100.0)
+        energy_fraction_at_peak = float(
+            mean_per_mel_band[peak_band_index] / np.sum(mean_per_mel_band)
+        )
+        self.assertGreater(energy_fraction_at_peak, 0.5)
+
+
+class TestSpectralFeaturesKnownAnswerTwoTone(unittest.TestCase):
+    """§Gap 11 (chunk 55): a two-tone signal with exact-bin-resolved frequencies
+    (no spectral leakage) gives hand-derivable centroid/spread/rolloff/flatness --
+    closing the range-check-only coverage that a swapped mean or a power-vs-
+    magnitude weighting would previously have passed.
+
+    ``n=1000``, ``fs=1000`` gives 1 Hz bin resolution; ``f1=10 Hz`` (bin 10,
+    amplitude 1.0 -> magnitude ~500) and ``f2=100 Hz`` (bin 100, amplitude 3.0
+    -> magnitude ~1500) are each an exact integer number of periods, so (up to
+    floating-point noise ~1e-10 relative) all spectral energy is concentrated
+    in exactly those two bins.
+    """
+
+    def setUp(self) -> None:
+        n = 1000
+        fs = 1000.0
+        dt_seconds = 1.0 / fs
+        tone_low = Waveform1D.sine(n, frequency=10.0, amplitude=1.0, dt_seconds=dt_seconds)
+        tone_high = Waveform1D.sine(n, frequency=100.0, amplitude=3.0, dt_seconds=dt_seconds)
+        self.w = Waveform1D(tone_low.values + tone_high.values, dt_seconds=dt_seconds)
+        # Magnitude-weighted-mean-frequency closed form for two dominant bins
+        # (m1 ~= 500 at 10 Hz, m2 ~= 1500 at 100 Hz):
+        self.expected_centroid = (10.0 * 500.0 + 100.0 * 1500.0) / 2000.0
+        self.expected_spread = float(
+            np.sqrt(
+                (500.0 * (10.0 - self.expected_centroid) ** 2
+                 + 1500.0 * (100.0 - self.expected_centroid) ** 2)
+                / 2000.0
+            )
+        )
+
+    def test_centroid_matches_hand_derived_weighted_mean(self) -> None:
+        features = self.w.spectral_features()
+        self.assertAlmostEqual(features.centroid, self.expected_centroid, places=6)
+
+    def test_spread_matches_hand_derived_weighted_std(self) -> None:
+        features = self.w.spectral_features()
+        self.assertAlmostEqual(features.spread, self.expected_spread, places=6)
+
+    def test_rolloff_lands_at_the_second_tone_bin(self) -> None:
+        # Cumulative magnitude reaches 25% of total at bin 10 (500/2000), then
+        # stays flat until it jumps to 100% at bin 100 (2000/2000) -- so the
+        # default 95%-rolloff must land exactly on the 100 Hz bin.
+        features = self.w.spectral_features()
+        self.assertAlmostEqual(features.rolloff, 100.0, places=6)
+
+    def test_flatness_matches_independent_geomean_over_arithmean(self) -> None:
+        """Flatness has no scipy reference; derive it independently from the raw
+        FFT magnitude array (following the method's own documented definition)
+        rather than by calling any private helper of the implementation."""
+        values = np.asarray(self.w.values, dtype=np.float64)
+        magnitudes = np.abs(np.fft.rfft(values))
+        nonzero = magnitudes[magnitudes > 0.0]
+        expected_flatness = float(np.exp(np.mean(np.log(nonzero))) / np.mean(magnitudes))
+
+        features = self.w.spectral_features()
+
+        self.assertAlmostEqual(features.flatness, expected_flatness, places=9)
+        # Sanity: this two-tone signal is strongly tonal, so flatness should be
+        # near zero -- catches a geomean/arithmean swap (which would report ~1
+        # or a value >> the ~1e-13 observed here).
+        self.assertLess(features.flatness, 1e-6)
 
 
 class TestDescriptorsRoundTripFromMethods(unittest.TestCase):

@@ -71,6 +71,34 @@ class TestUnwrapPhase(unittest.TestCase):
         with self.assertRaises(ValueError):
             w.unwrap_phase()
 
+    def test_threshold_changes_whether_a_borderline_step_is_corrected(self) -> None:
+        """§Gap 19 (chunk 55): ``threshold`` (``_phase.py:107``) was never varied
+        from the default. A constant per-sample step of 3.3 rad sits strictly
+        between ``pi`` (~3.14159, the default) and 3.4: the default threshold
+        registers it as a discontinuity and unwraps it, while ``threshold=3.4``
+        treats the same data as already continuous and leaves it untouched."""
+        n = 5
+        raw_phase = np.arange(n, dtype=np.float64) * 3.3
+        w = Waveform1D(raw_phase, dt_seconds=0.01)
+
+        unchanged = w.unwrap_phase(threshold=3.4)
+        np.testing.assert_allclose(unchanged.values, raw_phase)
+
+        corrected = w.unwrap_phase()  # default threshold=pi
+        expected = np.unwrap(raw_phase, discont=np.pi)
+        np.testing.assert_allclose(corrected.values, expected)
+        self.assertFalse(np.allclose(corrected.values, raw_phase))
+
+    def test_matches_direct_numpy_unwrap_at_a_non_default_threshold(self) -> None:
+        n = 5
+        raw_phase = np.arange(n, dtype=np.float64) * 3.3
+        w = Waveform1D(raw_phase, dt_seconds=0.01)
+
+        result = w.unwrap_phase(threshold=3.29)
+
+        expected = np.unwrap(raw_phase, discont=3.29)
+        np.testing.assert_allclose(result.values, expected)
+
 
 class TestInstantaneousFrequencyOfPureSineApproximatesFrequency(unittest.TestCase):
     """§Compliance 1: instantaneous frequency of a pure f-Hz sine ~= f on the
@@ -206,6 +234,23 @@ class TestPhaseCoherence(unittest.TestCase):
         w = Waveform1D([1.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w.phase_coherence(w)
+
+    def test_default_window_matches_sample_count_over_four_when_small(self) -> None:
+        """§Gap 19 (chunk 55): the default ``window`` expression (``_phase.py:187``,
+        ``min(256, max(1, sample_count // 4))``) was never exercised -- pin the
+        unclamped branch (``sample_count // 4 < 256``) by comparing against an
+        explicit matching ``window``."""
+        w = Waveform1D(np.zeros(40), dt_seconds=0.001)
+        default_result = w.phase_coherence(w)
+        explicit_result = w.phase_coherence(w, window=40 // 4)
+        self.assertEqual(len(default_result.values), len(explicit_result.values))
+
+    def test_default_window_clamps_to_256_when_sample_count_over_four_exceeds_it(self) -> None:
+        """Pins the ``min(256, ...)`` clamp branch (``sample_count // 4 > 256``)."""
+        w = Waveform1D(np.zeros(2000), dt_seconds=0.001)
+        default_result = w.phase_coherence(w)
+        explicit_result = w.phase_coherence(w, window=256)
+        self.assertEqual(len(default_result.values), len(explicit_result.values))
 
 
 class TestGroupDelay(unittest.TestCase):

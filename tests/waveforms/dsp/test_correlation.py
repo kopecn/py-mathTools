@@ -8,6 +8,7 @@ composes every DSP mixin from the compose chunk (30) onward.
 import unittest
 
 import numpy as np
+from scipy.signal import correlate
 
 from math_tools.errors import WaveformCompatibilityError
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
@@ -138,6 +139,36 @@ class TestCrossCorrelationBasics(unittest.TestCase):
         w2 = Waveform1D([1.0, 2.0], dt_seconds=0.1)
         with self.assertRaises(ValueError):
             w1.cross_correlation(w2)
+
+
+class TestCrossCorrelationUnnormalizedRawEnergy(unittest.TestCase):
+    """§Gap 16 (chunk 55): the ``normalized=False`` raw-energy branch
+    (``_correlation.py:155``) had no numeric assertion -- pin it against a
+    direct ``scipy.signal.correlate`` call on the un-demeaned, un-scaled values."""
+
+    def test_matches_direct_scipy_correlate(self) -> None:
+        w1 = Waveform1D([1.0, 3.0, 2.0, 4.0, 1.0], dt_seconds=0.1)
+        w2 = Waveform1D([2.0, 1.0, 3.0, 1.0, 2.0], dt_seconds=0.1)
+
+        result = w1.cross_correlation(w2, normalized=False)
+
+        expected = correlate(
+            np.array([1.0, 3.0, 2.0, 4.0, 1.0]),
+            np.array([2.0, 1.0, 3.0, 1.0, 2.0]),
+            mode="full",
+        )
+        np.testing.assert_allclose(result.values, expected, rtol=0.0, atol=1e-12)
+
+    def test_self_correlation_lag_zero_equals_energy(self) -> None:
+        values = [1.0, 2.0, 3.0, 2.0, 1.0]
+        w1 = Waveform1D(values, dt_seconds=0.1)
+        w2 = Waveform1D(values, dt_seconds=0.1)
+
+        result = w1.cross_correlation(w2, normalized=False)
+
+        center_index = len(result.values) // 2
+        expected_energy = sum(v * v for v in values)
+        self.assertAlmostEqual(float(result.values[center_index]), expected_energy, places=9)
 
 
 class TestFindMaxCorrelationKnownShiftRecoversExactLag(unittest.TestCase):

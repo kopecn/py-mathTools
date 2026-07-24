@@ -129,6 +129,30 @@ class TestUpperLowerEnvelopes(unittest.TestCase):
         with self.assertRaises(ValueError):
             w.upper_lower_envelopes()
 
+    def test_upper_and_lower_track_plus_and_minus_amplitude(self) -> None:
+        """§Gap 17 (chunk 55): ``upper_lower_envelopes`` (``_envelope.py:106``) never
+        asserted upper ~= +A / lower ~= -A for ``A*sin`` on the interior -- only
+        the weaker ``upper >= lower`` ordering check existed."""
+        n = 2000
+        amplitude = 3.0
+        w = _wrap(
+            Waveform1D.sine(n, frequency=20.0, amplitude=amplitude, dt_seconds=1.0 / 2000.0)
+        )
+
+        upper, lower = w.upper_lower_envelopes()
+
+        # A larger leading/trailing trim than a Hilbert-based envelope needs: the
+        # first/last anchors are the boundary samples themselves (not necessarily
+        # extrema), so the peak-interpolated envelope tapers over the first and
+        # last partial periods.
+        interior = slice(100, -100)
+        np.testing.assert_allclose(
+            upper.values[interior], np.full(n, amplitude)[interior], rtol=5e-2
+        )
+        np.testing.assert_allclose(
+            lower.values[interior], np.full(n, -amplitude)[interior], rtol=5e-2, atol=1e-6
+        )
+
 
 class TestInstantaneousAmplitudeMethods(unittest.TestCase):
     """§Compliance 1: each ``WaveformInstantaneousMethod`` returns the right length."""
@@ -185,6 +209,54 @@ class TestInstantaneousAmplitudeMethods(unittest.TestCase):
         result = w.instantaneous_amplitude(WaveformInstantaneousMethod.RMS)
         self.assertEqual(result.dt, w.dt)
         self.assertEqual(result.t0, w.t0)
+
+    def test_peak_method_interior_matches_amplitude(self) -> None:
+        """§Gap 17 (chunk 55): ``_peak_envelope`` (``_envelope.py:67``) never asserted
+        a sine's rectified peak envelope ~= amplitude -- only non-negativity/length."""
+        n = 2000
+        amplitude = 2.5
+        w = _wrap(
+            Waveform1D.sine(n, frequency=20.0, amplitude=amplitude, dt_seconds=1.0 / 2000.0)
+        )
+
+        result = w.instantaneous_amplitude(WaveformInstantaneousMethod.PEAK)
+
+        interior = slice(50, -50)
+        np.testing.assert_allclose(
+            result.values[interior], np.full(n, amplitude)[interior], rtol=5e-2
+        )
+
+
+class TestWindowedRmsKnownAnswer(unittest.TestCase):
+    """§Gap 17 (chunk 55): ``_windowed_rms`` (``_envelope.py:80``) had no known
+    answer, and even ``window_size`` (the asymmetric edge-pad + truncation branch,
+    ``_envelope.py:88``) was never exercised. At a strictly interior sample index
+    ``i`` on ``values = arange(n)``, the centered/odd window covers
+    ``[i-half, i+half]`` while the even window's asymmetric offset (see the module
+    docstring's edge-padding construction) covers ``[i-half, i+half)`` -- both
+    hand-derivable directly from the "centered moving-window RMS" definition
+    without reproducing the private helper's own code.
+    """
+
+    def test_odd_window_matches_symmetric_hand_computed_rms(self) -> None:
+        n = 20
+        w = Waveform1D(np.arange(n, dtype=np.float64), dt_seconds=0.1)
+
+        result = w.instantaneous_amplitude(WaveformInstantaneousMethod.RMS, window_size=5)
+
+        i, half = 10, 2
+        expected = float(np.sqrt(np.mean(np.arange(i - half, i + half + 1) ** 2.0)))
+        self.assertAlmostEqual(float(result.values[i]), expected, places=9)
+
+    def test_even_window_matches_asymmetric_hand_computed_rms(self) -> None:
+        n = 20
+        w = Waveform1D(np.arange(n, dtype=np.float64), dt_seconds=0.1)
+
+        result = w.instantaneous_amplitude(WaveformInstantaneousMethod.RMS, window_size=4)
+
+        i, half = 10, 2
+        expected = float(np.sqrt(np.mean(np.arange(i - half, i + half) ** 2.0)))
+        self.assertAlmostEqual(float(result.values[i]), expected, places=9)
 
 
 if __name__ == "__main__":

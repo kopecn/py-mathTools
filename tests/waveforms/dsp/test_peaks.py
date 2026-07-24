@@ -8,6 +8,9 @@ composes every DSP mixin from the compose chunk (30) onward.
 import math
 import unittest
 
+import numpy as np
+from scipy.signal import find_peaks, peak_prominences
+
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.waveform1d import Waveform1D
 
@@ -130,6 +133,38 @@ class TestFindMostProminentPeaksOrdering(unittest.TestCase):
 
         self.assertEqual(w.find_most_prominent_peaks(count=0), [])
         self.assertEqual(w.find_most_prominent_peaks(count=-1), [])
+
+    def test_prominence_values_match_direct_scipy_peak_prominences(self) -> None:
+        """§Gap 18 (chunk 55): ``WaveformPeakWithProminence.prominence``
+        (``_peaks.py:144``) only had its ordering asserted, never the numeric
+        value -- pin it against a direct ``scipy.signal.peak_prominences`` call."""
+        w = self._two_tone_waveform()
+        values = np.array([0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0])
+
+        top_peaks = w.find_most_prominent_peaks(count=2)
+
+        indices, _ = find_peaks(values)
+        expected_prominences, _, _ = peak_prominences(values, indices)
+        expected_by_index = dict(zip(indices.tolist(), expected_prominences.tolist(), strict=True))
+        for peak_with_prominence in top_peaks:
+            self.assertAlmostEqual(
+                peak_with_prominence.prominence,
+                expected_by_index[peak_with_prominence.peak.index],
+                places=9,
+            )
+
+    def test_min_distance_suppresses_close_secondary_peak(self) -> None:
+        """§Gap 18 (chunk 55): ``min_distance`` (``_peaks.py:131``) was never passed
+        to ``find_most_prominent_peaks`` by any test."""
+        values = [0.0, 5.0, 0.0, 6.0, 0.0, 4.0, 0.0]
+        w = Waveform1D(values, dt_seconds=0.1)
+
+        unfiltered = w.find_most_prominent_peaks(count=3)
+        filtered = w.find_most_prominent_peaks(count=3, min_distance=5)
+
+        self.assertEqual(len(unfiltered), 3)
+        self.assertLess(len(filtered), len(unfiltered))
+        self.assertIn(3, [p.peak.index for p in filtered])
 
 
 class TestFlatSignalHasNoPeaksOrValleys(unittest.TestCase):

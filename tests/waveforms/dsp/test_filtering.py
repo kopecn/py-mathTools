@@ -9,6 +9,7 @@ import unittest
 
 import numpy as np
 import numpy.typing as npt
+from scipy.signal import butter, freqz, lfilter, savgol_filter
 
 from math_tools.waveforms.dsp._protocol import WaveformProtocol
 from math_tools.waveforms.support import WaveformFilterType
@@ -332,6 +333,219 @@ class TestFrequencyResponse(unittest.TestCase):
         self.assertEqual(len(response.frequencies), 128)
         self.assertEqual(len(response.magnitudes), 128)
         self.assertEqual(len(response.phases), 128)
+
+    def test_band_pass_and_band_stop_and_phases_match_direct_scipy(self) -> None:
+        """§Gap 6 (chunk 55): ``phases`` and BAND_PASS/BAND_STOP pinned against a
+        direct ``scipy.signal.freqz`` call on the same ``butter``-designed coefficients."""
+        w = _wrap(Waveform1D.constant(1000, value=1.0, dt_seconds=1.0 / 2000.0))
+        fs = w.sampling_frequency_hz
+
+        for filter_type, btype, kwargs in (
+            (WaveformFilterType.BAND_PASS, "bandpass", {"low_hz": 20.0, "high_hz": 100.0}),
+            (WaveformFilterType.BAND_STOP, "bandstop", {"low_hz": 20.0, "high_hz": 100.0}),
+        ):
+            with self.subTest(filter_type=filter_type):
+                response = w.frequency_response(filter_type, order=4, num_points=256, **kwargs)
+                b, a = butter(4, [20.0, 100.0], btype=btype, fs=fs)
+                expected_freq, expected_response = freqz(b, a, worN=256, fs=fs)
+                np.testing.assert_allclose(response.frequencies, expected_freq)
+                np.testing.assert_allclose(response.magnitudes, np.abs(expected_response))
+                np.testing.assert_allclose(response.phases, np.angle(expected_response))
+
+
+class TestCausalFilterUsesLfilterNotFiltfilt(unittest.TestCase):
+    """§Gap 1 (chunk 55): ``causal=True`` selects a single-pass ``scipy.signal.lfilter``
+    (matched exactly, coefficient-for-coefficient), and differs from the zero-phase
+    ``filtfilt`` default -- pinning waveformDsp.md §Numerical conventions' ``causal=``
+    flag, previously never exercised by any test in the suite."""
+
+    def test_low_pass_causal_matches_direct_lfilter(self) -> None:
+        n = 1000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=200.0, dt_seconds=1.0 / fs))
+
+        causal = w.low_pass_filter(cutoff_hz=50.0, order=4, causal=True)
+
+        b, a = butter(4, 50.0, btype="low", fs=fs)
+        expected = lfilter(b, a, w.values)
+        np.testing.assert_allclose(causal.values, expected, rtol=0.0, atol=1e-12)
+
+    def test_causal_differs_from_zero_phase_default(self) -> None:
+        n = 1000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=200.0, dt_seconds=1.0 / fs))
+
+        causal = w.low_pass_filter(cutoff_hz=50.0, order=4, causal=True)
+        zero_phase = w.low_pass_filter(cutoff_hz=50.0, order=4, causal=False)
+
+        self.assertFalse(np.allclose(causal.values, zero_phase.values))
+
+    def test_high_pass_causal_matches_direct_lfilter(self) -> None:
+        n = 1000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=5.0, dt_seconds=1.0 / fs))
+
+        causal = w.high_pass_filter(cutoff_hz=50.0, order=4, causal=True)
+
+        b, a = butter(4, 50.0, btype="high", fs=fs)
+        expected = lfilter(b, a, w.values)
+        np.testing.assert_allclose(causal.values, expected, rtol=0.0, atol=1e-12)
+
+    def test_band_pass_causal_matches_direct_lfilter(self) -> None:
+        n = 1000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, dt_seconds=1.0 / fs))
+
+        causal = w.band_pass_filter(low_hz=20.0, high_hz=100.0, order=4, causal=True)
+
+        b, a = butter(4, [20.0, 100.0], btype="bandpass", fs=fs)
+        expected = lfilter(b, a, w.values)
+        np.testing.assert_allclose(causal.values, expected, rtol=0.0, atol=1e-12)
+
+    def test_filtered_dispatch_honors_causal(self) -> None:
+        n = 1000
+        fs = 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=200.0, dt_seconds=1.0 / fs))
+
+        via_dispatch = w.filtered(WaveformFilterType.LOW_PASS, cutoff_hz=50.0, causal=True)
+        via_dedicated = w.low_pass_filter(cutoff_hz=50.0, causal=True)
+        np.testing.assert_allclose(via_dispatch.values, via_dedicated.values, rtol=0.0, atol=1e-12)
+
+
+class TestValidateOrderRaisesForEveryButterworthMethod(unittest.TestCase):
+    """§Gap 4 (chunk 55): ``order < 1`` (the raise-don't-clamp policy's load-bearing
+    path, ``_filtering.py:63``) was never triggered for any Butterworth method."""
+
+    def test_low_pass_order_zero_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.low_pass_filter(cutoff_hz=10.0, order=0)
+
+    def test_high_pass_order_zero_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.high_pass_filter(cutoff_hz=10.0, order=0)
+
+    def test_band_pass_order_zero_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.band_pass_filter(low_hz=5.0, high_hz=10.0, order=0)
+
+    def test_filtered_order_zero_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.filtered(WaveformFilterType.LOW_PASS, cutoff_hz=10.0, order=0)
+
+    def test_frequency_response_order_zero_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.frequency_response(WaveformFilterType.LOW_PASS, cutoff_hz=10.0, order=0)
+
+    def test_negative_order_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.low_pass_filter(cutoff_hz=10.0, order=-1)
+
+
+class TestValidateCutoffLowerBoundRaises(unittest.TestCase):
+    """§Gap 5 (chunk 55): ``cutoff_hz <= 0`` (``_filtering.py:68``) was untested --
+    only the upper (Nyquist) bound was exercised before this chunk."""
+
+    def test_low_pass_zero_cutoff_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.low_pass_filter(cutoff_hz=0.0)
+
+    def test_low_pass_negative_cutoff_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.low_pass_filter(cutoff_hz=-10.0)
+
+    def test_high_pass_zero_cutoff_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.high_pass_filter(cutoff_hz=0.0)
+
+    def test_band_pass_zero_low_raises(self) -> None:
+        w = _wrap(Waveform1D.sine(100, frequency=5.0, dt_seconds=0.01))
+        with self.assertRaises(ValueError):
+            w.band_pass_filter(low_hz=0.0, high_hz=10.0)
+
+
+class TestExponentialFilterClosedForm(unittest.TestCase):
+    """§Gap 7 (chunk 55): pin the closed-form recursion ``y[i] = alpha*x[i] +
+    (1-alpha)*y[i-1]`` at a specific interior ``i`` -- the existing suite only
+    checked ``alpha=1.0`` (identity) and ``values[20] < 1.0`` (a bound a swapped
+    ``alpha``/``1-alpha`` would also satisfy)."""
+
+    def test_recursion_matches_hand_computed_value_at_i5(self) -> None:
+        values = [1.0, 4.0, 2.0, 9.0, 5.0, 7.0, 3.0]
+        alpha = 0.3
+        w = Waveform1D(values, dt_seconds=0.1)
+
+        filtered = w.exponential_filter(alpha=alpha)
+
+        expected = values[0]
+        for x in values[1:6]:
+            expected = alpha * x + (1.0 - alpha) * expected
+        self.assertAlmostEqual(float(filtered.values[5]), expected, places=12)
+
+    def test_swapped_alpha_would_not_match(self) -> None:
+        """Sanity check that the closed-form pin above actually distinguishes a
+        swapped alpha/(1-alpha) -- guards against a vacuously-passing assertion."""
+        values = [1.0, 4.0, 2.0, 9.0, 5.0, 7.0, 3.0]
+        alpha = 0.3
+        w = Waveform1D(values, dt_seconds=0.1)
+
+        filtered = w.exponential_filter(alpha=alpha)
+
+        wrong_expected = values[0]
+        for x in values[1:6]:
+            wrong_expected = (1.0 - alpha) * x + alpha * wrong_expected
+        self.assertNotAlmostEqual(float(filtered.values[5]), wrong_expected, places=6)
+
+
+class TestSavitzkyGolayDerivativeUnits(unittest.TestCase):
+    """§Gap 2 (chunk 55): ``deriv > 0`` is the only place ``delta=dt_seconds`` is
+    applied (``_filtering.py:356``) -- a wrong ``delta`` silently returns
+    per-sample rather than per-second derivatives, and no existing test set
+    ``deriv > 0``."""
+
+    def test_matches_direct_scipy_call_with_delta(self) -> None:
+        """Pins that the mixin forwards exactly ``delta=dt_seconds`` to scipy --
+        a direct-scipy-reference comparison (design constraint 1)."""
+        n = 500
+        dt_seconds = 1.0 / 2000.0
+        w = _wrap(Waveform1D.sine(n, frequency=50.0, amplitude=1.0, dt_seconds=dt_seconds))
+
+        result = w.savitzky_golay_filter(window_length=11, polyorder=3, deriv=1)
+
+        expected = savgol_filter(
+            np.asarray(w.values), 11, 3, deriv=1, delta=dt_seconds
+        )
+        np.testing.assert_allclose(result.values, expected, rtol=0.0, atol=1e-12)
+
+    def test_interior_matches_analytic_derivative_in_per_second_units(self) -> None:
+        """A wrong ``delta`` (e.g. the unscaled per-sample default of 1.0) would
+        return values off by a factor of ``dt_seconds`` (~2e-4 here) -- this
+        analytic comparison to ``2*pi*f*A*cos(2*pi*f*t)`` fails loudly in that case."""
+        n = 1000
+        fs = 2000.0
+        dt_seconds = 1.0 / fs
+        frequency = 50.0
+        amplitude = 1.0
+        w = _wrap(
+            Waveform1D.sine(n, frequency=frequency, amplitude=amplitude, dt_seconds=dt_seconds)
+        )
+
+        result = w.savitzky_golay_filter(window_length=11, polyorder=3, deriv=1)
+
+        t = np.arange(n, dtype=np.float64) * dt_seconds
+        analytic = 2.0 * np.pi * frequency * amplitude * np.cos(2.0 * np.pi * frequency * t)
+        interior = slice(20, -20)
+        np.testing.assert_allclose(
+            result.values[interior], analytic[interior], rtol=2e-2, atol=1.0
+        )
 
 
 if __name__ == "__main__":

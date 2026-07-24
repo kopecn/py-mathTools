@@ -114,6 +114,28 @@ class TestDetectEdgeTriggersMinimumInterval(unittest.TestCase):
         self.assertEqual([e.index for e in events], [1, 3])
 
 
+class TestDetectLevelTriggersMinimumInterval(unittest.TestCase):
+    """§Gap 21 (chunk 55): ``minimum_interval`` dedup was verified through only
+    ``detect_edge_triggers`` -- this closes the ``detect_level_triggers`` entry
+    point (2 of 5)."""
+
+    def test_second_close_rising_level_is_dropped(self) -> None:
+        values = [-1.0, 1.0, -1.0, 1.0, -1.0]
+        w = Waveform1D(values, dt_seconds=1.0)
+        events = w.detect_level_triggers(
+            level=0.0, minimum_interval=PrecisionTimeInterval.from_seconds(5.0)
+        )
+        self.assertEqual([e.index for e in events], [1])
+
+    def test_far_apart_rising_levels_both_kept(self) -> None:
+        values = [-1.0, 1.0, -1.0, 1.0, -1.0]
+        w = Waveform1D(values, dt_seconds=1.0)
+        events = w.detect_level_triggers(
+            level=0.0, minimum_interval=PrecisionTimeInterval.from_seconds(0.5)
+        )
+        self.assertEqual([e.index for e in events], [1, 3])
+
+
 class TestDetectLevelTriggers(unittest.TestCase):
     def test_default_rising_matches_edge_rising(self) -> None:
         values = _square_pulses(3, samples_per_phase=10, low=-1.0, high=1.0)
@@ -181,6 +203,23 @@ class TestDetectWindowTriggersPairUp(unittest.TestCase):
         )
 
 
+class TestDetectWindowTriggersMinimumInterval(unittest.TestCase):
+    """§Gap 21 (chunk 55): ``minimum_interval`` dedup entry point 3 of 5
+    (``detect_window_triggers``)."""
+
+    def test_second_close_enter_is_dropped(self) -> None:
+        values = [0.0, 0.5, 0.0, 0.5, 0.0]
+        w = Waveform1D(values, dt_seconds=1.0)
+        no_dedup = w.detect_window_triggers(0.3, 0.8, WaveformWindowTriggerType.ENTER)
+        self.assertEqual([e.index for e in no_dedup], [1, 3])
+
+        deduped = w.detect_window_triggers(
+            0.3, 0.8, WaveformWindowTriggerType.ENTER,
+            minimum_interval=PrecisionTimeInterval.from_seconds(5.0),
+        )
+        self.assertEqual([e.index for e in deduped], [1])
+
+
 class TestDetectPatternTriggersFindsPlantedIndices(unittest.TestCase):
     """Acceptance criterion: pattern trigger finds an embedded motif at the planted indices."""
 
@@ -215,6 +254,27 @@ class TestDetectPatternTriggersFindsPlantedIndices(unittest.TestCase):
 
     def test_empty_pattern_returns_empty(self) -> None:
         self.assertEqual(self.w.detect_pattern_triggers([], tolerance=1.0), [])
+
+
+class TestDetectPatternTriggersMinimumInterval(unittest.TestCase):
+    """§Gap 21 (chunk 55): ``minimum_interval`` dedup entry point 4 of 5
+    (``detect_pattern_triggers``)."""
+
+    def test_close_matches_are_deduped(self) -> None:
+        motif = [1.0, 0.0]
+        values = np.zeros(10)
+        values[1] = 1.0
+        values[3] = 1.0
+        values[7] = 1.0
+        w = Waveform1D(values, dt_seconds=1.0)
+
+        no_dedup = w.detect_pattern_triggers(motif, tolerance=1e-9)
+        self.assertEqual([e.index for e in no_dedup], [1, 3, 7])
+
+        deduped = w.detect_pattern_triggers(
+            motif, tolerance=1e-9, minimum_interval=PrecisionTimeInterval.from_seconds(3.0)
+        )
+        self.assertEqual([e.index for e in deduped], [1, 7])
 
 
 class TestDetectTriggersGenericDispatch(unittest.TestCase):
@@ -274,6 +334,20 @@ class TestDetectTriggersGenericDispatch(unittest.TestCase):
     def test_pattern_kind_missing_fields_raises(self) -> None:
         with self.assertRaises(ValueError):
             self.square.detect_triggers(WaveformTrigger(kind=WaveformTriggerType.PATTERN))
+
+    def test_minimum_interval_honored_through_generic_dispatch(self) -> None:
+        """§Gap 21 (chunk 55): ``minimum_interval`` dedup entry point 5 of 5
+        (``detect_triggers``'s generic ``WaveformTrigger``-driven dispatch)."""
+        values = [-1.0, 1.0, -1.0, 1.0, -1.0]
+        w = Waveform1D(values, dt_seconds=1.0)
+        min_interval = PrecisionTimeInterval.from_seconds(5.0)
+
+        via_trigger = w.detect_triggers(
+            WaveformTrigger(kind=WaveformTriggerType.EDGE, level=0.0, minimum_interval=min_interval)
+        )
+        direct = w.detect_edge_triggers(level=0.0, minimum_interval=min_interval)
+        self.assertEqual([e.index for e in via_trigger], [1])
+        self.assertEqual([e.index for e in via_trigger], [e.index for e in direct])
 
 
 class TestWithEventMarkers(unittest.TestCase):

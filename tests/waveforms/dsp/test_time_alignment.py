@@ -111,6 +111,29 @@ class TestTimeLagAccountsForExistingT0Offset(unittest.TestCase):
         self.assertAlmostEqual(lag.lag_seconds, 0.3, places=9)
 
 
+class TestTimeLagMaxLagRestrictsSearch(unittest.TestCase):
+    """§Gap 20 (chunk 55): ``max_lag`` (``_time_alignment.py:171``) was never passed
+    to ``time_lag`` by any test."""
+
+    def test_max_lag_bounds_the_result(self) -> None:
+        n = 2000
+        base = Waveform1D.white_noise(n, amplitude=1.0, seed=7, dt_seconds=0.001)
+        w1 = _wrap(base)
+        shifted_values = np.roll(base.values, 17)
+        w2 = Waveform1D(shifted_values, dt=base.dt, t0=base.t0)
+
+        unrestricted = w1.time_lag(w2)
+        restricted = w1.time_lag(w2, max_lag=5)
+
+        self.assertIsNotNone(unrestricted)
+        self.assertIsNotNone(restricted)
+        assert unrestricted is not None
+        assert restricted is not None
+        self.assertEqual(unrestricted.lag_samples, -17)
+        self.assertLessEqual(abs(restricted.lag_samples), 5)
+        self.assertNotEqual(restricted.lag_samples, unrestricted.lag_samples)
+
+
 class TestTimeLagPropagatesCorrelationMixinValidation(unittest.TestCase):
     def test_dt_mismatch_raises(self) -> None:
         w1 = Waveform1D([1.0, 2.0, 3.0], dt_seconds=0.1)

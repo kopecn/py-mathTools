@@ -171,6 +171,28 @@ class TestSegmentsBetweenZeroCrossings(unittest.TestCase):
         for segment in segments:
             self.assertEqual(segment.dt, w.dt)
 
+    def test_inclusive_slicing_pinned_on_hand_computed_case(self) -> None:
+        """§Gap 23 (chunk 55): the inclusive ``[start:stop+1]`` slicing
+        (``_zero_crossings.py:206``) was never pinned against a hand-computed
+        case. ``values = [1, -1, 1, -1, 1]`` (alternating sign, ``dt=1s``) has
+        BOTH-direction crossings landing at indices ``[1, 2, 3, 4]`` (each pair
+        change is a crossing); with ``split_points = [0, 1, 2, 3, 4, 4]`` (the
+        trailing duplicate ``sample_count - 1 == 4`` dropped, since
+        ``start >= stop``), the four inclusive segments are
+        ``values[0:2], values[1:3], values[2:4], values[3:5]`` -- each interior
+        boundary sample shared by exactly two adjacent segments.
+        """
+        values = [1.0, -1.0, 1.0, -1.0, 1.0]
+        w = Waveform1D(values, dt_seconds=1.0, t0_seconds=0.0)
+
+        segments = w.segments_between_zero_crossings()
+
+        self.assertEqual(len(segments), 4)
+        expected_slices = [(0, 2), (1, 3), (2, 4), (3, 5)]
+        for segment, (start, stop) in zip(segments, expected_slices, strict=True):
+            np.testing.assert_allclose(segment.values, values[start:stop])
+            self.assertEqual(segment.t0, w.t0 + w.dt * start)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -47,6 +47,44 @@ class TestGenerateWindowEveryMember(unittest.TestCase):
             np.testing.assert_allclose(coefficients, [1.0])
 
 
+class TestWindowCoefficientsMatchScipyDirectly(unittest.TestCase):
+    """§Gap 22 (chunk 55): coefficients were verified only for HANN; HAMMING,
+    BLACKMAN, BARTLETT, and KAISER were checked only for shape, so a wrong
+    ``_WINDOW_NAME_MAP`` entry (``_windowing.py:56``) would still pass. Pin the
+    full coefficient array for every member against a direct
+    ``scipy.signal.get_window`` call (symmetric convention)."""
+
+    def test_hamming_matches_scipy(self) -> None:
+        n = 33
+        result = WindowingMixin.generate_window(WaveformWindowType.HAMMING, n)
+        expected = scipy_get_window("hamming", n, fftbins=False)
+        np.testing.assert_allclose(result, expected)
+
+    def test_blackman_matches_scipy(self) -> None:
+        n = 33
+        result = WindowingMixin.generate_window(WaveformWindowType.BLACKMAN, n)
+        expected = scipy_get_window("blackman", n, fftbins=False)
+        np.testing.assert_allclose(result, expected)
+
+    def test_bartlett_matches_scipy(self) -> None:
+        n = 33
+        result = WindowingMixin.generate_window(WaveformWindowType.BARTLETT, n)
+        expected = scipy_get_window("bartlett", n, fftbins=False)
+        np.testing.assert_allclose(result, expected)
+
+    def test_kaiser_matches_scipy_with_shared_beta(self) -> None:
+        n = 33
+        result = WindowingMixin.generate_window(WaveformWindowType.KAISER, n)
+        expected = scipy_get_window(("kaiser", DEFAULT_KAISER_BETA), n, fftbins=False)
+        np.testing.assert_allclose(result, expected)
+
+    def test_rectangular_matches_scipy(self) -> None:
+        n = 33
+        result = WindowingMixin.generate_window(WaveformWindowType.RECTANGULAR, n)
+        expected = scipy_get_window("boxcar", n, fftbins=False)
+        np.testing.assert_allclose(result, expected)
+
+
 class TestHannShape(unittest.TestCase):
     """Acceptance criterion: HANN endpoints ~= 0 and midpoint ~= 1."""
 
@@ -88,6 +126,14 @@ class TestWindowProcessingGain(unittest.TestCase):
         gain = w.window_processing_gain(WaveformWindowType.HANN)
         self.assertLess(gain, 1.0)
         self.assertGreater(gain, 0.0)
+
+    def test_hann_processing_gain_matches_analytic_sqrt_3_over_8(self) -> None:
+        """§Gap 22 (chunk 55): HANN's known-answer processing gain
+        (``sqrt(3/8) ~= 0.6124``) was available but unpinned -- only the loose
+        ``RECTANGULAR``-only known-answer test existed."""
+        w = _wrap(Waveform1D.constant(1001, value=1.0, dt_seconds=0.001))
+        gain = w.window_processing_gain(WaveformWindowType.HANN)
+        self.assertAlmostEqual(gain, float(np.sqrt(3.0 / 8.0)), delta=1e-3)
 
     def test_empty_waveform_raises(self) -> None:
         w = Waveform1D([])
