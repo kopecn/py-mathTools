@@ -12,7 +12,7 @@
 	uv-lifecycle-test \
 	dev setup \
 	installDev e refresh \
-	test testInEnvCleanup testInEnvInstallFromSetup testInEnvRunPytest testInEnv \
+	test cleanRoomCleanup cleanRoomBootstrap cleanRoomPytest testInEnv \
 	build validateBuild release-test release \
 	nuke list
 
@@ -387,7 +387,7 @@ refresh:  ## Refresh pip packages: reinstall from requirements + upgrade editabl
 test:  ## Run tests using the current Python environment
 	pytest
 
-testInEnvCleanup:  ## Delete the temporary venv ($(VENV))
+cleanRoomCleanup:  ## Delete the clean-room venv ($(VENV))
 	rm -rf $(VENV) || true
 
 # The clean room is an install path, so it obeys the same BKM rule as every other
@@ -398,7 +398,7 @@ testInEnvCleanup:  ## Delete the temporary venv ($(VENV))
 # (`No matching distribution found`). Install the requirements file FIRST, then the
 # package. Keep ".[dev]" NON-editable here — validating the real packaging path is
 # this target's entire purpose.
-testInEnvInstallFromSetup: testInEnvCleanup  ## Create temp venv + install dev deps
+cleanRoomBootstrap: cleanRoomCleanup  ## Bootstrap the clean-room venv + deps (runs NO tests)
 	$(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate && \
 	which python3 && \
@@ -406,12 +406,12 @@ testInEnvInstallFromSetup: testInEnvCleanup  ## Create temp venv + install dev d
 	$(VENV)/bin/pip install ".[dev]"
 	@echo "Virtual env can be activated with 'source $(VENV)/bin/activate'"
 
-testInEnvRunPytest:  ## Run pytest inside the temporary venv
+cleanRoomPytest:  ## Run pytest inside the clean-room venv
 	. $(VENV)/bin/activate && \
 	which $(PYTHON) && \
 	$(PYTHON) -m pytest
 
-testInEnv: clean testInEnvInstallFromSetup testInEnvRunPytest testInEnvCleanup  ## Full clean-room test
+testInEnv: clean cleanRoomBootstrap cleanRoomPytest cleanRoomCleanup  ## Full clean-room test
 	@echo ">> testInEnv completed"
 
 # ============================================================================
