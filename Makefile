@@ -390,10 +390,19 @@ test:  ## Run tests using the current Python environment
 testInEnvCleanup:  ## Delete the temporary venv ($(VENV))
 	rm -rf $(VENV) || true
 
+# The clean room is an install path, so it obeys the same BKM rule as every other
+# one (see the dependency-model comment above ##@ UV · Bootstrap): pyproject.toml
+# declares dependency NAMES ONLY, and requirements.txt carries the pins and the
+# git/path pointers. Installing ".[dev]" alone makes pip resolve those bare names
+# against PyPI, which fails outright for any unpublished sibling dependency
+# (`No matching distribution found`). Install the requirements file FIRST, then the
+# package. Keep ".[dev]" NON-editable here — validating the real packaging path is
+# this target's entire purpose.
 testInEnvInstallFromSetup: testInEnvCleanup  ## Create temp venv + install dev deps
 	$(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate && \
 	which python3 && \
+	$(VENV)/bin/pip install -r requirements.txt && \
 	$(VENV)/bin/pip install ".[dev]"
 	@echo "Virtual env can be activated with 'source $(VENV)/bin/activate'"
 
