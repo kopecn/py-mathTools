@@ -7,8 +7,8 @@ spec: TemplateConformance
 scope: project
 status: accepted
 applies_to: pyproject.toml, requirements.txt, Makefile, .env, .github/, .claude/, src/, README.md
-last_updated: 2026-07-23
-semver: 0.0.3
+last_updated: 2026-08-14
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 
@@ -77,7 +77,8 @@ Requirements:
    math tiers), package map, gate command, pointer to `.claude/specs/`.
    It references specs — never duplicates their content.
 2. `.claude/specs/` — this spec set.
-3. `.claude/action-plan/` — the chunk set produced from these specs.
+3. `.claude/archive/math-tools-port/` — the completed chunk set produced
+   from these specs.
 
 ## Gap 4 — README and metadata
 
