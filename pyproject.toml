@@ -22,6 +22,7 @@ license = {text = "MIT"}
 dependencies = [
     "pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev",
     "matplotlib",
+    "numpy-quaternion",
 ]
 
 [project.optional-dependencies]
