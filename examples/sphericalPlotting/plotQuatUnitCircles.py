@@ -25,19 +25,16 @@ Expected Output:
 
 """
 
-from typing import List
+
+import numpy as np
+from foundationTypes.mathTypes.MathTypes import UnitSphericalSmallCircleType
 from numpy import pi
 
-from foundationTypes.mathTypes.UnitSphericalSmallCircle import UnitSphericalSmallCircle
-
-from pyMathTools.spatial.Quaternion import Quaternion
-
-from pyMathToolsPlotHelpers.plotUnitSpherical import (
-    plot_unit_spherical_multiplot,
-)
+from math_plot_helpers import plot_unit_spherical_multiplot
+from math_tools.spatial.quaternion import Quaternion
 
 
-def main():
+def main() -> None:
     """
     Convert canonical quaternions to spherical small circles and plot them.
 
@@ -49,15 +46,15 @@ def main():
     All circles use a radius angle of pi/8 except y and z, which use the default.
     """
 
-    quat4 = Quaternion.from_unit_x_to_vector([1, 0, 0])
-    quat5 = Quaternion.from_unit_x_to_vector([0, 1, 0])
-    quat6 = Quaternion.from_unit_x_to_vector([0, 0, 1])
+    quat4 = Quaternion.from_unit_x_to_vector(np.array([1.0, 0.0, 0.0]))
+    quat5 = Quaternion.from_unit_x_to_vector(np.array([0.0, 1.0, 0.0]))
+    quat6 = Quaternion.from_unit_x_to_vector(np.array([0.0, 0.0, 1.0]))
 
     quat1 = Quaternion.from_components(0, 1, 0, 0)
     quat2 = Quaternion.from_components(0, 0, 1, 0)
     quat3 = Quaternion.from_components(0, 0, 0, 1)
 
-    circles: List[UnitSphericalSmallCircle] = [
+    circles: list[UnitSphericalSmallCircleType] = [
         quat1.to_unitSphericalSmallCircle(radius_angle=pi / 8),
         quat2.to_unitSphericalSmallCircle(radius_angle=pi / 8),
         quat3.to_unitSphericalSmallCircle(),
@@ -66,7 +63,7 @@ def main():
         quat6.to_unitSphericalSmallCircle(radius_angle=pi / 16),
     ]
 
-    quats: List[Quaternion] = [quat1, quat2, quat3, quat4, quat5, quat6]
+    quats: list[Quaternion] = [quat1, quat2, quat3, quat4, quat5, quat6]
 
     # from_vector_part
     _ = plot_unit_spherical_multiplot(
