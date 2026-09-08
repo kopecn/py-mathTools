@@ -26,11 +26,13 @@ ifneq (,$(wildcard .env))
 endif
 
 # Defaults (overridable via .env — the user-editable surface). Keep in sync with .env.
-PYTHONS ?= 3.11 3.12 3.13 3.14 3.15
+PYTHONS ?= 3.11 3.12 3.13
 DEFAULT_PYTHON ?= 3.13
 PYTHON ?= python3
 VENV ?= .cleanroom-venv
 
+# Quality-target paths. ROOT half has NO src/ — its Python lives in hooks/ + tests/
+# (see GAPS.md §6). The template half overrides these to src/. Overridable via .env.
 PY_SRC ?= hooks
 PY_TESTS ?= tests
 PY_EXAMPLES ?=
@@ -311,6 +313,7 @@ uv-test-all: check-uv  ## Run tests across all configured Python versions (.venv
 		venv=".venvs/$$py"; \
 		[ -d "$$venv" ] || uv venv --python $$py "$$venv"; \
 		if ( . "$$venv/bin/activate" && \
+		     uv pip install -q -r requirements.txt && \
 		     uv pip install -q -e ".[dev]" && \
 		     python -m pytest ); then \
 			echo "PASS: Python $$py"; \
@@ -560,3 +563,23 @@ list: ## List pip packages in available environments
 		$$venv/bin/pip list 2>/dev/null || echo "No packages or pip not available"; \
 		echo; \
 	done
+	
+# ============================================================================
+# MARK: - Codegen
+# ============================================================================
+
+# Base dir for generated Python types; mirrors _PYTHON_TYPES_BASE in
+# schema/scripts/reuse/codegen.sh. Kept in sync so the fleet-wide normalization
+# sweep targets every generated model regardless of its generate script.
+_PYTHON_TYPES_BASE := src/foundationTypes
+
+codegen-all: check-uv  ## Run all schema codegen scripts in schema/scripts/
+	@for script in schema/scripts/*.sh; do \
+		echo "Generating: $$script"; \
+		bash "$$script"; \
+	done
+	@echo "Normalizing all generated models (fleet-wide DataModelHelper contract)..."
+	@bash schema/scripts/reuse/normalize_generated.sh $(_PYTHON_TYPES_BASE)
+	@echo "Formatting the generated tree with black (first-class formatter)..."
+	$(UV) black $(_PYTHON_TYPES_BASE)
+	@echo "-- fini --"
