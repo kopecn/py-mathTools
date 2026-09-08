@@ -1,0 +1,25 @@
+# flake8 config (flake8 does not read pyproject.toml). Formatting is owned by black
+# ([tool.black]); this file only lints. flake8-bugbear supplies the `B` checks.
+[flake8]
+max-line-length = 100
+
+# E (pycodestyle errors), F (pyflakes), B (bugbear). The `W` warning series is
+# intentionally not enforced.
+select = E, F, B
+
+# E203, W503: disabled for black compatibility.
+# E704: `def f(): ...` one-liners are the idiomatic form for @overload / stub bodies.
+extend-ignore = E203, E704, W503, F401
+
+# Repo-specific relaxations go here, e.g.:
+#   per-file-ignores =
+#       tests/test_something.py: E501
+
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .venv,
+    .venvs,
+    .cleanroom-venv

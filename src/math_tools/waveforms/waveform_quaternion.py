@@ -140,6 +140,18 @@ class WaveformQuaternion(QuaternionWaveformABC):
         quaternions = [Quaternion.from_dict(q) for q in obj.get("quaternions", [])]
         return cls(quaternions, dt=dt, t0=t0)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"dt", "quaternions", "t0"}``.
+
+        Emits exactly what ``foundationTypes`` ``QuaternionWaveformType.to_dict()``
+        emits, so the payload round-trips through either carrier.
+        """
+        return {
+            "dt": self.dt.to_dict(),
+            "quaternions": [q.to_dict() for q in self.quaternions],
+            "t0": self.t0.to_dict(),
+        }
+
     @classmethod
     def from_components(
         cls, w: Waveform1D, x: Waveform1D, y: Waveform1D, z: Waveform1D

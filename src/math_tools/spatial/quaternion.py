@@ -843,6 +843,14 @@ class Quaternion(QuaternionABC):
         # cls ensures the correct subclass type is returned
         return cls.from_components(w, x, y, z)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"w", "x", "y", "z"}``.
+
+        Emits exactly what ``foundationTypes`` ``QuaternionType.to_dict()`` emits,
+        so the payload round-trips through either carrier.
+        """
+        return {"w": self.w, "x": self.x, "y": self.y, "z": self.z}
+
     def to_unitSphericalSmallCircle(
         q: Quaternion, radius_angle: float = np.pi / 4
     ) -> UnitSphericalSmallCircleType:

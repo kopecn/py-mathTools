@@ -97,7 +97,7 @@ make uv-format       # ruff format + autofix
 
 ## Requirements
 
-- Python >= 3.10
+- Python >= 3.11
 - `pyFoundationTools`, `numpy`, `scipy`, `numpy-quaternion`, `matplotlib`
   (see [`pyproject.toml`](pyproject.toml) for the names-only dependency
   declaration and [`requirements.txt`](requirements.txt) for the pinned

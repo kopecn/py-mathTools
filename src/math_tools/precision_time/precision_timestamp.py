@@ -211,6 +211,28 @@ class PrecisionTimestamp(PrecisionTimestampABC):
             uncertainty=uncertainty,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape (camelCase optional keys).
+
+        Emits exactly what ``foundationTypes`` ``PrecisionTimestampType.to_dict()``
+        emits: the ``{"attoseconds", "seconds", "sign"}`` core, plus
+        ``referenceFrame``/``timescale``/``uncertainty`` only when present. Enum
+        values serialize to their string value, so the payload round-trips
+        through either carrier.
+        """
+        result: dict[str, Any] = {
+            "attoseconds": self.attoseconds,
+            "seconds": self.seconds,
+            "sign": self.sign.value,
+        }
+        if self._reference_frame is not None:
+            result["referenceFrame"] = self._reference_frame.value
+        if self._timescale is not None:
+            result["timescale"] = self._timescale.value
+        if self._uncertainty is not None:
+            result["uncertainty"] = self._uncertainty
+        return result
+
     # MARK: - Properties (ABC-required)
 
     @property
@@ -238,6 +260,21 @@ class PrecisionTimestamp(PrecisionTimestampABC):
         return self._uncertainty
 
     # MARK: - Accessors (beyond the ABC)
+
+    @property
+    def is_epoch(self) -> bool:
+        """Whether this timestamp is exactly the Unix epoch."""
+        return self.sign == NumericSign.ZERO
+
+    @property
+    def is_after_epoch(self) -> bool:
+        """Whether this timestamp is strictly after the Unix epoch."""
+        return self.sign == NumericSign.POSITIVE
+
+    @property
+    def is_before_epoch(self) -> bool:
+        """Whether this timestamp is strictly before the Unix epoch."""
+        return self.sign == NumericSign.NEGATIVE
 
     @property
     def interval(self) -> PrecisionTimeInterval:

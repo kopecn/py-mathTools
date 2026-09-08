@@ -215,6 +215,20 @@ class WaveformSpatialPose(WaveformSpatialABC):
         quaternions = [Quaternion.from_dict(q) for q in obj.get("quaternions", [])]
         return cls(positions, quaternions, dt=dt, t0=t0)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"dt", "positions", "quaternions", "t0"}``.
+
+        Emits exactly what ``foundationTypes``
+        ``SpatialTransformWaveformType.to_dict()`` emits (parallel position and
+        quaternion arrays), so the payload round-trips through either carrier.
+        """
+        return {
+            "dt": self.dt.to_dict(),
+            "positions": [p.to_dict() for p in self.positions],
+            "quaternions": [q.to_dict() for q in self.quaternions],
+            "t0": self.t0.to_dict(),
+        }
+
     @classmethod
     def from_poses(
         cls,
