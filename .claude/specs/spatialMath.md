@@ -1,5 +1,5 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: spatialMath
 purpose: Behavioral contract for the Position, Quaternion, and SpatialPose math types
@@ -227,7 +227,9 @@ robotics reading)
 
 ## Compliance requirements (test-checkable)
 
-1. All three classes satisfy `isinstance` of their ABC and round-trip
+1. All three classes structurally conform to their ABC — member presence over
+   the ABC's `__abstractmethods__`; the Tier-2 ABCs are non-runtime_checkable
+   `typing.Protocol`s, so this is not `isinstance`-checkable — and round-trip
    `to_dict`/`from_dict` against the matching `foundationTypes` generated
    Type's wire output. The target names are `PositionType`,
    `QuaternionType`, and `SpatialTransformType`; verification is meaningful

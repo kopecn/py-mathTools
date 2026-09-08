@@ -1,5 +1,5 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: precisionTimeMath
 purpose: Behavioral contract for the Tier-3 PrecisionTimeInterval and PrecisionTimestamp math types
@@ -129,4 +129,7 @@ for round-trip parity.
 7. `timestamp - timestamp` across the epoch (one pre-1970 operand) is exact.
 8. `compare_validated` raises `TimestampComparisonError` on differing timescale (both set), differing frame (both set), and overlapping uncertainty (both set, delta ≤ combined — pin the boundary case delta == combined as raising); returns -1/0/1 otherwise. `can_compare` is True when either side's metadata is `None` and ignores uncertainty.
 9. `as_datetime`/`from_datetime` round-trips to microsecond precision, including a pre-epoch instant.
-10. mypy strict clean; all classes pass `isinstance(x, <ABC>)`.
+10. mypy strict clean; all classes structurally conform to their Tier-2
+    `<ABC>`. The ABC is a non-runtime_checkable `typing.Protocol`, so
+    conformance is verified by member presence (`hasattr` over
+    `<ABC>.__abstractmethods__`), not `isinstance`.

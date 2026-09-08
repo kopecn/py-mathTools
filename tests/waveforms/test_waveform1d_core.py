@@ -75,10 +75,15 @@ class TestSpecCompliance1SerializationRoundTrip(unittest.TestCase):
         w2 = Waveform1D.from_dict(w.to_dict())
         self.assertEqual(w, w2)
 
-    def test_isinstance_of_abc(self) -> None:
+    def test_structural_conformance_to_abc(self) -> None:
+        """Waveform1D structurally conforms to Waveform1dABC (a
+        non-runtime_checkable ``typing.Protocol``), verified by member presence
+        rather than ``isinstance``."""
         from foundation_abc.math.waveformABCs import Waveform1dABC
 
-        self.assertIsInstance(Waveform1D([1.0]), Waveform1dABC)
+        w = Waveform1D([1.0])
+        for member in Waveform1dABC.__abstractmethods__:
+            self.assertTrue(hasattr(w, member), member)
 
 
 class TestConstruction(unittest.TestCase):

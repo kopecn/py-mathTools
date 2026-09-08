@@ -804,19 +804,28 @@ class TestQuaternionSerialization(unittest.TestCase):
         self.assertEqual(q.w, 1.0)
         self.assertEqual(q.x, 2.0)
 
-    def test_inheritance_from_quaternion_type(self) -> None:
-        """Test that Quaternion properly inherits from the shared QuaternionABC."""
+    def test_structural_conformance_to_abc(self) -> None:
+        """Quaternion structurally conforms to QuaternionABC.
+
+        The Tier-2 ABC is a non-runtime_checkable ``typing.Protocol``, so
+        conformance is verified by member presence rather than ``isinstance``.
+        """
         from foundation_abc.math.spatialABCs import QuaternionABC
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
-        self.assertIsInstance(q, QuaternionABC)
+        for member in QuaternionABC.__abstractmethods__:
+            self.assertTrue(hasattr(q, member), member)
 
-    def test_inheritance_from_data_model_helper(self) -> None:
-        """Test that Quaternion inherits from QuaternionABC (ABC-only, not DataModelHelper)."""
+    def test_conforms_to_abc_without_carrier_inheritance(self) -> None:
+        """Quaternion conforms to QuaternionABC structurally and does not inherit
+        the Tier-1 ``DataModelHelper`` carrier base (ABC-only conformance)."""
         from foundation_abc.math.spatialABCs import QuaternionABC
 
         q = Quaternion.from_components(1.0, 2.0, 3.0, 4.0)
-        self.assertIsInstance(q, QuaternionABC)
+        for member in QuaternionABC.__abstractmethods__:
+            self.assertTrue(hasattr(q, member), member)
+        mro_names = {base.__name__ for base in type(q).__mro__}
+        self.assertNotIn("DataModelHelper", mro_names)
 
     def test_has_serialization_methods(self) -> None:
         """Test that Quaternion has the required serialization methods."""

@@ -1,5 +1,5 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: waveformCore
 purpose: Behavioral contract for Waveform1D and the aggregate spatial waveform containers
@@ -229,7 +229,9 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
 
 ## Compliance requirements (test-checkable)
 
-1. All four classes: `isinstance` of their ABC; `to_dict` output loads via
+1. All four classes: structural conformance to their ABC (member presence over
+   the ABC's `__abstractmethods__`; the Tier-2 ABCs are non-runtime_checkable
+   `typing.Protocol`s, not `isinstance`-checkable); `to_dict` output loads via
    the matching `foundationTypes` generated Type and round-trips equal —
    target names: `Waveform1D` ↔
    `ScalarWaveformType`, `WaveformPosition` ↔ `PositionWaveformType`,
