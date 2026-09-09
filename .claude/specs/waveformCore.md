@@ -1,14 +1,14 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: waveformCore
 purpose: Behavioral contract for Waveform1D and the aggregate spatial waveform containers
 spec: WaveformCore
 scope: project
-status: accepted
+status: draft
 applies_to: src/math_tools/waveforms/, tests/waveforms/
-last_updated: 2026-07-23
-semver: 0.0.4
+last_updated: 2026-08-26
+semver: 0.1.0
 author: Nicholas Bergantz
 ---
 
@@ -50,14 +50,14 @@ The inherited ABC `to_dict` therefore emits the correct wire keys
 and the DSP mixins use the numpy accessors; the ABC accessors exist for the
 contract and serialization.
 
-## Instantiability / DSP phasing (load-bearing)
+## Instantiability
 
-The core chunk ships `class Waveform1D(Waveform1dABC)` with **no DSP mixin
-bases**. The mixin base list is added in a single later "compose" chunk after
-every mixin exists ([waveformDsp.md](waveformDsp.md)); until then the class
-is complete and the gate stays green. A test pins that `Waveform1D` is
-concrete (`Waveform1D.__abstractmethods__ == frozenset()` and a bare
-construction succeeds).
+`Waveform1D` SHALL be concrete and directly constructible:
+`Waveform1D.__abstractmethods__` is empty and a bare construction succeeds.
+
+It composes the DSP families defined in [waveformDsp.md](waveformDsp.md) as
+mixin bases ahead of `Waveform1dABC` in its MRO. Adding a DSP family SHALL NOT
+change this class's own contract.
 
 ## Time axis (shared by all four)
 
@@ -144,6 +144,27 @@ Python list vocabulary, not Swift's:
 `pop(i=-1) -> float` (`IndexError` on empty/out-of-range — stdlib
 semantics, not Swift's Optional), `clear()`.
 
+**`insert` index semantics.** `insert(i, x)` SHALL follow `list.insert` index
+semantics, including its out-of-range rule: the index is clamped, never
+rejected. `insert` SHALL NOT raise for any integer `i`.
+
+| `i` | Insertion point |
+| --- | --- |
+| `i > n` | end |
+| `0 <= i <= n` | `i` |
+| `-n <= i < 0` | `n + i` |
+| `i < -n` | front |
+
+This governs `Waveform1D.insert` and `insert` on all three aggregate
+containers. `WaveformSpatialPose` resolves a single index for both of its
+parallel arrays, so its length and `sample_count` invariants hold after any
+insertion.
+
+`insert` is the only mutation verb with clamping semantics: `pop` and
+`replace` raise on out-of-range indices, matching stdlib `list`.
+
+Each `insert` docstring SHALL state that the index clamps and never raises.
+
 ## Aggregate containers
 
 All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
@@ -175,7 +196,7 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
   `sample_count == min(len(positions), len(quaternions))` — both subtle Swift
   behaviors, kept.
 - `==`, `repr`, `to_dict`/`from_dict` per the ABC wire shapes.
-- **Shared API idioms** (mathToolsArchitecture.md §API idioms, chunk 50): all
+- **Shared API idioms** (mathToolsArchitecture.md §API idioms): all
   three aggregates additionally implement `__array__` and
   `isclose(other, rtol, atol)`, mirroring the umbrella idiom already required
   of `Waveform1D`, `Position`, and `Quaternion`.
@@ -200,17 +221,19 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
     rotation).
   - `WaveformSpatialPose.from_components(position_x, position_y, position_z,
     quaternion_w, quaternion_x, quaternion_y, quaternion_z)`: the third
-    aggregate's `from_components`, dropped in chunk 17 and restored in chunk
-    50 — seven per-component `Waveform1D`s (three position, four quaternion),
+    aggregate's `from_components` — seven per-component `Waveform1D`s
+    (three position, four quaternion),
     following `WaveformPosition.from_components`/
     `WaveformQuaternion.from_components`'s shape; `ValueError` unless all
     seven share length and `dt`.
 
 ## Compliance requirements (test-checkable)
 
-1. All four classes: `isinstance` of their ABC; `to_dict` output loads via
+1. All four classes: structural conformance to their ABC (member presence over
+   the ABC's `__abstractmethods__`; the Tier-2 ABCs are non-runtime_checkable
+   `typing.Protocol`s, not `isinstance`-checkable); `to_dict` output loads via
    the matching `foundationTypes` generated Type and round-trips equal —
-   exact target names on the pinned branch: `Waveform1D` ↔
+   target names: `Waveform1D` ↔
    `ScalarWaveformType`, `WaveformPosition` ↔ `PositionWaveformType`,
    `WaveformQuaternion` ↔ `QuaternionWaveformType`, `WaveformSpatialPose` ↔
    `SpatialTransformWaveformType`.
@@ -226,7 +249,10 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
    choice with a literal expected value).
 6. `value_at_time` midpoint between two samples returns their average.
 7. Mutation verbs match stdlib list semantics (pin `prepend` t0 shift;
-   `pop()` on empty raises `IndexError`; `clear()` empties).
+   `pop()` on empty raises `IndexError`; `clear()` empties). For all four
+   classes and any integer index, `insert` produces the same resulting order
+   as the equivalent `list.insert` and raises nothing.
+   `WaveformSpatialPose.insert` leaves its parallel arrays equal in length.
 8. Aggregate `component_waveforms` → `from_components` round-trips exactly
    (quaternion tuple order `(w, x, y, z)` pinned).
 9. `WaveformSpatialPose` with unequal arrays: `is_valid` False,

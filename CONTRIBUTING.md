@@ -107,7 +107,7 @@ Before submitting a pull request, make sure:
 
 - [ ] Tests are included for new logic
 - [ ] Documentation is updated if needed
-- [ ] The project supports Python 3.10 through 3.13
+- [ ] The project supports Python 3.11 through 3.13
 - [ ] All tests pass (CI checks will run on PRs)
 
 ---

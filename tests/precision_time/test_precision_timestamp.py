@@ -417,10 +417,16 @@ class TestNotImplementedFallback(unittest.TestCase):
 
 
 class TestIsinstanceAndAbc(unittest.TestCase):
-    def test_isinstance_of_abc(self) -> None:
-        """Compliance 10: isinstance(x, PrecisionTimestampABC)."""
+    def test_structural_conformance_to_abc(self) -> None:
+        """Compliance 10: PrecisionTimestamp structurally conforms to
+        PrecisionTimestampABC.
+
+        The Tier-2 ABC is a non-runtime_checkable ``typing.Protocol``, so
+        conformance is verified by member presence rather than ``isinstance``.
+        """
         ts = PrecisionTimestamp(seconds=1)
-        self.assertIsInstance(ts, PrecisionTimestampABC)
+        for member in PrecisionTimestampABC.__abstractmethods__:
+            self.assertTrue(hasattr(ts, member), member)
 
 
 class TestSerializationRoundTrip(unittest.TestCase):

@@ -154,6 +154,14 @@ class Position(PositionABC):
         z = _from_float(obj.get("z"))
         return cls(x, y, z)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"x", "y", "z"}``.
+
+        Emits exactly what ``foundationTypes`` ``PositionType.to_dict()`` emits,
+        so the payload round-trips through either carrier.
+        """
+        return {"x": self.x, "y": self.y, "z": self.z}
+
     # MARK: - Properties
 
     @property

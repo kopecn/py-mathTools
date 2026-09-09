@@ -1,5 +1,5 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: precisionTimeMath
 purpose: Behavioral contract for the Tier-3 PrecisionTimeInterval and PrecisionTimestamp math types
@@ -7,8 +7,8 @@ spec: PrecisionTimeMath
 scope: project
 status: accepted
 applies_to: src/math_tools/precision_time/, tests/precision_time/
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-09-08
+semver: 0.0.3
 author: Nicholas Bergantz
 ---
 
@@ -69,10 +69,13 @@ noted; `NotImplemented` for foreign types so Python falls back correctly):
 - `==`, `<`, `<=`, `>`, `>=` (total ordering on signed total), `__hash__`.
 - `bool(x)` is `not x.is_zero`.
 
-**Serialization**: `to_dict` inherited from the ABC; `from_dict` accepts the
-ABC wire shape `{"seconds", "attoseconds", "sign"}` — exactly what
-`foundationTypes` `PrecisionTimeIntervalType.to_dict()` emits (wire-format
-interop is the Tier-1↔Tier-3 contract).
+**Serialization**: `to_dict` and `from_dict` are both implemented on this
+class (the Tier-2 ABC declares them abstract and, per `mathTypeTiers.md`, must
+stay free of concrete wire mappings — there is nothing to inherit). Both use
+the ABC wire shape `{"attoseconds", "seconds", "sign"}` (`sign` as its string
+value) — exactly what `foundationTypes` `PrecisionTimeIntervalType.to_dict()`
+emits, so payloads round-trip through either carrier (wire-format interop is
+the Tier-1↔Tier-3 contract).
 
 ## `PrecisionTimestamp`
 
@@ -110,8 +113,10 @@ epoch), `days_since_epoch: int`, `seconds_of_day: int`,
   rendering of Swift's `Result<ComparisonResult, ComparisonValidationError>`
   in `PrecisionTimestamp+Comparable.swift`.
 
-**Serialization**: ABC `to_dict` (camelCase optional keys); `from_dict`
-accepts the same wire shape (parity with `PrecisionTimestampType`).
+**Serialization**: `to_dict` and `from_dict` are both implemented on this
+class (camelCase optional keys `referenceFrame`/`timescale`/`uncertainty`
+emitted only when present); the wire shape matches `PrecisionTimestampType`
+for round-trip parity.
 
 ## Compliance requirements (test-checkable)
 
@@ -124,4 +129,7 @@ accepts the same wire shape (parity with `PrecisionTimestampType`).
 7. `timestamp - timestamp` across the epoch (one pre-1970 operand) is exact.
 8. `compare_validated` raises `TimestampComparisonError` on differing timescale (both set), differing frame (both set), and overlapping uncertainty (both set, delta ≤ combined — pin the boundary case delta == combined as raising); returns -1/0/1 otherwise. `can_compare` is True when either side's metadata is `None` and ignores uncertainty.
 9. `as_datetime`/`from_datetime` round-trips to microsecond precision, including a pre-epoch instant.
-10. mypy strict clean; all classes pass `isinstance(x, <ABC>)`.
+10. mypy strict clean; all classes structurally conform to their Tier-2
+    `<ABC>`. The ABC is a non-runtime_checkable `typing.Protocol`, so
+    conformance is verified by member presence (`hasattr` over
+    `<ABC>.__abstractmethods__`), not `isinstance`.

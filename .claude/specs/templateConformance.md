@@ -5,107 +5,97 @@ name: templateConformance
 purpose: Bring py-MathTools into full conformance with the py-foundationTools template conventions
 spec: TemplateConformance
 scope: project
-status: accepted
+status: draft
 applies_to: pyproject.toml, requirements.txt, Makefile, .env, .github/, .claude/, src/, README.md
-last_updated: 2026-08-14
-semver: 0.0.4
+last_updated: 2026-08-26
+semver: 0.1.1
 author: Nicholas Bergantz
 ---
 
 # Template Conformance
 
-> Sibling of [mathToolsArchitecture.md](mathToolsArchitecture.md). The
-> authoritative template reference is py-foundationTools at branch
-> `feat/switch-to-new-template`
-> (`/Users/nbergantz/__Workspaces__/pythonWorkspaces/py-foundationTools`);
-> this spec states what "conformant" means for this repo, not a copy of that
-> repo's content.
+> Sibling of [mathToolsArchitecture.md](mathToolsArchitecture.md). This spec states what "conformant to the py-foundationTools template" means for this repo; it does not copy that repo's content. The authoritative template reference is the py-foundationTools release selected by `requirements.txt`.
+>
+> The migration that first brought this repo into conformance is recorded in [`../archive/math-tools-port/`](../archive/math-tools-port/00-overview.md). Reproduced dependency-resolution evidence is held in [the 2026-08-26 findings](../findings/2026-08-26-spherical-spatial-packaging.md).
 
-## Already conformant (verify, don't re-do)
+## Package and module naming
 
-The current branch already carries: the uv Makefile (with `uv-fullCheck`
-gate), `.env` (`PY_SRC=src`), `.bumpversion.cfg`, the `ci-cd.yml` workflow
-(quality checks + Python compatibility matrix on PRs to `dev`/`prod`),
-names-only `pyproject.toml` policy, and pinned `requirements.txt`.
-Conformance work MUST NOT rewrite these wholesale; only close the specific
-gaps below.
+- Import packages are snake_case: `math_tools` and `math_plot_helpers` under `src/`.
+- Module filenames are snake_case; class names are not affected by this rule.
+- The distribution name is `py_math_tools` and is independent of the import package names.
+- Every package directory exposing a public API ships `py.typed`.
+- Package discovery is driven by `package-dir = {"" = "src"}`; no explicit `packages` enumeration is maintained.
+- Tooling configuration that names packages or paths resolves to the names above.
 
-## Gap 1 — package rename (breaking, approved)
+## Dependency declaration model
 
-| Current | Target |
-|---|---|
-| `src/pyMathTools/` | `src/math_tools/` |
-| `src/pyMathToolsPlotHelpers/` | `src/math_plot_helpers/` |
+This model is the repo BKM: only the application layer pins, so module-level pins and version-control URLs in `pyproject.toml` are prohibited.
 
-Requirements:
+1. `pyproject.toml` `dependencies` declares **names only** — no version specifier, no `@`, no `git+` URL.
+2. `requirements*.txt` carries every pin and version-control pointer. It is the authoritative resolution source for `pyFoundationTools`.
+3. No lockfile is committed.
 
-1. `git mv` the trees; module layout inside follows the umbrella's module map
-   (existing `spatial/`, `spherical/`, `hints.py` migrate; `Quaternion.py` →
-   `spatial/quaternion.py`; `plotUnitSpherical.py` →
-   `math_plot_helpers/plot_unit_spherical.py`). Module **filenames** become
-   snake_case; class names are unchanged.
-2. Behavior of migrated code is unchanged in the rename chunk — imports and
-   paths only ([stay-in-scope]). Extensions to migrated classes come later
-   under their own sibling specs.
-3. All imports updated: `tests/`, `examples/`, intra-package.
-4. Every package dir (`math_tools`, each subpackage with public API,
-   `math_plot_helpers`) contains `py.typed`.
-5. `pyproject.toml` needs no `packages` edit (`package-dir = {"" = "src"}`
-   auto-discovers), but the Makefile's mypy package list (`MYPY_PKGS` pattern
-   from the template) and any name references MUST resolve to the new names.
-6. Distribution name stays `py_math_tools`; only import packages rename.
+## Dependency resolvability
 
-## Gap 2 — dependencies
+### Pin immutability
 
-1. `pyproject.toml` `dependencies`: names only —
-   `pyFoundationTools`, `numpy`, `scipy`, `numpy-quaternion`, `matplotlib`.
-2. `requirements.txt`: keep the `pyFoundationTools @ git+...@feat/switch-to-new-template`
-   pin until foundation tags a release, then move to a tag pin (tracked as a
-   known follow-up, not part of this effort).
-3. No `uv.lock` committed (repo BKM).
-4. **Hard prerequisite for every other chunk:** the installed `.venv` may
-   hold a pre-template `pyfoundationtools` (old per-type ABC layout,
-   `foundationTypes.mathTypes.quaternionABC` etc.). The first chunk MUST
-   `make uv-refresh` (or equivalent) so the environment matches the branch
-   pin's layout (`foundation_abc.math.*`, `PositionType`,
-   `SpatialTransformType`, `ScalarWaveformType`); the gate is meaningless
-   against the stale install.
+The `pyFoundationTools` pointer in `requirements.txt` SHALL name an immutable, remotely reachable ref — a release tag or a full 40-character commit SHA. A branch name SHALL NOT be used.
 
-## Gap 3 — `.claude/` governance
+The pinned ref SHALL supply the full import surface this repo depends on:
 
-1. `.claude/CLAUDE.md` authored for this repo: role (Tier 3 of foundation's
-   math tiers), package map, gate command, pointer to `.claude/specs/`.
-   It references specs — never duplicates their content.
-2. `.claude/specs/` — this spec set.
-3. `.claude/archive/math-tools-port/` — the completed chunk set produced
-   from these specs.
+- `foundation_abc.math.{mathEnums, precisionTimeABC, spatialABCs, sphericalABCs, waveformABCs}`
+- `foundationTypes.mathTypes.MathTypes.{PositionType, QuaternionWaveformType, PositionWaveformType, PrecisionTimeIntervalType, PrecisionTimestampType, ScalarWaveformType, SpatialTransformType, SpatialTransformWaveformType, UnitSphericalArcType, UnitSphericalSmallCircleType}`
 
-## Gap 4 — README and metadata
+The declared environment SHALL be reproducible from `requirements.txt` alone, independently of any environment already installed.
 
-1. `README.md` replaces the "Python Boilerplate" stub, following the
-   template's section shape: title → Features → Installation → Quick Start →
-   Development Workflows → Requirements. Content MUST describe what actually
-   exists at the time the chunk runs (no aspirational feature lists).
-2. `pyproject.toml` `description` updated from boilerplate text.
-3. `examples/sphericalPlotting/*` imports fixed to real module paths (note:
-   `plotArcs.py` currently imports a nonexistent
-   `foundationTypes.mathTypes.UnitSphericalArc` path).
+### Install-path parity
 
-## Gap 5 — layering test
+Every install path that runs tests SHALL resolve `pyFoundationTools` from `requirements.txt`, installing the requirements file before the editable self-install. No target that installs the package's own extras without `requirements.txt` may run tests.
 
-Port the template's layering-enforcement pattern
-(py-foundationTools `tests/test_package_layering.py`) as
-`tests/test_package_layering.py` asserting, via import/AST scan of `src/`:
+Where two CI jobs install by different paths, both SHALL resolve `pyFoundationTools` to the same version.
+
+### Distribution consumption
+
+Built artifacts carry only the names-only requirement from `pyproject.toml` metadata; `requirements.txt` is not part of wheel metadata. Resolving `pyFoundationTools` is therefore the consumer's responsibility — a consequence of §Dependency declaration model, not an exception to it.
+
+`README.md` §Installation SHALL state that installing the distribution requires supplying a `pyFoundationTools` source — the `requirements.txt` pointer, a private index, or an already-installed foundation — and SHALL give a working command. Whether py-foundationTools is published to an index is an upstream decision this spec does not make.
+
+## Environment currency
+
+Verification results are evidence only about the environment that produced them. An environment SHALL match the current `requirements.txt` pin for its results to bear on this repo's conformance.
+
+## Governance artifacts
+
+1. `.claude/CLAUDE.md` states this repo's role, package map, and gate command, and links every spec under `.claude/specs/`. It references specs and does not duplicate their content. Publishing a new spec includes adding its link here.
+2. `.claude/specs/` holds the spec set.
+3. `.claude/findings/` holds reproduced defect evidence and other non-normative observations.
+4. `.claude/archive/` holds completed chunk sets.
+
+## README and metadata
+
+1. `README.md` follows the template's section shape: title → Features → Installation → Quick Start → Development Workflows → Requirements, and describes only what exists.
+2. `pyproject.toml` `description` describes this package, not boilerplate.
+3. Everything under `examples/` imports real module paths and runs against the installed package.
+
+## Layering enforcement
+
+`tests/test_package_layering.py` asserts, by AST scan of `src/`:
 
 - `math_tools` never imports `math_plot_helpers` or `matplotlib`.
 - `math_plot_helpers` may import `math_tools`.
 - Only `math_plot_helpers` imports `matplotlib`.
 
-## Compliance checklist (mechanically verifiable)
+The test fails if a `matplotlib` import is added to any `math_tools` module.
 
-- [x] `grep -r "pyMathTools" src/ tests/ examples/ Makefile pyproject.toml` → no hits
-- [x] `find src -name py.typed` covers every public package
-- [x] `make uv-fullCheck` passes after rename
-- [x] `.claude/CLAUDE.md` exists and links every spec in `.claude/specs/`
-- [x] `README.md` contains no "Boilerplate" text
-- [x] `tests/test_package_layering.py` passes and fails if `import matplotlib` is added to any `math_tools` module
+## Conformance criteria
+
+Observable properties of a conformant repo:
+
+1. Import package names match §Package and module naming, and every public package ships `py.typed`.
+2. `.claude/CLAUDE.md` links every `*.md` under `.claude/specs/`.
+3. `README.md` carries no boilerplate stub text, and its §Installation satisfies §Distribution consumption.
+4. The layering test passes, and fails when a `matplotlib` import is introduced into `math_tools`.
+5. `pyproject.toml` `dependencies` contains no version specifier, `@`, or `git+` URL.
+6. The `requirements.txt` `pyFoundationTools` pointer names a tag or full commit SHA that resolves against the remote.
+7. An environment built from `requirements.txt` alone supplies every symbol in §Pin immutability.
+8. All test-running install paths resolve `pyFoundationTools` to the same version.

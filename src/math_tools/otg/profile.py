@@ -55,7 +55,9 @@ _J_EPS = 1e-12
 _P_PRECISION = 1e-8
 _V_PRECISION = 1e-8
 _A_PRECISION = 1e-10
-_T_PRECISION = 1e-12  # Declared but unused in the Swift source too; ported for fidelity.
+_T_PRECISION = (
+    1e-12  # Declared but unused in the Swift source too; ported for fidelity.
+)
 _T_MAX = 1e12
 
 #: Swift ``Double.ulpOfOne`` (machine epsilon for float64) -- used (not
@@ -271,7 +273,15 @@ class Profile:
         if self.t[1] < 0.0:
             return False
 
-        self.t_sum = [0.0, self.t[1], self.t[1], self.t[1], self.t[1], self.t[1], self.t[1]]
+        self.t_sum = [
+            0.0,
+            self.t[1],
+            self.t[1],
+            self.t[1],
+            self.t[1],
+            self.t[1],
+            self.t[1],
+        ]
         if self.t_sum[-1] > _T_MAX:
             return False
 
@@ -457,6 +467,7 @@ class Profile:
 
     @overload
     def set_boundary(self, profile: Profile, /) -> None: ...
+
     @overload
     def set_boundary(
         self,
@@ -602,7 +613,9 @@ class Profile:
                 return False
             if not (a_min - _A_EPS < a_down < a_max + _A_EPS):
                 return False
-        return self.check_for_second_order(a_up, a_down, v_max, v_min, control_signs, limits)
+        return self.check_for_second_order(
+            a_up, a_down, v_max, v_min, control_signs, limits
+        )
 
     # MARK: - First-order position interface
 
@@ -624,7 +637,9 @@ class Profile:
         self.v = [0.0, 0.0, 0.0, v_up if self.t[3] > 0 else 0.0, 0.0, 0.0, 0.0, self.vf]
 
         for i in range(7):
-            self.p[i + 1], _, _ = integrate_jerk(self.t[i], self.p[i], self.v[i], self.a[i], 0.0)
+            self.p[i + 1], _, _ = integrate_jerk(
+                self.t[i], self.p[i], self.v[i], self.a[i], 0.0
+            )
 
         self.control_signs = control_signs
         self.limits = limits
@@ -699,5 +714,9 @@ class Profile:
                 Profile.check_position_extremum(-a / j, t_sum, t, p, v, a, j, ext)
             elif d > 0.0:
                 d_sqrt = math.sqrt(d)
-                Profile.check_position_extremum((-a - d_sqrt) / j, t_sum, t, p, v, a, j, ext)
-                Profile.check_position_extremum((-a + d_sqrt) / j, t_sum, t, p, v, a, j, ext)
+                Profile.check_position_extremum(
+                    (-a - d_sqrt) / j, t_sum, t, p, v, a, j, ext
+                )
+                Profile.check_position_extremum(
+                    (-a + d_sqrt) / j, t_sum, t, p, v, a, j, ext
+                )

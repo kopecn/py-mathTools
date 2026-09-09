@@ -11,8 +11,9 @@
 	uv-flush-cache uv-flush-envs uv-flush-pythons uv-flush-everything uv-nuke \
 	uv-lifecycle-test \
 	dev setup \
-	installDev e refresh \
-	test cleanRoomCleanup cleanRoomBootstrap cleanRoomPytest testInEnv \
+	installDev e refresh pip-bootstrap \
+	lint format typecheck fullCheck \
+	test check-pip cleanRoomCleanup cleanRoomBootstrap cleanRoomPytest testInEnv \
 	build validateBuild release-test release \
 	nuke list
 
@@ -25,7 +26,7 @@ ifneq (,$(wildcard .env))
 endif
 
 # Defaults (overridable via .env — the user-editable surface). Keep in sync with .env.
-PYTHONS ?= 3.10 3.11 3.12 3.13
+PYTHONS ?= 3.11 3.12 3.13
 DEFAULT_PYTHON ?= 3.13
 PYTHON ?= python3
 VENV ?= .cleanroom-venv
@@ -34,15 +35,23 @@ VENV ?= .cleanroom-venv
 # (see GAPS.md §6). The template half overrides these to src/. Overridable via .env.
 PY_SRC ?= hooks
 PY_TESTS ?= tests
-PY_EXAMPLES ?= examples
+PY_EXAMPLES ?=
 PY_ALL ?= $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
+
+# mypy cannot CRAWL a src/ layout that is editable-installed: the editable .pth puts
+# src/ on sys.path, so each module resolves under both `pkg` and `src.pkg` → mypy's
+# "Source file found twice under different module names" error. Drive mypy by package
+# NAME instead (resolved via the single src/ root). Top-level packages = src/ subdirs
+# that have an __init__.py. Empty for the hooks/ root variant (no src/), which crawls
+# normally. See uv-typecheck.
+MYPY_PKGS := $(patsubst src/%/,-p %,$(sort $(dir $(wildcard src/*/__init__.py))))
 
 
 # Derived
 # Tool runner for uv- quality/test recipes. `--extra dev` ensures ruff/mypy/pytest are
 # resolved (and installed if missing) from the "[dev]" extra even on a FRESH checkout —
 # no reliance on a pre-existing .venv, rather than the ambient PATH.
-UV := uv run --no-project
+UV := uv run --no-project 
 PIP := $(PYTHON) -m pip
 BUMPVERSION := bumpversion --allow-dirty
 REPO := $(notdir $(CURDIR))
@@ -95,7 +104,7 @@ endef
 # MARK: - HELP
 # ============================================================================
 help:  ## Show this help
-	@echo "$(REPO) — make targets   (bare = pip · uv-… = uv path)"
+	@echo "$(REPO) — make targets   (bare = pip · FIRST-CLASS · uv-… = uv runner · second-class)"
 	@echo "config: DEFAULT_PYTHON=$(DEFAULT_PYTHON)  PYTHONS=$(PYTHONS)"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*?## "} \
@@ -266,19 +275,20 @@ uv-refresh: check-uv  ## Clean cache + reinstall from requirements + upgrade edi
 # ============================================================================
 # MARK: - UV · QUALITY
 # ============================================================================
-##@ UV · Quality
-uv-lint: check-uv  ## Run ruff linter (read-only; non-zero exit for CI)
-	$(UV) ruff check $(PY_ALL)
+##@ UV · Quality  (second-class uv RUNNER for the first-class flake8/black/mypy tools)
+uv-lint: check-uv  ## Run flake8 via uv (read-only; non-zero exit for CI)
+	$(UV) flake8 $(PY_ALL)
 
-uv-format: check-uv  ## Format code with ruff
-	$(UV) ruff format $(PY_ALL)
-# KEEP --unsafe-fixes: intentional, added after findings on 2026-06-25.
-# Do NOT strip in cleanup/refactor passes — the unsafe autofixes here are relied
-# upon deliberately. Removing it has regressed this target before.
-	$(UV) ruff check --fix --unsafe-fixes $(PY_ALL)
+uv-format: check-uv  ## Format code with black via uv
+	$(UV) black $(PY_ALL)
 
 uv-typecheck: check-uv  ## Strict type check with mypy
+ifeq ($(strip $(MYPY_PKGS)),)
 	$(UV) mypy $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
+else
+	$(UV) mypy $(MYPY_PKGS)
+	$(UV) mypy $(PY_TESTS) $(PY_EXAMPLES)
+endif
 
 # ty (Astral's preview type-checker) is intentionally OUT for now (decision D1):
 # it's pre-release and not wired into uv-fullCheck. Revisit when it stabilizes.
@@ -303,6 +313,7 @@ uv-test-all: check-uv  ## Run tests across all configured Python versions (.venv
 		venv=".venvs/$$py"; \
 		[ -d "$$venv" ] || uv venv --python $$py "$$venv"; \
 		if ( . "$$venv/bin/activate" && \
+		     uv pip install -q -r requirements.txt && \
 		     uv pip install -q -e ".[dev]" && \
 		     python -m pytest ); then \
 			echo "PASS: Python $$py"; \
@@ -380,6 +391,41 @@ refresh:  ## Refresh pip packages: reinstall from requirements + upgrade editabl
 	$(PIP) install --upgrade -e ".[dev]"
 
 # ============================================================================
+# MARK: - PIP · QUALITY  (FIRST-CLASS)
+# ============================================================================
+##@ PIP · Quality  (FIRST-CLASS: flake8 + black + mypy, run on ambient $(PYTHON))
+lint:  ## Run flake8 (read-only; non-zero exit for CI) — first-class
+	$(PYTHON) -m flake8 $(PY_ALL)
+
+format:  ## Format code with black — first-class
+	$(PYTHON) -m black $(PY_ALL)
+
+typecheck:  ## Strict type check with mypy — first-class
+ifeq ($(strip $(MYPY_PKGS)),)
+	$(PYTHON) -m mypy $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
+else
+	$(PYTHON) -m mypy $(MYPY_PKGS)
+	$(PYTHON) -m mypy $(PY_TESTS) $(PY_EXAMPLES)
+endif
+
+fullCheck: lint typecheck test  ## FIRST-CLASS gate: flake8 + mypy + pytest
+
+# nuke's inverse (see the comment on `nuke`). Rebuilds the build backend
+# (setuptools/wheel) that `ensurepip` never bundles on Python >= 3.12 (E1).
+# Deliberately NOT wired as a prereq of installDev/e/refresh/build (D1) — those
+# targets keep failing loudly on their own terms rather than growing a guard
+# layer; check-pip is scoped only to the clean-room target (D2, see C2 comment
+# on cleanRoomBootstrap below).
+pip-bootstrap:  ## Rebuild the ambient build backend after `nuke` (NETWORK REQUIRED)
+	@echo "Bootstrapping ambient pip + build backend (setuptools, wheel)..."
+	$(PYTHON) -m ensurepip --upgrade
+	$(PIP) install --upgrade setuptools wheel
+	@echo ""
+	@echo "If this fails with 'externally-managed-environment' (Homebrew/Debian"
+	@echo "Python), this interpreter refuses ambient installs by design — use"
+	@echo "'make uv-bootstrap' instead (offline-capable via uv's cache)."
+
+# ============================================================================
 # MARK: - PIP · TEST
 # ============================================================================
 ##@ PIP · Test
@@ -390,6 +436,28 @@ test:  ## Run tests using the current Python environment
 cleanRoomCleanup:  ## Delete the clean-room venv ($(VENV))
 	rm -rf $(VENV) || true
 
+# check-pip guard. Assert ONLY what the clean room actually needs: that the
+# ambient interpreter can build a working venv, i.e. `ensurepip` is present.
+#
+# It deliberately does NOT assert that `setuptools.build_meta` imports on the
+# ambient interpreter. The clean room installs into $(VENV) under PEP-517 build
+# isolation, which provisions its own setuptools from PyPI — the ambient
+# interpreter's build backend is never consulted. Guarding on it produced a
+# false negative that blocked a clean room which then succeeded when run by
+# hand. That assertion is only meaningful for --no-build-isolation ambient
+# installs (`e`, `installDev`), which D1 deliberately leaves ungated.
+#
+# NETWORK REQUIRED for the recipe below: since Python 3.12 ensurepip seeds pip
+# only (E1), so a fresh venv has no build backend and PEP-517 isolation must
+# reach PyPI. A backend-less ambient interpreter does not change that either
+# way, which is precisely why it is not worth guarding here.
+check-pip:  ## Check the ambient interpreter can create the clean-room venv
+	@$(PYTHON) -m ensurepip --version >/dev/null 2>&1 || { \
+	  echo "ERROR: ensurepip unavailable on $(PYTHON) — cannot create $(VENV)."; \
+	  echo "  Run: make pip-bootstrap"; \
+	  echo "  Or use the uv path: make uv-sync"; \
+	  exit 1; }
+
 # The clean room is an install path, so it obeys the same BKM rule as every other
 # one (see the dependency-model comment above ##@ UV · Bootstrap): pyproject.toml
 # declares dependency NAMES ONLY, and requirements.txt carries the pins and the
@@ -398,7 +466,7 @@ cleanRoomCleanup:  ## Delete the clean-room venv ($(VENV))
 # (`No matching distribution found`). Install the requirements file FIRST, then the
 # package. Keep ".[dev]" NON-editable here — validating the real packaging path is
 # this target's entire purpose.
-cleanRoomBootstrap: cleanRoomCleanup  ## Bootstrap the clean-room venv + deps (runs NO tests)
+cleanRoomBootstrap: cleanRoomCleanup check-pip  ## Bootstrap the clean-room venv + deps (runs NO tests)
 	$(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate && \
 	which python3 && \
@@ -418,30 +486,35 @@ testInEnv: clean cleanRoomBootstrap cleanRoomPytest cleanRoomCleanup  ## Full cl
 # MARK: - PIP · BUILD & RELEASE
 # ============================================================================
 ##@ PIP · Build & Release
-build: clean-build  ## Build sdist + wheel ($(PYTHON) -m build)
+# build/twine were previously invoked against ambient $(PYTHON), but both are
+# declared in [project.optional-dependencies].dev, which installs into .venv —
+# not the ambient interpreter (E4, a live bug independent of the FA this track
+# is fixing). Route them through `uv run --with` instead so they resolve
+# correctly on a checkout whose only setup was `make uv-sync`.
+build: check-uv clean-build  ## Build sdist + wheel (uv run --with build python -m build)
 	@echo "Building package..."
-	$(PYTHON) -m build
+	$(UV) --with build python -m build
 
-validateBuild: build  ## Validate build artifacts with twine
+validateBuild: check-uv build  ## Validate build artifacts with twine
 	@echo "Validating dist/ with twine..."
-	$(PYTHON) -m twine check dist/*
+	$(UV) --with twine twine check dist/*
 
 release-test: checkCleanGit validateBuild  ## Dry-run publish to TestPyPI (clean tree only)
 	@echo "Uploading $(REPO) v$$($(MAKE) -s version) to TestPyPI..."
-	@$(PYTHON) -m twine upload --repository testpypi dist/*
+	@$(UV) --with twine twine upload --repository testpypi dist/*
 
-# No CI-driven publish path exists: `.github/workflows/ci-cd.yml` runs quality
-# checks and the Python compatibility matrix on PRs to dev/prod only — it does not
-# tag or upload anything. Release is therefore a manual, human-run procedure;
-# `make release` refuses to upload from an unreviewed working tree and prints that
-# procedure instead of performing it.
-release: validateBuild  ## Refuse local upload; print the manual release procedure
-	@echo "No CI-driven publish path exists — release is a manual procedure."
+# PyPI publishing is owned by CI, not this Makefile. Per the ci-cd spec, the
+# pipeline is the single authoritative path to production — no manual, out-of-band
+# uploads. `.github/workflows/tag-on-prod.yml` tags v<version> on push to `prod`;
+# a publish-on-tag workflow promotes that artifact. `make release` therefore
+# refuses to upload and prints the release procedure instead.
+release: validateBuild  ## Refuse local upload; print the CI-driven release procedure
+	@echo "Local PyPI upload is disabled — the pipeline is the authoritative publish path."
 	@echo ""
 	@echo "To release $(REPO) v$$($(MAKE) -s version):"
 	@echo "  1. Bump the version (make bump-patch|bump-minor|bump-major) and merge to prod."
-	@echo "  2. Build + validate: make validateBuild."
-	@echo "  3. Upload by hand: python3 -m twine upload dist/*"
+	@echo "  2. Push to prod → tag-on-prod.yml creates the v<version> tag."
+	@echo "  3. The publish-on-tag workflow uploads to PyPI."
 	@echo ""
 	@echo "For a local pre-flight, use: make release-test (TestPyPI)."
 	@exit 1
@@ -454,14 +527,22 @@ release: validateBuild  ## Refuse local upload; print the manual release procedu
 # the AMBIENT interpreter ($(PIP)). Prefer `make uv-flush-envs` — deleting the
 # venv dir is the reliable flush primitive. Use this only when you're stuck in a
 # non-deletable (e.g. system) env. Non-editable URL/VCS installs are skipped.
+#
+# --exclude setuptools --exclude wheel: at Python >= 3.12, pip/_internal/commands/
+# freeze.py:12-20 stopped suppressing the build backend from `pip freeze`
+# (_should_suppress_build_backends() is version-gated below 3.12), so an
+# unqualified `freeze --exclude-editable | pip uninstall` now removes the very
+# build backend the interpreter needs to install anything afterward — including
+# itself. Keep these exclusions; do not "clean up" them in a later refactor.
 nuke: ## Per-package uninstall from ambient env (inferior — prefer uv-flush-envs)
 	@echo "Uninstalling regular packages (skipping system-managed)..."
-	$(call uninstall_package_list,$(PIP) freeze --exclude-editable | grep -v ' @ ')
+	$(call uninstall_package_list,$(PIP) freeze --exclude-editable --exclude setuptools --exclude wheel | grep -v ' @ ')
 
 	@echo "Uninstalling editable packages by name..."
 	$(call uninstall_package_list,$(PIP) list --editable --format=freeze | cut -d= -f1)
 
 	@echo "pip-nuke complete."
+	@echo "Run 'make pip-bootstrap' (network) or 'make uv-bootstrap' (offline-capable) to rebuild."
 
 list: ## List pip packages in available environments
 	$(call print_packages,SYSTEM PYTHON PACKAGES,$(PIP))
@@ -483,3 +564,22 @@ list: ## List pip packages in available environments
 		echo; \
 	done
 	
+# ============================================================================
+# MARK: - Codegen
+# ============================================================================
+
+# Base dir for generated Python types; mirrors _PYTHON_TYPES_BASE in
+# schema/scripts/reuse/codegen.sh. Kept in sync so the fleet-wide normalization
+# sweep targets every generated model regardless of its generate script.
+_PYTHON_TYPES_BASE := src/foundationTypes
+
+codegen-all: check-uv  ## Run all schema codegen scripts in schema/scripts/
+	@for script in schema/scripts/*.sh; do \
+		echo "Generating: $$script"; \
+		bash "$$script"; \
+	done
+	@echo "Normalizing all generated models (fleet-wide DataModelHelper contract)..."
+	@bash schema/scripts/reuse/normalize_generated.sh $(_PYTHON_TYPES_BASE)
+	@echo "Formatting the generated tree with black (first-class formatter)..."
+	$(UV) black $(_PYTHON_TYPES_BASE)
+	@echo "-- fini --"

@@ -1,14 +1,14 @@
 ---
-version: 1.0
+version: 1.1
 type: specification
 name: spatialMath
 purpose: Behavioral contract for the Position, Quaternion, and SpatialPose math types
 spec: SpatialMath
 scope: project
-status: accepted
+status: draft
 applies_to: src/math_tools/spatial/, tests/spatial/
-last_updated: 2026-07-11
-semver: 0.0.2
+last_updated: 2026-08-26
+semver: 0.1.1
 author: Nicholas Bergantz
 ---
 
@@ -24,7 +24,7 @@ author: Nicholas Bergantz
 | Class | Module | Subclasses | Storage |
 |---|---|---|---|
 | `Position` | `spatial/position.py` | `PositionABC` | `np.ndarray` shape `(3,)` float64 |
-| `Quaternion` | `spatial/quaternion.py` (migrated existing class) | `QuaternionABC` (already) | `numpy-quaternion` (already) |
+| `Quaternion` | `spatial/quaternion.py` | `QuaternionABC` | `numpy-quaternion` |
 | `SpatialPose` | `spatial/spatial_pose.py` | `SpatialTransformABC` | composed `Position` + `Quaternion` |
 
 `Quaternion` is the **existing, tested implementation** (~90 tests). Its
@@ -58,6 +58,54 @@ Beyond that, this spec only adds the members under "Quaternion additions".
   exception ([precisionTimeMath.md](precisionTimeMath.md)).
 - `__array__(dtype=None)` on `Position` (→ `(3,)` vector) and `Quaternion`
   (→ `[w, x, y, z]`), so `np.asarray(x)` / `plt.plot(...)` work directly.
+
+### Deserializer error semantics (normative)
+
+`from_dict` is public API reachable from untrusted wire data, so its input
+validation is behavior rather than a developer-time check. Its outcomes SHALL
+be identical whether or not assertions are enabled.
+
+Per [mathToolsArchitecture.md](mathToolsArchitecture.md) §Error semantics
+(programmer errors raise stdlib `TypeError`/`ValueError`), every `from_dict` on
+`Position`, `Quaternion`, and `SpatialPose` SHALL:
+
+- raise `TypeError` when the payload is not a `dict`, or when a field's value
+  is not a real number (`bool` is rejected: it is an `int` subclass and is not
+  a coordinate);
+- raise `ValueError` when a required key is absent;
+- carry a message naming the class, the key, and the offending type.
+
+All three classes SHALL apply the same numeric-field rule and raise the same
+exception type, with a message of the same form, for the same malformed
+payload. Validation behavior SHALL NOT vary by class, and the rule SHALL NOT
+appear on any public surface.
+
+All three SHALL expose `from_dict` as `(cls: type[T], obj: Any) -> T`, so a
+subclass deserializes to its own type.
+
+### Non-unit quaternion inputs (normative)
+
+Quaternion magnitude is not part of the rotation a quaternion represents.
+Two APIs return a rotation *angle* derived from quaternion components, and
+both MUST be invariant to a positive rescaling of their inputs:
+
+- `SpatialPose.angular_distance(to)` — `f(αq₁, βq₂) == f(q₁, q₂)` for all
+  `α, β > 0`.
+- `Quaternion.angle` — `(αq).angle == q.angle` for all `α > 0`.
+
+This section governs those two members only. `Quaternion.axis` is
+scale-invariant by construction and `interpolate` is outside this contract;
+neither is governed here.
+
+### Degenerate (zero) magnitude (normative)
+
+A zero vector has no direction and a zero quaternion has no rotation. Neither
+is representable, so producing `nan` components is prohibited: the operation
+MUST raise `ValueError` at the point of the invalid input, before a corrupt
+value can propagate into a pose, a waveform, or serialized output. This applies
+uniformly to `Position` and `Quaternion`: the zero-vector rule stated for
+`Position.normalize()` under §`Position` and the zero-quaternion rule under
+§`Quaternion` are one contract, not two.
 
 ## `Position`
 
@@ -102,7 +150,9 @@ Swift's custom `•`/`×` operators map to the named methods `dot`/`cross` plus
 
 ## `Quaternion` additions
 
-Added to the existing class (plus the ABC re-parent above; no other change):
+The members below are part of the `Quaternion` contract. Items 1–4 are
+established and unchanged by this revision; items 5–6 are the requirements this
+revision adds.
 
 1. `dot(other) -> float` — 4-component dot product.
 2. `rotation_matrix_elements -> RotationMatrixElements` — frozen dataclass
@@ -112,11 +162,20 @@ Added to the existing class (plus the ABC re-parent above; no other change):
    `rotate_vector`, typed for `Position` (`q * p` NOT overloaded; explicit
    method only, to avoid ambiguity with the existing quaternion `*`).
 4. `__array__(dtype=None)` per the cross-cutting conventions.
-5. snake_case aliases for the two camelCase slips on the public surface:
+5. **Degenerate-input guards** (§Degenerate (zero) magnitude). Each of
+   `normalized()`, `normalize()`, `inverse`, and
+   `from_axis_angle(axis, angle)` SHALL raise `ValueError` on a zero-magnitude
+   operand — a zero quaternion for the first three, a zero axis for the last.
+   None SHALL return a non-finite component.
+
+   The condition is exact equality with zero, not a tolerance: a very small
+   but nonzero quaternion has a well-defined direction and SHALL be accepted.
+
+   Each of the four docstrings SHALL carry a `Raises:` section.
+6. snake_case aliases for the two camelCase slips on the public surface:
    `from_numpy_quaternion` (= `fromNumpyQuaternion`) and
-   `to_unit_spherical_small_circle` (= `to_unitSphericalSmallCircle`); the
-   camelCase originals remain as deprecated aliases (docstring note, no
-   removal in this effort).
+   `to_unit_spherical_small_circle` (= `to_unitSphericalSmallCircle`). The
+   camelCase spellings remain available and are documented as deprecated.
 
 ## `SpatialPose`
 
@@ -159,20 +218,23 @@ robotics reading)
   parity pinned by test.
 - `position_distance(to)`, `position_distance_squared(to)`,
   `angular_distance(to) -> float` (radians, double-cover safe: uses
-  `min(θ, 2π−θ)` via `|dot|`).
+  `min(θ, 2π−θ)` via `|dot|`). Scale-invariant per §Non-unit quaternion inputs.
+  Raises `ValueError` if either orientation has zero norm (§Degenerate (zero)
+  magnitude).
 - `normalize()` / `normalized()` — normalize orientation only.
 - `==` exact, `isclose(other, rtol, atol)` (double-cover aware via
   `Quaternion.isclose`), `repr`, `to_dict`/`from_dict`.
 
 ## Compliance requirements (test-checkable)
 
-1. All three classes satisfy `isinstance` of their ABC and round-trip
+1. All three classes structurally conform to their ABC — member presence over
+   the ABC's `__abstractmethods__`; the Tier-2 ABCs are non-runtime_checkable
+   `typing.Protocol`s, so this is not `isinstance`-checkable — and round-trip
    `to_dict`/`from_dict` against the matching `foundationTypes` generated
-   Type's wire output — exact target names on the pinned branch:
-   `PositionType`, `QuaternionType`, `SpatialTransformType`
-   (NOT the pre-template `PositionVectorType`/`SpatialPoseType`; refresh the
-   venv to the branch pin first, per
-   [templateConformance.md](templateConformance.md)).
+   Type's wire output. The target names are `PositionType`,
+   `QuaternionType`, and `SpatialTransformType`; verification is meaningful
+   only against an environment matching the current foundation pin
+   ([templateConformance.md](templateConformance.md) §Environment currency).
 2. Coordinate inits/accessors are mutual inverses (property-style tests over
    a grid of radii/angles, both spherical conventions, atol 1e-12).
 3. `cross` follows the right-hand rule (`unit_x × unit_y == unit_z` pinned).
@@ -190,3 +252,20 @@ robotics reading)
 10. `__hash__ is None` pinned for all three classes; `np.asarray(x)` returns
     the documented array for `Position` and `Quaternion`.
 11. mypy strict clean.
+12. **Scale invariance.** For any positive scale factor applied to either
+    operand, `SpatialPose.angular_distance` and `Quaternion.angle` are
+    unchanged to atol 1e-12, as is `Quaternion.axis`. Compliance 7 (`q` vs
+    `-q` → 0) is unaffected.
+13. **No NaN escape.** `Quaternion.normalized()`, `normalize()`, `inverse`,
+    and `from_axis_angle` raise `ValueError` on a zero-magnitude operand, and
+    each carries a `Raises:` docstring section. For finite non-degenerate
+    input, none of the four returns a non-finite component.
+14. **Deserializer errors.** For each of `Position`, `Quaternion`,
+    `SpatialPose`: a non-`dict` payload raises `TypeError`; a payload missing a
+    required key raises `ValueError`; a field carrying a string or a `bool`
+    raises `TypeError`. The three classes raise the same type for the same
+    malformed payload, and every outcome is unchanged when assertions are
+    disabled. All three `from_dict` docstrings carry a `Raises:` section.
+15. **Wire round-trip preserved.** `to_dict` → `from_dict` remains exact for
+    all three classes: the validation required by 13–14 rejects malformed
+    input without narrowing well-formed input.
