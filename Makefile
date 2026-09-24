@@ -1,4 +1,4 @@
-# Configuration
+# MARK: - Configuration
 .PHONY: help version checkCleanGit open-github \
 	clean clean-build clean-artifacts clean-test clean-node \
 	bump-patch bump-minor bump-major \
@@ -39,7 +39,7 @@ PY_ALL ?= $(PY_SRC) $(PY_TESTS) $(PY_EXAMPLES)
 MYPY_PKGS := $(patsubst src/%/,-p %,$(sort $(dir $(wildcard src/*/__init__.py))))
 
 
-# Derived settings
+# MARK: - Derived settings
 # Run quality and test tools through uv with the development dependencies available.
 UV := uv run --no-project 
 PIP := $(PYTHON) -m pip
@@ -53,7 +53,7 @@ ifeq ($(filter $(DEFAULT_PYTHON),$(PYTHONS)),)
     $(error DEFAULT_PYTHON ($(DEFAULT_PYTHON)) is not in PYTHONS ($(PYTHONS)) — fix .env)
 endif
 
-# Helpers
+# MARK: - Helpers
 
 define uninstall_package_list
 	@$(1) | while read pkg; do \
@@ -85,11 +85,9 @@ define roll_changelog
 	esac
 endef
 
-# ============================================================================
-# MARK: - HELP
-# ============================================================================
+# MARK: - Help
 help:  ## Show this help
-	@echo "$(REPO) — make targets   (bare = pip · FIRST-CLASS · uv-… = uv runner · second-class)"
+	@echo "$(REPO) — available make targets"
 	@echo "config: DEFAULT_PYTHON=$(DEFAULT_PYTHON)  PYTHONS=$(PYTHONS)"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*?## "} \
@@ -98,20 +96,18 @@ help:  ## Show this help
 		$(MAKEFILE_LIST)
 
 
-# ============================================================================
-# MARK: - COMMON · VERSION & GIT
-# ============================================================================
+# MARK: - Version and Git
 ##@ Common · Version & Git
 version:  ## Display the current project version
 	@$(PYTHON) -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])" 2>/dev/null \
 		|| grep -m1 '^version' pyproject.toml | cut -d'"' -f2
 
-checkCleanGit:  ## Guard: fail if the git working tree is dirty
+checkCleanGit:  ## Verify that the Git working tree is clean
 	@[ -z "$$(git status --porcelain)" ] || \
 		(echo "Working tree is dirty. Commit or stash changes first."; exit 1)
 
 # Version bump targets share this recipe and update the changelog.
-bump-patch bump-minor bump-major: bump-%:  ## Bump version (patch|minor|major) + roll HISTORY.md
+bump-patch bump-minor bump-major: bump-%:  ## Bump the version and update HISTORY.md
 	$(BUMPVERSION) $*
 	$(call roll_changelog)
 
@@ -124,10 +120,8 @@ open-github:  ## Open the GitHub repository in the default browser (macOS/Linux)
 	elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$$url"; \
 	else echo "No browser opener found; visit: $$url"; fi
 
-# ============================================================================
-# MARK: - COMMON · CLEAN
+# MARK: - Cleanup
 # Cleanup targets used by development and CI workflows.
-# ============================================================================
 ##@ Common · Clean
 
 clean: clean-build clean-artifacts clean-test clean-node ## Remove all build, cache, and test artifacts
@@ -155,7 +149,7 @@ clean-test: ## Remove test, coverage, and lint caches
 		.tox/ \
 		.nox/
 
-clean-node: ## Recursively remove node_modules and its sibling package.json/lock files
+clean-node: ## Remove node_modules directories and related package files
 	find . -name 'node_modules' -type d -prune | while read -r dir; do \
 		parent="$$(dirname "$$dir")"; \
 		rm -f "$$parent/package.json" \
@@ -166,11 +160,9 @@ clean-node: ## Recursively remove node_modules and its sibling package.json/lock
 		rm -rf "$$dir"; \
 	done
 
-# ============================================================================
-# MARK: - UV · TOOLING
-# ============================================================================
+# MARK: - uv tooling
 ##@ UV · Tooling
-check-uv:  ## Check if uv is installed (guard for all uv- targets)
+check-uv:  ## Verify that uv is installed
 	@command -v uv >/dev/null 2>&1 || { \
 	  echo "ERROR: uv not found."; \
 	  echo "  Install it with: make install-uv"; \
@@ -211,9 +203,7 @@ list-uv: check-uv  ## List uv envs, installed Pythons, packages, and cache info
 	@uv cache dir
 	@du -sh $$(uv cache dir) 2>/dev/null || echo "Cache empty or not accessible"
 
-# ============================================================================
-# MARK: - UV · BOOTSTRAP & SYNC
-# ============================================================================
+# MARK: - uv setup and synchronization
 ##@ UV · Bootstrap & Sync
 uv-bootstrap-pythons: check-uv  ## Install all configured Python versions via uv
 	uv python install $(PYTHONS)
@@ -264,11 +254,9 @@ uv-refresh: check-uv  ## Clean cache + reinstall from requirements + upgrade edi
 	uv pip install -r requirements.txt
 	uv pip install --upgrade -e ".[dev]"
 
-# ============================================================================
-# MARK: - UV · QUALITY
-# ============================================================================
+# MARK: - uv quality checks
 ##@ UV · Quality
-uv-lint: check-uv  ## Run flake8 via uv (read-only; non-zero exit for CI)
+uv-lint: check-uv  ## Run flake8 via uv
 	$(UV) flake8 $(PY_ALL)
 
 uv-format: check-uv  ## Format code with black via uv
@@ -283,11 +271,9 @@ else
 endif
 
 # The preview `ty` type checker is not included in the quality gate.
-uv-fullCheck: check-uv uv-lint uv-typecheck uv-test  ## lint + typecheck + tests
+uv-fullCheck: check-uv uv-lint uv-typecheck uv-test  ## Run linting, type checks, and tests
 
-# ============================================================================
-# MARK: - UV · TEST
-# ============================================================================
+# MARK: - uv tests
 ##@ UV · Test
 # Synchronize development dependencies before running tests.
 uv-test: check-uv uv-sync  ## Run tests on DEFAULT_PYTHON (ensures a synced env first)
@@ -325,9 +311,7 @@ uv-test-all: check-uv  ## Run tests across all configured Python versions (.venv
 
 uv-test-matrix: uv-bootstrap-pythons uv-test-all  ## Ensure Pythons installed, then run all tests
 
-# ============================================================================
-# MARK: - UV · FLUSH / NUKE
-# ============================================================================
+# MARK: - uv environment cleanup
 ##@ UV · Flush / Nuke
 
 uv-flush-envs:  ## Remove all virtual environments (.venv + .venvs/<ver>)
@@ -342,7 +326,7 @@ uv-flush-cache: check-uv  ## Clean uv cache
 	uv cache clean
 	@echo "uv cache cleaned."
 
-uv-flush-pythons:  ## Remove uv-managed Python installs (NUCLEAR)
+uv-flush-pythons:  ## Remove uv-managed Python installations
 	@echo "WARNING: This removes ALL uv-managed Python installations!"
 	@echo "Location: ~/.local/share/uv/python"
 	rm -rf ~/.local/share/uv/python
@@ -351,19 +335,17 @@ uv-flush-pythons:  ## Remove uv-managed Python installs (NUCLEAR)
 uv-flush-everything: clean uv-flush-envs uv-flush-cache  ## Full cleanup (keeps pythons)
 	@echo "Environment flushed. Run 'make uv-flush-pythons' separately for global Pythons."
 
-uv-nuke: uv-flush-everything  ## NUCLEAR: everything then prompt for Python removal
+uv-nuke: uv-flush-everything  ## Clean all uv data and optionally remove Python installations
 	@echo ""
 	@echo ">> Running uv-nuke..."
 	@$(MAKE) uv-flush-pythons
 	@echo ""
 	@echo "Environment nuked. Run 'make uv-bootstrap' to rebuild from scratch."
 
-uv-lifecycle-test: uv-flush-everything uv-bootstrap uv-test-all  ## flush -> bootstrap -> test-all
+uv-lifecycle-test: uv-flush-everything uv-bootstrap uv-test-all  ## Rebuild the uv environment and run the test matrix
 	@echo ">> Lifecycle test complete"
 
-# ============================================================================
-# MARK: - PIP · INSTALL
-# ============================================================================
+# MARK: - pip installation
 ##@ PIP · Install
 # These targets use the active Python environment. Prefer the uv workflow for an
 # isolated development environment.
@@ -378,9 +360,7 @@ refresh:  ## Refresh pip packages: reinstall from requirements + upgrade editabl
 	$(PIP) install -r requirements.txt
 	$(PIP) install --upgrade -e ".[dev]"
 
-# ============================================================================
-# MARK: - PIP · QUALITY
-# ============================================================================
+# MARK: - pip quality checks
 ##@ PIP · Quality
 lint:  ## Run flake8 using the active Python environment
 	$(PYTHON) -m flake8 $(PY_ALL)
@@ -408,9 +388,7 @@ pip-bootstrap:  ## Restore pip build tools after `nuke` (requires network access
 	@echo "Python), this interpreter refuses ambient installs by design — use"
 	@echo "'make uv-bootstrap' instead (offline-capable via uv's cache)."
 
-# ============================================================================
-# MARK: - PIP · TEST
-# ============================================================================
+# MARK: - pip tests
 ##@ PIP · Test
 
 test:  ## Run tests using the current Python environment
@@ -430,7 +408,7 @@ check-pip:  ## Check the ambient interpreter can create the clean-room venv
 
 # Install pinned requirements before the package. The package is installed normally,
 # rather than editable, to validate the distribution workflow.
-cleanRoomBootstrap: cleanRoomCleanup check-pip  ## Bootstrap the clean-room venv + deps (runs NO tests)
+cleanRoomBootstrap: cleanRoomCleanup check-pip  ## Create the clean-room environment and install dependencies
 	$(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate && \
 	which python3 && \
@@ -446,9 +424,7 @@ cleanRoomPytest:  ## Run pytest inside the clean-room venv
 testInEnv: clean cleanRoomBootstrap cleanRoomPytest cleanRoomCleanup  ## Full clean-room test
 	@echo ">> testInEnv completed"
 
-# ============================================================================
-# MARK: - PIP · BUILD & RELEASE
-# ============================================================================
+# MARK: - Build and release
 ##@ PIP · Build & Release
 # Run build and publishing tools through uv so no global installation is required.
 build: check-uv clean-build  ## Build sdist + wheel (uv run --with build python -m build)
@@ -476,9 +452,7 @@ release: validateBuild  ## Refuse local upload; print the CI-driven release proc
 	@echo "For a local pre-flight, use: make release-test (TestPyPI)."
 	@exit 1
 
-# ============================================================================
-# MARK: - PIP · FLUSH / LIST
-# ============================================================================
+# MARK: - pip environment cleanup
 ##@ PIP · Flush / List
 # Remove packages from the active Python environment. Prefer `uv-flush-envs` when
 # using a virtual environment. Core packaging tools are preserved for recovery.
@@ -512,9 +486,7 @@ list: ## List pip packages in available environments
 		echo; \
 	done
 	
-# ============================================================================
-# MARK: - Codegen
-# ============================================================================
+# MARK: - Code generation
 
 # Base directory for generated Python types. Keep this aligned with codegen.sh.
 _PYTHON_TYPES_BASE := src/foundationTypes
