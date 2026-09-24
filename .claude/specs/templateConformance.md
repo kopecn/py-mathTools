@@ -2,13 +2,11 @@
 version: 1.0
 type: specification
 name: templateConformance
-purpose: Bring py-MathTools into full conformance with the py-foundationTools template conventions
-spec: TemplateConformance
+purpose: Ongoing packaging, dependency-resolution, CI-parity, and governance requirements for py-MathTools
 scope: project
-status: draft
 applies_to: pyproject.toml, requirements.txt, Makefile, .env, .github/, .claude/, src/, README.md
-last_updated: 2026-08-26
-semver: 0.1.1
+last_updated: 2026-09-24
+semver: 0.1.2
 author: Nicholas Bergantz
 ---
 
@@ -16,16 +14,14 @@ author: Nicholas Bergantz
 
 > Sibling of [mathToolsArchitecture.md](mathToolsArchitecture.md). This spec states what "conformant to the py-foundationTools template" means for this repo; it does not copy that repo's content. The authoritative template reference is the py-foundationTools release selected by `requirements.txt`.
 >
-> The migration that first brought this repo into conformance is recorded in [`../archive/math-tools-port/`](../archive/math-tools-port/00-overview.md). Reproduced dependency-resolution evidence is held in [the 2026-08-26 findings](../findings/2026-08-26-spherical-spatial-packaging.md).
+> The migration that first brought this repo into conformance is summarized in [the math-tools port retrospective](../archive/math-tools-port.md). Reproduced dependency-resolution evidence is held in [the 2026-08-26 findings](../findings/2026-08-26-spherical-spatial-packaging.md).
 
-## Package and module naming
+## Package metadata
 
-- Import packages are snake_case: `math_tools` and `math_plot_helpers` under `src/`.
-- Module filenames are snake_case; class names are not affected by this rule.
+- Package names, module names, source layout, and public typing markers are governed by [mathToolsArchitecture.md](mathToolsArchitecture.md) §Packages and layering and §Shared conventions.
 - The distribution name is `py_math_tools` and is independent of the import package names.
-- Every package directory exposing a public API ships `py.typed`.
 - Package discovery is driven by `package-dir = {"" = "src"}`; no explicit `packages` enumeration is maintained.
-- Tooling configuration that names packages or paths resolves to the names above.
+- Tooling configuration that names packages or paths resolves to the names governed by this section and [mathToolsArchitecture.md](mathToolsArchitecture.md).
 
 ## Dependency declaration model
 
@@ -69,7 +65,7 @@ Verification results are evidence only about the environment that produced them.
 1. `.claude/CLAUDE.md` states this repo's role, package map, and gate command, and links every spec under `.claude/specs/`. It references specs and does not duplicate their content. Publishing a new spec includes adding its link here.
 2. `.claude/specs/` holds the spec set.
 3. `.claude/findings/` holds reproduced defect evidence and other non-normative observations.
-4. `.claude/archive/` holds completed chunk sets.
+4. `.claude/archive/` holds concise retrospectives for completed work whose decisions remain useful.
 
 ## README and metadata
 
@@ -79,19 +75,13 @@ Verification results are evidence only about the environment that produced them.
 
 ## Layering enforcement
 
-`tests/test_package_layering.py` asserts, by AST scan of `src/`:
-
-- `math_tools` never imports `math_plot_helpers` or `matplotlib`.
-- `math_plot_helpers` may import `math_tools`.
-- Only `math_plot_helpers` imports `matplotlib`.
-
-The test fails if a `matplotlib` import is added to any `math_tools` module.
+The package dependency direction is governed by [mathToolsArchitecture.md](mathToolsArchitecture.md) §Packages and layering. `tests/test_package_layering.py` enforces it by static AST scan of `src/` and SHALL fail if `math_tools` imports `math_plot_helpers` or `matplotlib`.
 
 ## Conformance criteria
 
 Observable properties of a conformant repo:
 
-1. Import package names match §Package and module naming, and every public package ships `py.typed`.
+1. Package metadata matches §Package metadata and every public package satisfies the typing-marker requirement in [mathToolsArchitecture.md](mathToolsArchitecture.md).
 2. `.claude/CLAUDE.md` links every `*.md` under `.claude/specs/`.
 3. `README.md` carries no boilerplate stub text, and its §Installation satisfies §Distribution consumption.
 4. The layering test passes, and fails when a `matplotlib` import is introduced into `math_tools`.

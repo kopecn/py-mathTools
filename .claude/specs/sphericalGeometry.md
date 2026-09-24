@@ -3,12 +3,10 @@ version: 1.0
 type: specification
 name: sphericalGeometry
 purpose: Behavioral contract for math_tools.spherical — arc/small-circle construction, generation, and coordinate transforms on the unit sphere
-spec: SphericalGeometry
 scope: project
-status: draft
 applies_to: src/math_tools/spherical/, tests/spherical/
-last_updated: 2026-08-26
-semver: 0.1.1
+last_updated: 2026-09-24
+semver: 0.1.2
 author: Nicholas Bergantz
 ---
 
@@ -22,7 +20,7 @@ author: Nicholas Bergantz
 
 ## Coordinate convention
 
-ISO physics convention. The `spherical_generators` module docstring is the canonical statement; other modules reference it rather than restating it.
+This specification is the canonical statement of the ISO physics convention; implementation modules reference it rather than defining competing conventions.
 
 - **θ (polar)** — colatitude from `+z`, range `[0, π]`. `0` = north pole, `π/2` = equator, `π` = south pole.
 - **φ (azimuth)** — angle in the xy-plane from `+x`, counterclockwise viewed from `+z`.
@@ -135,7 +133,7 @@ Stable observable outcomes of a conforming implementation.
 
 1. **No new spherical types.** Tier-1 carriers stay upstream; this subpackage defines no arc/circle class.
 2. **No azimuth-range harmonization.** The per-function ranges in §Coordinate convention are contract, not drift.
-2. **No upstream ABC docstring change.** Owned by py-foundationTools.
-3. **No small-circle degeneracy rework.** See §Degeneracy handling.
-4. **No reformulation of `compute_spherical_arc_endpoint`.** The bands in §Accuracy bands near the pole are the contract; tightening them is a separate governed change.
-5. **No `isPositive` redesign.** Reverse-traversal semantics are contract.
+3. **No upstream ABC docstring change.** Owned by py-foundationTools.
+4. **No small-circle degeneracy rework.** See §Degeneracy handling.
+5. **No reformulation of `compute_spherical_arc_endpoint`.** The bands in §Accuracy bands near the pole are the contract; tightening them is a separate governed change.
+6. **No `isPositive` redesign.** Reverse-traversal semantics are contract.

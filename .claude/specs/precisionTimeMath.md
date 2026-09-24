@@ -3,12 +3,10 @@ version: 1.1
 type: specification
 name: precisionTimeMath
 purpose: Behavioral contract for the Tier-3 PrecisionTimeInterval and PrecisionTimestamp math types
-spec: PrecisionTimeMath
 scope: project
-status: accepted
 applies_to: src/math_tools/precision_time/, tests/precision_time/
-last_updated: 2026-09-08
-semver: 0.0.3
+last_updated: 2026-09-24
+semver: 0.0.4
 author: Nicholas Bergantz
 ---
 

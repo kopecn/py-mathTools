@@ -6,8 +6,8 @@ purpose: Reproduced defect evidence, measurements, and implementation material d
 scope: project
 status: open
 applies_to: src/math_tools/spherical/, src/math_tools/spatial/, src/math_tools/waveforms/, requirements.txt, Makefile, README.md
-last_updated: 2026-08-26
-semver: 0.1.1
+last_updated: 2026-09-24
+semver: 0.1.2
 author: Nicholas Bergantz
 ---
 
@@ -184,53 +184,13 @@ The `from_axis_angle` case is the worse of the two: a plausible-looking finite
 `Position.normalize()` already raises `ValueError` on the zero vector, so the
 sibling contract exists and `Quaternion` diverges from it.
 
-## F5 — the foundation dependency pin is dead
+## F5 — the foundation dependency pin is mutable
 
-`requirements.txt:22` pins
-`pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@feat/switch-to-new-template`.
+`requirements.txt:22` currently pins `pyFoundationTools @ git+https://github.com/kopecn/py-foundationTools.git@dev`.
 
-That branch **does not exist on the remote**. Verified:
+`dev` is a branch, so the same requirements file can resolve to different commits over time. This violates [templateConformance.md](../specs/templateConformance.md) §Pin immutability and prevents a clean environment from being reproducible from the declared dependency source alone.
 
-```
-$ git ls-remote --heads https://github.com/kopecn/py-foundationTools.git
-ada8247… refs/heads/dev
-1082ccb… refs/heads/feat/new-features
-1216008… refs/heads/main
-fc22d72… refs/heads/prod
-
-$ git ls-remote --tags …
-b476033… refs/tags/v0.0.2
-efb630e… refs/tags/v0.0.3
-fc22d72… refs/tags/v0.0.4
-```
-
-A clean `uv pip install -r requirements.txt` therefore **fails outright
-today**. The repo builds only because the existing `.venv` holds an install of
-commit `323e4b09` (per its `direct_url.json`), reachable from a local clone but
-from nothing on the remote. The reported green gate — 1,550 tests passing — is
-evidence about a stale environment, not about a fresh checkout.
-
-**Selected pin: `v0.0.4`.** It resolves to `fc22d72`, is tag-reachable, is
-identical to `refs/heads/prod`, and carries the post-template
-`foundation_abc/math/` layout including `sphericalABCs.py` and
-`waveformABCs.py`. `git diff 323e4b09 v0.0.4` restricted to
-`src/foundation_abc/` and `src/foundationTypes/mathTypes/` is **empty** —
-adopting it is behaviour-preserving, not an upgrade.
-
-A commit-SHA fallback is unavailable: the only SHA that would serve
-(`323e4b09`) is the unreachable object that caused the problem.
-
-## F6 — the two CI jobs install from different sources
-
-`Makefile:306` (`uv-test-all`) runs `uv pip install -q -e ".[dev]"`, bypassing
-`requirements.txt`. It is the only install path in the Makefile that does so;
-`uv-bootstrap`, `uv-sync`, `uv-sync-headless`, `uv-sync-dev`, `uv-refresh`, and
-the pip fallback all install `-r requirements.txt` first.
-
-Consequence: the `compatibility` job resolves `pyFoundationTools` from the
-configured index (where it is not published) while `quality` resolves it from
-the git pointer. The two jobs can test different code, and post-F5 the
-compatibility job cannot resolve the dependency at all.
+The prior dead-branch reference has been replaced, and every test-running Makefile path now installs `requirements.txt` before the editable package. The remaining defect is limited to replacing `dev` with a remotely reachable release tag or full commit SHA that supplies the required foundation import surface.
 
 ## F7 — waveform insertion rejects indices `list.insert` clamps
 

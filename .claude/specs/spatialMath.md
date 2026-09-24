@@ -3,12 +3,10 @@ version: 1.1
 type: specification
 name: spatialMath
 purpose: Behavioral contract for the Position, Quaternion, and SpatialPose math types
-spec: SpatialMath
 scope: project
-status: draft
 applies_to: src/math_tools/spatial/, tests/spatial/
-last_updated: 2026-08-26
-semver: 0.1.1
+last_updated: 2026-09-24
+semver: 0.1.2
 author: Nicholas Bergantz
 ---
 
@@ -27,37 +25,14 @@ author: Nicholas Bergantz
 | `Quaternion` | `spatial/quaternion.py` | `QuaternionABC` | `numpy-quaternion` |
 | `SpatialPose` | `spatial/spatial_pose.py` | `SpatialTransformABC` | composed `Position` + `Quaternion` |
 
-`Quaternion` is the **existing, tested implementation** (~90 tests). Its
-math behavior is authoritative and unchanged, but one structural edit is
-REQUIRED: the pinned foundation branch deleted
-`foundationTypes.mathTypes.quaternionABC` — the base class re-parents to
-`foundation_abc.math.spatialABCs.QuaternionABC`. The old ABC also carried
-`DataModelHelper`; the new one is `ABC`-only, so serialization tests that
-assert `DataModelHelper` inheritance update their base-class assertions
-(`to_dict`/`from_dict` behavior itself is preserved by the new ABC).
-Beyond that, this spec only adds the members under "Quaternion additions".
+`Quaternion` subclasses `foundation_abc.math.spatialABCs.QuaternionABC`. Serialization behavior is defined by the ABC's `to_dict`/`from_dict` contract; no `DataModelHelper` inheritance is required.
 
-## Coordinate conventions (single source of truth)
+## Coordinate conventions
 
 - **spherical** (`azimuth`, `elevation`): elevation measured from the xy-plane
   (geographic).
-- **spherical ISO** (`azimuth`, `polar`): polar measured from +z (ISO 80000-2
-  colatitude) — the convention already documented in
-  `math_tools/spherical/spherical_generators.py`; both conventions preserved,
-  as in Swift.
+- **spherical ISO** (`azimuth`, `polar`): polar measured from +z (ISO 80000-2 colatitude), as governed by [sphericalGeometry.md](sphericalGeometry.md).
 - Angles in radians everywhere.
-
-## Cross-cutting API conventions (all three classes)
-
-- `normalized()` is a **method** returning a copy (matches the incumbent
-  `Quaternion.normalized()`); `normalize()` mutates in place.
-- Approximate comparison is `isclose(other, rtol=1e-9, atol=0.0) -> bool`
-  (incumbent signature style; numpy `rtol`/`atol` vocabulary repo-wide).
-- These classes are **mutable → unhashable**: each sets `__hash__ = None`
-  explicitly (pinned by test). Hashable time types are the immutable
-  exception ([precisionTimeMath.md](precisionTimeMath.md)).
-- `__array__(dtype=None)` on `Position` (→ `(3,)` vector) and `Quaternion`
-  (→ `[w, x, y, z]`), so `np.asarray(x)` / `plt.plot(...)` work directly.
 
 ### Deserializer error semantics (normative)
 
@@ -150,9 +125,7 @@ Swift's custom `•`/`×` operators map to the named methods `dot`/`cross` plus
 
 ## `Quaternion` additions
 
-The members below are part of the `Quaternion` contract. Items 1–4 are
-established and unchanged by this revision; items 5–6 are the requirements this
-revision adds.
+The members below are part of the `Quaternion` contract.
 
 1. `dot(other) -> float` — 4-component dot product.
 2. `rotation_matrix_elements -> RotationMatrixElements` — frozen dataclass
@@ -247,25 +220,23 @@ robotics reading)
 7. `angular_distance` between `q` and `-q` is 0.
 8. `homogeneous` ∘ `from_homogeneous` round-trips (atol 1e-9), including a
    non-normalized input quaternion (normalized on export).
-9. Existing `Quaternion` test suite passes with import-path and base-class
-   assertion edits only — no assertion on math behavior changes.
-10. `__hash__ is None` pinned for all three classes; `np.asarray(x)` returns
-    the documented array for `Position` and `Quaternion`.
-11. mypy strict clean.
-12. **Scale invariance.** For any positive scale factor applied to either
+9. `__hash__ is None` pinned for all three classes; `np.asarray(x)` returns
+   the documented array for `Position` and `Quaternion`.
+10. mypy strict clean.
+11. **Scale invariance.** For any positive scale factor applied to either
     operand, `SpatialPose.angular_distance` and `Quaternion.angle` are
     unchanged to atol 1e-12, as is `Quaternion.axis`. Compliance 7 (`q` vs
     `-q` → 0) is unaffected.
-13. **No NaN escape.** `Quaternion.normalized()`, `normalize()`, `inverse`,
+12. **No NaN escape.** `Quaternion.normalized()`, `normalize()`, `inverse`,
     and `from_axis_angle` raise `ValueError` on a zero-magnitude operand, and
     each carries a `Raises:` docstring section. For finite non-degenerate
     input, none of the four returns a non-finite component.
-14. **Deserializer errors.** For each of `Position`, `Quaternion`,
+13. **Deserializer errors.** For each of `Position`, `Quaternion`,
     `SpatialPose`: a non-`dict` payload raises `TypeError`; a payload missing a
     required key raises `ValueError`; a field carrying a string or a `bool`
     raises `TypeError`. The three classes raise the same type for the same
     malformed payload, and every outcome is unchanged when assertions are
     disabled. All three `from_dict` docstrings carry a `Raises:` section.
-15. **Wire round-trip preserved.** `to_dict` → `from_dict` remains exact for
-    all three classes: the validation required by 13–14 rejects malformed
+14. **Wire round-trip preserved.** `to_dict` → `from_dict` remains exact for
+    all three classes: the validation required by 12–13 rejects malformed
     input without narrowing well-formed input.

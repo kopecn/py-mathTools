@@ -3,12 +3,10 @@ version: 1.1
 type: specification
 name: waveformCore
 purpose: Behavioral contract for Waveform1D and the aggregate spatial waveform containers
-spec: WaveformCore
 scope: project
-status: draft
 applies_to: src/math_tools/waveforms/, tests/waveforms/
-last_updated: 2026-08-26
-semver: 0.1.0
+last_updated: 2026-09-24
+semver: 0.1.1
 author: Nicholas Bergantz
 ---
 
@@ -196,10 +194,7 @@ All three share (with `Element` = `Position` / `Quaternion` / `SpatialPose`):
   `sample_count == min(len(positions), len(quaternions))` — both subtle Swift
   behaviors, kept.
 - `==`, `repr`, `to_dict`/`from_dict` per the ABC wire shapes.
-- **Shared API idioms** (mathToolsArchitecture.md §API idioms): all
-  three aggregates additionally implement `__array__` and
-  `isclose(other, rtol, atol)`, mirroring the umbrella idiom already required
-  of `Waveform1D`, `Position`, and `Quaternion`.
+- **Aggregate array and comparison behavior:** all three aggregates implement the umbrella's required `__array__` and `isclose(other, rtol, atol)` APIs with these module-specific shapes and tolerances:
   - `__array__(dtype=None, copy=None)`: `WaveformPosition` returns the
     `(sample_count, 3)` position array; `WaveformQuaternion` returns the
     `(sample_count, 4)` `(w, x, y, z)` array; `WaveformSpatialPose` returns a
