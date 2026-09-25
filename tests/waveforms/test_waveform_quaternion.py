@@ -41,8 +41,13 @@ class TestSpecCompliance1SerializationRoundTrip(unittest.TestCase):
         w2 = WaveformQuaternion.from_dict(w.to_dict())
         self.assertEqual(w, w2)
 
-    def test_isinstance_of_abc(self) -> None:
-        self.assertIsInstance(_make(), QuaternionWaveformABC)
+    def test_structural_conformance_to_abc(self) -> None:
+        """WaveformQuaternion structurally conforms to QuaternionWaveformABC (a
+        non-runtime_checkable ``typing.Protocol``), verified by member presence
+        rather than ``isinstance``."""
+        wq = _make()
+        for member in QuaternionWaveformABC.__abstractmethods__:
+            self.assertTrue(hasattr(wq, member), member)
 
     def test_no_abstract_methods_remain(self) -> None:
         self.assertEqual(WaveformQuaternion.__abstractmethods__, frozenset())

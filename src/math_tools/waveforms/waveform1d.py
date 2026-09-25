@@ -179,6 +179,19 @@ class Waveform1D(
         t0 = PrecisionTimestamp.from_dict(obj["t0"])
         return cls(obj.get("waveform", []), dt=dt, t0=t0)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"waveform", "dt", "t0"}``.
+
+        Emits exactly what ``foundationTypes`` ``ScalarWaveformType.to_dict()``
+        emits (``waveform`` as a list of floats), so the payload round-trips
+        through either carrier.
+        """
+        return {
+            "waveform": [float(v) for v in self.values],
+            "dt": self.dt.to_dict(),
+            "t0": self.t0.to_dict(),
+        }
+
     # MARK: - Generators (sinusoidal)
 
     @classmethod

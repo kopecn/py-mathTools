@@ -38,8 +38,13 @@ class TestSpecCompliance1SerializationRoundTrip(unittest.TestCase):
         w2 = WaveformPosition.from_dict(w.to_dict())
         self.assertEqual(w, w2)
 
-    def test_isinstance_of_abc(self) -> None:
-        self.assertIsInstance(_make(), PositionWaveformABC)
+    def test_structural_conformance_to_abc(self) -> None:
+        """WaveformPosition structurally conforms to PositionWaveformABC (a
+        non-runtime_checkable ``typing.Protocol``), verified by member presence
+        rather than ``isinstance``."""
+        wp = _make()
+        for member in PositionWaveformABC.__abstractmethods__:
+            self.assertTrue(hasattr(wp, member), member)
 
     def test_no_abstract_methods_remain(self) -> None:
         self.assertEqual(WaveformPosition.__abstractmethods__, frozenset())

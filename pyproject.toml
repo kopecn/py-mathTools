@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py_math_tools"
-version = "0.0.2"
+version = "0.0.3"
 description = "Tier 3 numpy-backed math implementation layer for pyFoundationTools (quaternions, spatial/spherical math, waveforms, polynomials, trajectory generation)."
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
   {name = "Nicholas Bergantz", email = "nicholas.bergantz@gmail.com"}
 ]
@@ -20,7 +20,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -44,12 +43,16 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-asyncio",
-    "ruff",
+    "flake8",
+    "flake8-bugbear",
+    "black",
+    "mypy",
     "build",
     "bump2version",
-    "mypy",
-    "ty",
     "twine",
+    # second-class (available, not in the gate):
+    "ruff",
+    "ty",
 ]
 
 [project.urls]

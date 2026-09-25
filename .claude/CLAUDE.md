@@ -54,15 +54,20 @@ and every module's behavior. Consult the relevant spec before extending a
 module; if implementation forces a contract change, the spec is updated in
 the same change and its `semver` bumped.
 
+Reproduced defect evidence, measurements, source locations, and
+implementation material live in `.claude/findings/` — never in a spec.
+
 - [mathToolsArchitecture.md](specs/mathToolsArchitecture.md) — umbrella:
   layering, package layout, dependency policy, shared conventions, error
   semantics
-- [templateConformance.md](specs/templateConformance.md) — template
-  migration: packaging, Makefile/CI parity, rename, governance docs
+- [templateConformance.md](specs/templateConformance.md) — packaging,
+  dependency resolvability, CI install parity, governance artifacts
 - [precisionTimeMath.md](specs/precisionTimeMath.md) — `PrecisionTimeInterval`,
   `PrecisionTimestamp`
 - [spatialMath.md](specs/spatialMath.md) — `Position`, `Quaternion`,
   `SpatialPose`
+- [sphericalGeometry.md](specs/sphericalGeometry.md) — unit-sphere arcs and
+  small circles, transforms, the `orient` bearing convention
 - [waveformCore.md](specs/waveformCore.md) — `Waveform1D` + aggregate
   waveform containers
 - [waveformDsp.md](specs/waveformDsp.md) — DSP families, scipy mapping,

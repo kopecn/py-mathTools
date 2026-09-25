@@ -3,19 +3,17 @@ version: 1.0
 type: umbrella-architecture
 name: mathToolsArchitecture
 purpose: Layering, package layout, dependency policy, and shared conventions for py-MathTools
-spec: MathToolsArchitecture
 scope: project
-status: accepted
-applies_to: src/, tests/, pyproject.toml
-last_updated: 2026-07-11
-semver: 0.0.2
+applies_to: src/, tests/, pyproject.toml, requirements.txt
+last_updated: 2026-09-24
+semver: 0.1.1
 author: Nicholas Bergantz
 ---
 
 # py-MathTools Architecture
 
-> Umbrella spec. Each module's behavioral contract lives in a sibling spec
-> (index at the bottom); this spec owns the layering, the package layout, the
+> Umbrella spec. Each module's behavioral contract lives in a sibling spec;
+> this spec owns the layering, the package layout, the
 > dependency policy, and the conventions every sibling inherits. On conflict
 > within this repo, this spec wins for structure; the sibling wins for its own
 > module's behavior.
@@ -43,11 +41,7 @@ Rules that follow:
 2. py-MathTools **never re-implements storage/data-carrier types** that
    foundation already generates; it interoperates with them via
    `to_dict`/`from_dict` (wire-format parity is the compatibility contract).
-3. Dependency direction is one-way: py-MathTools → pyFoundationTools. Nothing
-   in foundation may import this package. The foundation-side `XxxxMathLike`
-   modules referenced by `mathTypeTiers.md` do not exist yet; when foundation
-   adds them, tightening our base classes is a follow-on task in that repo's
-   cadence — not assumed here.
+3. Dependency direction is one-way: py-MathTools → pyFoundationTools. Nothing in foundation may import this package.
 
 ## Dependency policy (differs from foundation)
 
@@ -70,9 +64,7 @@ per the template BKM (see [templateConformance.md](templateConformance.md)).
 
 ## Packages and layering
 
-Two top-level snake_case packages under `src/` (replacing `pyMathTools` and
-`pyMathToolsPlotHelpers` — see the rename contract in
-[templateConformance.md](templateConformance.md)):
+Two top-level snake_case packages under `src/`:
 
 ```
 math_plot_helpers  →  math_tools  →  pyFoundationTools  →  stdlib
@@ -87,11 +79,11 @@ No reverse imports. `matplotlib` never appears in `math_tools`.
 src/math_tools/
   __init__.py            # curated public re-exports (see Public surface)
   py.typed
-  hints.py               # shared type aliases (migrated from pyMathTools/hints.py)
+  hints.py               # shared type aliases
   errors.py              # exception hierarchy (see Error semantics)
   precision_time/        # PrecisionTimeInterval, PrecisionTimestamp   → precisionTimeMath.md
   spatial/               # Position, Quaternion, SpatialPose           → spatialMath.md
-  spherical/             # migrated spherical arc/circle utilities (behavior unchanged)
+  spherical/             # unit-sphere arcs/circles/transforms       → sphericalGeometry.md
   waveforms/             # Waveform1D + aggregates                     → waveformCore.md
     dsp/                 # DSP mixin per family                        → waveformDsp.md
     support.py           # DSP descriptor dataclasses/enums            → waveformDsp.md
@@ -99,8 +91,7 @@ src/math_tools/
   otg/                   # online trajectory generation (Ruckig port)  → otg.md
 ```
 
-`src/math_plot_helpers/` holds the migrated plotting module(s); rename-only,
-no behavioral change in this effort.
+`src/math_plot_helpers/` holds the plotting module(s).
 
 ## Shared conventions (inherited by every sibling spec)
 
@@ -135,11 +126,8 @@ no behavioral change in this effort.
 - **Error semantics:** see below.
 - **Testing:** `unittest.TestCase` style run under pytest (repo convention,
   `tests/test*.py`); tests mirror the package layout
-  (`tests/spatial/test_position.py`, …). TDD per chunk. Gate:
-  `make uv-fullCheck`.
-- **Docstrings:** every public symbol; module docstrings state conventions
-  (e.g. the ISO spherical convention doc in the existing `spherical/` module
-  stays canonical).
+  (`tests/spatial/test_position.py`, …).
+- **Docstrings:** every public symbol; module docstrings reference the governing convention where needed. [sphericalGeometry.md](sphericalGeometry.md) is authoritative for the ISO spherical convention.
 
 ## Error semantics
 
@@ -171,18 +159,6 @@ class PolynomialSolveError(MathToolsError): ...         # unsolvable/ill-posed r
 4. **Swift stubs are not ported:** `Waveform1D+Custom`, the empty
    `SpatialWaveforms/Operators/*+Arithmetic` files, and the empty
    `PrecisionTime/Extensions` files define no behavior.
-5. **Serialization file I/O helpers** (Swift's CSV/JSON `load/save`) are not
-   part of this effort; wire interop is `to_dict`/`from_dict` (foundation's
-   `DataModelHelper` owns file I/O patterns).
-
-## Sibling spec index
-
-| Spec | Contract |
-|---|---|
-| [templateConformance.md](templateConformance.md) | template migration: packaging, Makefile/CI parity, rename, governance |
-| [precisionTimeMath.md](precisionTimeMath.md) | `PrecisionTimeInterval`, `PrecisionTimestamp` |
-| [spatialMath.md](spatialMath.md) | `Position`, `Quaternion`, `SpatialPose` |
-| [waveformCore.md](waveformCore.md) | `Waveform1D` + aggregate waveform containers |
-| [waveformDsp.md](waveformDsp.md) | DSP families, scipy mapping, support types |
-| [polynomials.md](polynomials.md) | polynomial type + analytic root solvers |
-| [otg.md](otg.md) | online trajectory generation (Ruckig port) |
+5. **No serialization file I/O helpers.** Wire interop is
+   `to_dict`/`from_dict`; foundation's `DataModelHelper` owns file I/O
+   patterns.

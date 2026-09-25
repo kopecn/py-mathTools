@@ -1,5 +1,9 @@
 """Online trajectory generation (OTG): a faithful Ruckig port.
 
+Ported from Ruckig (community edition, MIT-licensed; Copyright (c) 2021 Lars
+Berscheid), https://github.com/pantor/ruckig. The upstream copyright notice and
+license text are retained in the ``NOTICE`` file at the repository root.
+
 See ``.claude/specs/otg.md``. Pure Python + stdlib in the per-cycle path --
 this package (and everything under it) never imports numpy (real-time
 control-loop constraint, enforced by ``tests/test_package_layering.py``).

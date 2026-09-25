@@ -466,9 +466,13 @@ class TestArrayConversion(unittest.TestCase):
 
 
 class TestIsinstanceAndAbc(unittest.TestCase):
-    def test_isinstance_of_abc(self) -> None:
+    def test_structural_conformance_to_abc(self) -> None:
+        """Position structurally conforms to PositionABC (a non-runtime_checkable
+        ``typing.Protocol``), verified by member presence rather than
+        ``isinstance``."""
         p = Position(1.0, 2.0, 3.0)
-        self.assertIsInstance(p, PositionABC)
+        for member in PositionABC.__abstractmethods__:
+            self.assertTrue(hasattr(p, member), member)
 
 
 class TestSerializationRoundTrip(unittest.TestCase):

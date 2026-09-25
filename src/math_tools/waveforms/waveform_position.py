@@ -127,6 +127,18 @@ class WaveformPosition(PositionWaveformABC):
         positions = [Position.from_dict(p) for p in obj.get("positions", [])]
         return cls(positions, dt=dt, t0=t0)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"dt", "positions", "t0"}``.
+
+        Emits exactly what ``foundationTypes`` ``PositionWaveformType.to_dict()``
+        emits, so the payload round-trips through either carrier.
+        """
+        return {
+            "dt": self.dt.to_dict(),
+            "positions": [p.to_dict() for p in self.positions],
+            "t0": self.t0.to_dict(),
+        }
+
     @classmethod
     def from_components(cls, x: Waveform1D, y: Waveform1D, z: Waveform1D) -> WaveformPosition:
         """Build from three per-axis ``Waveform1D``s (``dt``/``t0`` taken from ``x``).

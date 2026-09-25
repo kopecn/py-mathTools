@@ -140,6 +140,19 @@ class PrecisionTimeInterval(PrecisionTimeIntervalABC):
             sign=sign,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"attoseconds", "seconds", "sign"}``.
+
+        Emits exactly what ``foundationTypes`` ``PrecisionTimeIntervalType.to_dict()``
+        emits (``sign`` as its string value), so the payload round-trips through
+        either carrier.
+        """
+        return {
+            "attoseconds": self.attoseconds,
+            "seconds": self.seconds,
+            "sign": self.sign.value,
+        }
+
     # MARK: - Properties (ABC-required)
 
     @property
@@ -167,6 +180,11 @@ class PrecisionTimeInterval(PrecisionTimeIntervalABC):
     def seconds_as_float(self) -> float:
         """This interval's duration in seconds, as a (lossy) float."""
         return self._total_atto / ATTOSECONDS_PER_SECOND
+
+    @property
+    def is_zero(self) -> bool:
+        """Whether this interval is exactly zero."""
+        return self._total_atto == 0
 
     # MARK: - Arithmetic
 

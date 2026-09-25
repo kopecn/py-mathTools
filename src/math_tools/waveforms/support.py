@@ -88,6 +88,7 @@ if TYPE_CHECKING:
 
 # MARK: - Enums
 
+
 class WaveformFilterType(str, enum.Enum):
     """Filter family selector for ``FilteringMixin.filtered``."""
 

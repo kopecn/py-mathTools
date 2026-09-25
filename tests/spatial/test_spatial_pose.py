@@ -55,9 +55,13 @@ class TestConstruction(unittest.TestCase):
         self.assertEqual((pose.x, pose.y, pose.z), (1.0, 2.0, 3.0))
         self.assertEqual((pose.qw, pose.qx, pose.qy, pose.qz), (0.0, 1.0, 0.0, 0.0))
 
-    def test_isinstance_of_abc(self) -> None:
+    def test_structural_conformance_to_abc(self) -> None:
+        """SpatialPose structurally conforms to SpatialTransformABC (a
+        non-runtime_checkable ``typing.Protocol``), verified by member presence
+        rather than ``isinstance``."""
         pose = SpatialPose()
-        self.assertIsInstance(pose, SpatialTransformABC)
+        for member in SpatialTransformABC.__abstractmethods__:
+            self.assertTrue(hasattr(pose, member), member)
 
 
 class TestFromHomogeneous(unittest.TestCase):

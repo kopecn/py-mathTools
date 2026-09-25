@@ -122,6 +122,18 @@ class SpatialPose(SpatialTransformABC):
         orientation = Quaternion.from_dict(obj.get("orientation"))
         return cls(position, orientation)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to the ABC wire shape ``{"orientation", "position"}``.
+
+        Emits exactly what ``foundationTypes`` ``SpatialTransformType.to_dict()``
+        emits (nested ``QuaternionType``/``PositionType`` payloads), so the
+        payload round-trips through either carrier.
+        """
+        return {
+            "orientation": self.orientation.to_dict(),
+            "position": self.position.to_dict(),
+        }
+
     # MARK: - Properties
 
     @property
