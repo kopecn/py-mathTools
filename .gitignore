@@ -1,6 +1,4 @@
-# ==============================
-# Python Build / Bytecode Artifacts
-# ==============================
+# MARK: - Python Build / Bytecode Artifacts
 
 # Compiled Python files (bytecode)
 __pycache__/
@@ -22,9 +20,7 @@ parts/
 var/
 
 
-# ==============================
-# Virtual Environments & Dependencies
-# ==============================
+# MARK: - Virtual Environments & Dependencies
 
 # General virtual environments (Modern and Classic)
 .venv/
@@ -55,9 +51,7 @@ requirements-local.txt
 .nox/
 .mypy_cache/
 
-# ==============================
-# Tooling and Static Analysis Caches
-# ==============================
+# MARK: - Tooling and Static Analysis Caches
 
 # Coverage / Testing Reports
 .coverage
@@ -77,9 +71,7 @@ dmypy.json
 .ipynb_checkpoints/
 
 
-# ==============================
-# IDEs, Editors, and OS System Files
-# ==============================
+# MARK: - IDEs, Editors, and OS System Files
 
 # macOS system files
 .DS_Store
@@ -91,17 +83,16 @@ dmypy.json
 .idea/
 # Generic module file
 *.iml
-# VS Code workspace settings
-.vscode/
+# VS Code workspace settings — track only the shared extension recommendations
+.vscode/*
+!.vscode/extensions.json
 
 # Python boilerplate / Framework config
 # Django specific local overrides
 local_settings.py
 
 
-# ==============================
-# Packaging, Installation & Build Systems
-# ==============================
+# MARK: - Packaging, Installation & Build Systems
 
 # General package distribution folders (PyInstaller/Build tools)
 # PyInstaller spec files
@@ -117,9 +108,7 @@ CMakeCache.txt
 cmake_install.cmake
 
 
-# ==============================
-# Documentation and Translations
-# ==============================
+# MARK: - Documentation and Translations
 
 # Sphinx documentation builds
 docs/_build/
@@ -129,10 +118,8 @@ docs/_build/
 *.pot
 
 
-# ==============================
-# Local Runtime Data & Logs 
+# MARK: - Local Runtime Data & Logs 
 # (DO NOT COMMIT THESE FILES!)
-# ==============================
 
 # Databases and local state files
 # SQLite database file

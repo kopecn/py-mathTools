@@ -1,6 +1,6 @@
 # MARK: - Configuration
 .PHONY: help version checkCleanGit open-github \
-	clean clean-build clean-artifacts clean-test clean-node \
+	clean clean-build clean-artifacts clean-test clean-node clean-venv \
 	bump-patch bump-minor bump-major \
 	check-uv install-uv list-uv \
 	uv-bootstrap-pythons uv-bootstrap uv-sync uv-sync-headless uv-sync-dev uv-sync-release uv-sync-local uv-editable uv-refresh \
@@ -124,7 +124,7 @@ open-github:  ## Open the GitHub repository in the default browser (macOS/Linux)
 # Cleanup targets used by development and CI workflows.
 ##@ Common · Clean
 
-clean: clean-build clean-artifacts clean-test clean-node ## Remove all build, cache, and test artifacts
+clean: clean-build clean-artifacts clean-test clean-node clean-venv ## Remove all build, cache, and test artifacts
 
 clean-build: ## Remove packaging and distribution artifacts
 	rm -rf build/ dist/ .eggs/
@@ -159,6 +159,9 @@ clean-node: ## Remove node_modules directories and related package files
 		      "$$parent/pnpm-lock.yaml"; \
 		rm -rf "$$dir"; \
 	done
+
+clean-venv: ## Remove the local dev (.venv) and clean-room ($(VENV)) virtual environments
+	rm -rf .venv $(VENV)
 
 # MARK: - uv tooling
 ##@ UV · Tooling
